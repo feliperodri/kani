@@ -121,14 +121,16 @@ impl<'tcx> MutVisitor<'tcx> for ForeignFunctionTransformer<'tcx> {
         let func_ty = operand.ty(&self.local_decls, self.tcx);
         if let ty::FnDef(reachable_function, arguments) = *func_ty.kind() {
             if self.tcx.is_foreign_item(reachable_function) {
-                if let Some(stub) = self.stub_map.get(&reachable_function) {
-                    let Operand::Constant(function_definition) = operand else {
-                        return;
-                    };
-                    function_definition.const_ = Const::from_value(
-                        ConstValue::ZeroSized,
-                        self.tcx.type_of(stub).instantiate(self.tcx, arguments),
-                    );
+                for (key, value) in &self.stub_map {
+                    if self.tcx.item_name(reachable_function).to_string() == self.tcx.item_name(*key).to_string() {
+                        let Operand::Constant(function_definition) = operand else {
+                            return;
+                        };
+                        function_definition.const_ = Const::from_value(
+                            ConstValue::ZeroSized,
+                            self.tcx.type_of(*value).instantiate(self.tcx, arguments),
+                        );
+                    }
                 }
             }
         }
