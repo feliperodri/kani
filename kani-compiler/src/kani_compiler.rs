@@ -207,8 +207,9 @@ impl KaniCompiler {
                         unreachable!()
                     };
                     for (target, spec) in contract_spec {
-                        let target_harness = all_harnesses.get_mut(&target).unwrap();
-                        target_harness.metadata.contract = spec.into();
+                        if let Some(target_harness) = all_harnesses.get_mut(&target) {
+                            target_harness.metadata.contract = spec.into();
+                        }
                     }
                 }
                 CompilationStage::Done { metadata: Some((kani_metadata, crate_info)) } => {
