@@ -668,12 +668,18 @@ impl Expr {
                 if a.typ() == p.typ() {
                     true
                 } else {
+                    let type_a = a.typ().tag();
                     tracing::error!(param=?p.typ(), arg=?a.typ(), "Argument doesn't check");
+                    println!(" ------ ");
+                    println!(" The problem is the argmuents. ");
+                    println!(" param: [identifier] {:?}   --  [base_name] {:?}", p.identifier(), p.base_name());
+                    println!(" argument: {:?}", type_a);
+                    println!(" ------ ");
+                    
                     false
                 }
             })
         }
-
         if function.typ().is_code() {
             let parameters = function.typ().parameters().unwrap();
             arguments.len() == parameters.len() && typecheck_named_args(parameters, arguments)
@@ -681,6 +687,9 @@ impl Expr {
             let parameters = function.typ().parameters().unwrap();
             arguments.len() >= parameters.len() && typecheck_named_args(parameters, arguments)
         } else {
+            println!(" ------ ");
+            println!("function type: {:?}", function.typ());
+            println!(" ------ ");
             false
         }
     }

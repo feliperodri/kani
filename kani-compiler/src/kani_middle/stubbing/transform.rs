@@ -123,6 +123,9 @@ impl<'tcx> MutVisitor<'tcx> for ForeignFunctionTransformer<'tcx> {
             if self.tcx.is_foreign_item(reachable_function) {
                 for (key, value) in &self.stub_map {
                     if self.tcx.item_name(reachable_function).to_string() == self.tcx.item_name(*key).to_string() {
+                        println!("**** stub arguments ****");
+                        println!("{:?}", arguments);
+                        println!("********");
                         let Operand::Constant(function_definition) = operand else {
                             return;
                         };
