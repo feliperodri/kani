@@ -13,6 +13,8 @@ use super::{
     ContractConditionsData, ContractConditionsHandler,
 };
 
+use std::fmt::Debug;
+
 impl<'a> ContractConditionsHandler<'a> {
     /// Create the body of a check function.
     ///
@@ -157,6 +159,9 @@ impl<'a> ContractConditionsHandler<'a> {
         }
 
         let name = self.make_wrapper_name();
+        println!("****************");
+        println!("wrapper name: {}", name);
+        println!("****************");
         let ItemFn { vis, sig, block, .. } = self.annotated_fn;
 
         let mut sig = sig.clone();

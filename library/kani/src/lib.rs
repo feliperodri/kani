@@ -163,6 +163,11 @@ pub fn any<T: Arbitrary>() -> T {
     T::any()
 }
 
+#[inline(always)]
+pub fn conjure<T: Default>() -> T {
+    T::default()
+}
+
 /// This creates a symbolic *valid* value of type `T`.
 /// The value is constrained to be a value accepted by the predicate passed to the filter.
 /// You can assign the return value of this function to a variable that you want to make symbolic.
