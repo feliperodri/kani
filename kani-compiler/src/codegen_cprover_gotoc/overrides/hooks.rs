@@ -15,7 +15,7 @@ use crate::kani_middle::kani_functions::{KaniFunction, KaniHook, try_get_kani_fu
 use crate::unwrap_or_return_codegen_unimplemented_stmt;
 use cbmc::goto_program::CIntType;
 use cbmc::goto_program::Symbol as GotoSymbol;
-use cbmc::goto_program::{BuiltinFn, Expr, Location, Stmt, Type};
+use cbmc::goto_program::{BuiltinFn, Expr, Location, Stmt, SymbolValues, Type};
 use rustc_hir::LangItem;
 use rustc_middle::ty::TyCtxt;
 use rustc_public::mir::mono::Instance;
@@ -955,6 +955,13 @@ fn handle_quantifier(
     let target = target.unwrap();
     let lower_bound = &fargs[0];
     let upper_bound = &fargs[1];
+
+    // Warn when quantifier range is large or unbounded, since SAT solvers
+    // (the default backend) expand quantifiers into conjunctions/disjunctions
+    // over every value in the range. For unbounded quantifiers over usize,
+    // this means 2^64 terms, which will exhaust memory or diverge silently.
+    warn_large_quantifier_range(gcx, lower_bound, upper_bound, span, &quantifier_kind);
+
     let closure_call_expr = find_closure_call_expr(&instance, gcx, loc)
         .unwrap_or_else(|| unreachable!("Failed to find closure call expression"));
     let closure_arg = fargs[2].clone();
@@ -1014,6 +1021,83 @@ fn handle_quantifier(
         ],
         loc,
     )
+}
+
+/// Threshold above which a quantifier range is considered too large for SAT
+/// solvers. SAT-based backends expand quantifiers into one term per value in
+/// the range, so anything beyond this is likely to cause memory exhaustion or
+/// silent divergence. The value 1000 is chosen as a conservative default that
+/// covers most practical quantifier ranges while catching accidental unbounded
+/// or excessively large ranges.
+const QUANTIFIER_RANGE_WARN_THRESHOLD: u64 = 1000;
+
+/// Emit a compile-time warning when a quantifier's range is statically known
+/// to be large or unbounded. This catches the common mistake of writing
+/// `forall!(|i| ...)` (which expands over all 2^64 usize values) without
+/// selecting an SMT solver.
+///
+/// Only fires when **both** bounds resolve to compile-time integer constants.
+/// Bounded quantifiers (`forall!(|i in (lo, hi)| ...)`) use `let` bindings
+/// for type coercion, which hides the constants from codegen — so this
+/// currently only detects unbounded quantifiers in practice.
+fn warn_large_quantifier_range(
+    gcx: &GotocCtx,
+    lower_bound: &Expr,
+    upper_bound: &Expr,
+    span: Span,
+    quantifier_kind: &QuantifierKind,
+) {
+    let lo = unwrap_to_constant(gcx, lower_bound, 0);
+    let hi = unwrap_to_constant(gcx, upper_bound, 0);
+    if let (Some(lo), Some(hi)) = (lo, hi)
+        && hi > lo
+    {
+        let range_size = &hi - &lo;
+        let threshold = num::BigInt::from(QUANTIFIER_RANGE_WARN_THRESHOLD);
+        if range_size > threshold {
+            let kind = match quantifier_kind {
+                QuantifierKind::ForAll => "forall",
+                QuantifierKind::Exists => "exists",
+            };
+            // Use a human-friendly description for very large ranges
+            // (e.g., unbounded quantifiers with usize::MIN..usize::MAX).
+            let practically_unbounded = num::BigInt::from(u32::MAX);
+            let size_str = if range_size > practically_unbounded {
+                "unbounded (~2^64)".to_string()
+            } else {
+                format!("{range_size}")
+            };
+            let internal_span = rustc_internal::internal(gcx.tcx, span);
+            gcx.tcx.dcx().span_warn(
+                internal_span,
+                format!(
+                    "`kani::{kind}` has an {size_str} range; \
+                     SAT solvers (the default backend) expand quantifiers \
+                     over every value and may exhaust memory or diverge. \
+                     Consider adding tighter bounds or using an SMT solver \
+                     (`#[kani::solver(z3)]` or `--solver z3`)."
+                ),
+            );
+        }
+    }
+}
+
+/// Unwrap typecasts and symbol references to extract an integer constant.
+/// `depth` guards against cycles in the symbol table (max 5 levels).
+fn unwrap_to_constant(gcx: &GotocCtx, expr: &Expr, depth: u8) -> Option<num::BigInt> {
+    if depth > 5 {
+        return None;
+    }
+    expr.int_constant_value().or_else(|| match expr.value() {
+        cbmc::goto_program::ExprValue::Typecast(inner) => unwrap_to_constant(gcx, inner, depth + 1),
+        cbmc::goto_program::ExprValue::Symbol { identifier } => {
+            gcx.symbol_table.lookup(*identifier).and_then(|sym| match &sym.value {
+                SymbolValues::Expr(init) => unwrap_to_constant(gcx, init, depth + 1),
+                _ => None,
+            })
+        }
+        _ => None,
+    })
 }
 
 fn find_closure_call_expr(instance: &Instance, gcx: &mut GotocCtx, loc: Location) -> Option<Expr> {
