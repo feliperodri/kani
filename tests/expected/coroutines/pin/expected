@@ -1,13 +1,59 @@
-SUCCESS\
-Description: "unexpected return from resume"\
-in function main
-
-SUCCESS\
-Description: "unexpected yield from resume"\
-in function main
-
-UNREACHABLE\
+Status: SUCCESS
+Description: "unexpected return from resume"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unexpected yield from resume"
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
 Description: "coroutine resumed after completion"
-in function main::{closure#0}
-
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

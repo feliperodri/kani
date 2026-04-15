@@ -1,29 +1,56 @@
+warning: function `simple` is never used
+ --> src/lib.rs:8:8
+  |
+8 |     fn simple(x: u8, _y: u16) -> u8 {
+  |        ^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `generic` is never used
+  --> src/lib.rs:13:8
+   |
+13 |     fn generic<T>(x: u32, _y: T) -> u32 {
+   |        ^^^^^^^
+
+warning: function `simple` is never used
+  --> src/lib.rs:20:8
+   |
+20 |     fn simple(x: u8, _y: u16) -> u8 {
+   |        ^^^^^^
+
+
 Kani generated automatic harnesses for 1 function(s):
-+---------------------------+-------------------+
-| Crate                     | Selected Function |
-+===============================================+
-| cargo_autoharness_include | include::simple   |
-+---------------------------+-------------------+
++---------------------------+--------------------------------------------+
+| Crate                     | Selected Function                          |
++========================================================================+
+| cargo_autoharness_include | cargo_autoharness_include::include::simple |
++---------------------------+--------------------------------------------+
 
 Kani did not generate automatic harnesses for 2 function(s).
 If you believe that the provided reason is incorrect and Kani should have generated an automatic harness, please comment on this issue: https://github.com/model-checking/kani/issues/3832
-+---------------------------+------------------+--------------------------------+
-| Crate                     | Skipped Function | Reason for Skipping            |
-+===============================================================================+
-| cargo_autoharness_include | excluded::simple | Did not match provided filters |
-|---------------------------+------------------+--------------------------------|
-| cargo_autoharness_include | include::generic | Generic Function               |
-+---------------------------+------------------+--------------------------------+
-Autoharness: Checking function include::simple against all possible inputs...
++---------------------------+---------------------------------------------+--------------------------------+
+| Crate                     | Skipped Function                            | Reason for Skipping            |
++==========================================================================================================+
+| cargo_autoharness_include | cargo_autoharness_include::excluded::simple | Did not match provided filters |
+|---------------------------+---------------------------------------------+--------------------------------|
+| cargo_autoharness_include | cargo_autoharness_include::include::generic | Generic Function               |
++---------------------------+---------------------------------------------+--------------------------------+
+Autoharness: Checking function cargo_autoharness_include::include::simple against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
 VERIFICATION:- SUCCESSFUL
 
 Manual Harness Summary:
 No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+---------------------------+-------------------+---------------------------+---------------------+
-| Crate                     | Selected Function | Kind of Automatic Harness | Verification Result |
-+=================================================================================================+
-| cargo_autoharness_include | include::simple   | #[kani::proof]            | Success             |
-+---------------------------+-------------------+---------------------------+---------------------+
++---------------------------+--------------------------------------------+---------------------------+---------------------+
+| Crate                     | Selected Function                          | Kind of Automatic Harness | Verification Result |
++==========================================================================================================================+
+| cargo_autoharness_include | cargo_autoharness_include::include::simple | #[kani::proof]            | Success             |
++---------------------------+--------------------------------------------+---------------------------+---------------------+
 Complete - 1 successfully verified functions, 0 failures, 1 total.

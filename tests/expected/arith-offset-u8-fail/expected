@@ -1,2 +1,16 @@
-FAILURE\
-dereference failure: pointer outside object bounds
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: FAILURE
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Failed Checks: dereference failure: pointer outside object bounds
+VERIFICATION:- FAILED

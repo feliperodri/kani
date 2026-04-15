@@ -1,7 +1,53 @@
-Check 1: check_invariant.assertion.1\
-         - Status: SUCCESS\
-         - Description: "assertion failed: point.is_safe()"
-
-Check 2: check_invariant.assertion.2\
-         - Status: UNREACHABLE\
-         - Description: ""this assertion should be unreachable""
+Status: SUCCESS
+Description: "this assertion should be unreachable"
+Status: SUCCESS
+Description: "assertion failed: point.is_safe()"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL

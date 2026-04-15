@@ -9,6 +9,7 @@ use crate::kani_middle::transform::body::{
 };
 use relevant_instruction::{InitRelevantInstruction, MemoryInitOp};
 use rustc_public::{
+    CrateDef,
     mir::{
         AggregateKind, BasicBlock, Body, ConstOperand, Mutability, Operand, Place, Rvalue,
         Statement, StatementKind, Terminator, TerminatorKind, UnwindAction, mono::Instance,
@@ -150,7 +151,13 @@ impl<'a> UninitInstrumenter<'a> {
             // ensure the correct type.
             let ptr_operand_ty = operation.operand_ty(body);
             let pointee_ty = match ptr_operand_ty.kind() {
-                TyKind::RigidTy(RigidTy::RawPtr(pointee_ty, _)) => pointee_ty,
+                TyKind::RigidTy(RigidTy::RawPtr(pointee_ty, _)) => pointee_ty.clone(),
+                TyKind::RigidTy(RigidTy::Adt(adt_def, args))
+                    if adt_def.name().ends_with("NonNull") =>
+                {
+                    // NonNull<T> wraps *const T. Extract T from generic args.
+                    args.0.iter().find_map(|arg| arg.ty()).unwrap().clone()
+                }
                 _ => {
                     unreachable!(
                         "Should only build checks for raw pointers, `{ptr_operand_ty}` encountered."

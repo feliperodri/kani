@@ -7,7 +7,7 @@
 #![allow(unused_variables)]
 
 mod should_derive {
-    #[derive(Eq, PartialEq)]
+    #[derive(Debug, Eq, PartialEq)]
     pub struct UnitStruct;
     pub struct AnonStruct(u8);
     pub struct AnonMultipleStruct(u32, char);
@@ -76,7 +76,7 @@ mod should_derive {
     struct RefRefStruct(&'static &'static i32);
     fn ref_ref_struct(foo: RefRefStruct) {}
 
-    #[derive(Eq, PartialEq)]
+    #[derive(Debug, Eq, PartialEq)]
     pub struct AlignmentStruct(usize);
 
     impl AlignmentStruct {

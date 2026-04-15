@@ -1,0 +1,5 @@
+fn_name;iterators;loops;nested_loops
+test::with_iterator;1;0;0
+test::with_for_loop;0;1;0
+test::with_while_loop;0;1;0
+test::with_loop_loop;0;1;0

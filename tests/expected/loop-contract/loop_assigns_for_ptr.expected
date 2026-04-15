@@ -1,13 +1,113 @@
-main.assigns.1\
-	 - Status: SUCCESS\
-	 - Description: "Check that a[var_14] is assignable"
-
-main.assigns.2\
-	 - Status: SUCCESS\
-	 - Description: "Check that i is assignable"
-
-main.loop_invariant_step.1\
-	 - Status: SUCCESS\
-	 - Description: "Check invariant after step for loop main.0"
-
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "Check invariant before entry for loop loop_assigns_for_ptr::main.0"
+Status: SUCCESS
+Description: "Check assigns clause inclusion for loop loop_assigns_for_ptr::main.0"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "Check that a[var_14] is assignable"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "Check that i is assignable"
+Status: SUCCESS
+Description: "Check invariant after step for loop loop_assigns_for_ptr::main.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop loop_assigns_for_ptr::main.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop loop_assigns_for_ptr::main.0"
+Status: SUCCESS
+Description: "Check that ptr is freeable"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "assertion havoc_slice W_OK(car.lb, car.size)"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

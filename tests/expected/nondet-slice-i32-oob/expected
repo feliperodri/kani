@@ -1,3 +1,97 @@
-Status: FAILURE\
-dereference failure: pointer outside object bounds\
-in function check_out_of_bounds
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: UNDETERMINED
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: UNDETERMINED
+Description: "attempt to subtract with overflow"
+Status: UNDETERMINED
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: FAILURE
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: FAILURE
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Failed Checks: Offset result and original pointer must point to the same allocation
+Failed Checks: dereference failure: pointer outside object bounds
+VERIFICATION:- FAILED

@@ -1,6 +1,28 @@
-SUCCESS\
-assertion failed: y[0] == 1
-SUCCESS\
-assertion failed: y[1] == 2
-FAILURE\
-index out of bounds: the length is less than or equal to the given index
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: FAILURE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "assertion failed: y[z] == 3"
+Status: SUCCESS
+Description: "assertion failed: y[1] == 2"
+Status: SUCCESS
+Description: "assertion failed: y[0] == 1"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Failed Checks: index out of bounds: the length is less than or equal to the given index
+VERIFICATION:- FAILED

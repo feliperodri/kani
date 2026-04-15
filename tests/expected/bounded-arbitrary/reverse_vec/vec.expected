@@ -1,8 +1,7 @@
-Checking harness check_reverse_is_its_own_inverse_should_fail...\
-
-Checking harness check_reverse_is_its_own_inverse_incomplete...\
-
-Checking harness check_reverse_is_its_own_inverse...\
-
-Verification failed for - check_reverse_is_its_own_inverse_should_fail
-Complete - 2 successfully verified harnesses, 1 failures, 3 total.
+Checking harness vec::check_reverse_is_its_own_inverse_should_fail...
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+VERIFICATION:- FAILED
+Checking harness vec::check_reverse_is_its_own_inverse_incomplete...
+VERIFICATION:- SUCCESSFUL
+Checking harness vec::check_reverse_is_its_own_inverse...
+VERIFICATION:- SUCCESSFUL

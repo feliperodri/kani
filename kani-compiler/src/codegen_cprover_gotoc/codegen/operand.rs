@@ -56,6 +56,9 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
             Operand::Constant(constant) => {
                 self.codegen_const(&constant.const_, self.codegen_span_stable(constant.span))
             }
+            // RuntimeChecks operands evaluate to a boolean constant.
+            // In Kani's verification context, these are always false.
+            Operand::RuntimeChecks(_) => Expr::c_false(),
         }
     }
 

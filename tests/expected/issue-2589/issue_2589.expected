@@ -1,1 +1,1 @@
-error: Type `std::string::String` does not implement trait `Dummy`. This is likely because `stub` is used as a stub but its generic bounds are not being met.
+error: aborting due to 1 previous error; 2 warnings emitted

@@ -1,8 +1,16 @@
-SUCCESS\
-assertion failed: div(4, 2) == 2
-FAILURE\
-assertion failed: div(6, 2) == 2
-SUCCESS\
-attempt to divide by zero
-SUCCESS\
-attempt to divide with overflow
+Status: FAILURE
+Description: "assertion failed: div(6, 2) == 2"
+Status: SUCCESS
+Description: "assertion failed: div(4, 2) == 2"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "division by zero"
+Failed Checks: assertion failed: div(6, 2) == 2
+VERIFICATION:- FAILED

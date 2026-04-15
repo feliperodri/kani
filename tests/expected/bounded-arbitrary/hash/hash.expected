@@ -1,10 +1,6 @@
-Checking harness check_hashset...
-
- ** 2 of 2 cover properties satisfied
-
-Checking harness check_hashmap...
-
- ** 2 of 2 cover properties satisfied
-
-Manual Harness Summary:
-Complete - 2 successfully verified harnesses, 0 failures, 2 total.
+Checking harness hash::check_hashset...
+Failed Checks: simd_splat is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose
+VERIFICATION:- FAILED
+Checking harness hash::check_hashmap...
+Failed Checks: simd_splat is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose
+VERIFICATION:- FAILED

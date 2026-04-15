@@ -1,4 +1,5 @@
+Checking harness access_padding_enum_diverging_variants::access_padding_supported...
+VERIFICATION:- SUCCESSFUL
+Checking harness access_padding_enum_diverging_variants::access_padding_unsupported...
 Failed Checks: Kani currently doesn't support checking memory initialization for pointers to `E1. Cannot determine layout for an Enum of type E1, as it has multiple variants that have different padding.
-
-Verification failed for - access_padding_unsupported
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.
+VERIFICATION:- FAILED

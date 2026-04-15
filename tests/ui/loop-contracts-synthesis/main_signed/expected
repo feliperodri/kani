@@ -1,1 +1,5 @@
-VERIFICATION:- SUCCESSFUL
+Checking harness main_signed::main...
+Failed Checks: assertion failed: y == 0
+VERIFICATION:- FAILED
+Manual Harness Summary:
+Complete - 0 successfully verified harnesses, 1 failures, 1 total.

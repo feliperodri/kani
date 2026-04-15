@@ -1,10 +1,33 @@
-main.assertion.2\
-         - Status: SUCCESS\
-         - Description: "assertion failed: unsafe { FOO.a[1] } == 0"
-
-
-main.assertion.3\
-         - Status: SUCCESS\
-         - Description: "assertion failed: unsafe { BAR.b } == 3"\
-
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "assertion failed: unsafe { BAR.b } == 3"
+Status: SUCCESS
+Description: "assertion failed: unsafe { FOO.a[1] } == 0"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

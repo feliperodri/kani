@@ -1,14 +1,393 @@
+Checking harness oob::check_usize_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
-
-Verification failed for - check_u16_upper
-Verification failed for - check_u64_upper
-Verification failed for - check_usize_upper
-Verification failed for - check_u32_upper
-Verification failed for - check_u8_upper
-Verification failed for - check_u128_lower
-Verification failed for - check_u32_lower
-Verification failed for - check_u8_lower
-Verification failed for - check_u64_lower
-Verification failed for - check_usize_lower
-Verification failed for - check_u16_lower
-Complete - 1 successfully verified harnesses, 11 failures, 12 total.
+VERIFICATION:- FAILED
+Checking harness oob::check_u8_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u16_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u128_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL
+Checking harness oob::check_u32_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u64_upper...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_usize_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u16_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u64_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u8_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u32_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob::check_u128_lower...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED

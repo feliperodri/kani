@@ -1,22 +1,292 @@
+
+Kani generated automatic harnesses for 3 function(s):
++-----------+---------------------------------+
+| Crate     | Selected Function               |
++=============================================+
+| immutable | immutable::takes_ref            |
+|-----------+---------------------------------|
+| immutable | immutable::takes_refs           |
+|-----------+---------------------------------|
+| immutable | immutable::takes_refs_and_other |
++-----------+---------------------------------+
+
 Skipped Functions: None. Kani generated automatic harnesses for all functions in the available crate(s).
+Autoharness: Checking function immutable::takes_refs_and_other against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
 
-Failed Checks: attempt to add with overflow
+RESULTS:
+Check 1: <i32 as std::ops::Mul>::mul.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to multiply with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:350:45 in function <i32 as std::ops::Mul>::mul
 
+Check 2: immutable::takes_refs_and_other.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: immutable.rs:17:5 in function immutable::takes_refs_and_other
+
+Check 3: immutable::takes_refs_and_other.assertion.2
+	 - Status: FAILURE
+	 - Description: "attempt to calculate the remainder with overflow"
+	 - Location: immutable.rs:17:5 in function immutable::takes_refs_and_other
+
+Check 4: immutable::takes_refs_and_other.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with overflow"
+	 - Location: immutable.rs:17:5 in function immutable::takes_refs_and_other
+
+Check 5: immutable::takes_refs_and_other.arithmetic_overflow.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: immutable.rs:17:5 in function immutable::takes_refs_and_other
+
+Check 6: immutable::takes_refs_and_other.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: immutable.rs:17:5 in function immutable::takes_refs_and_other
+
+Check 7: <&i32 as std::ops::Mul>::mul.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 8: <&i32 as std::ops::Mul>::mul.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 9: <&i32 as std::ops::Mul>::mul.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 10: <&i32 as std::ops::Mul>::mul.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 11: <&i32 as std::ops::Mul>::mul.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 12: <&i32 as std::ops::Mul>::mul.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Mul>::mul
+
+Check 13: <&i32 as std::ops::Mul>::mul.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+Check 14: <&i32 as std::ops::Mul>::mul.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+Check 15: <&i32 as std::ops::Mul>::mul.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+Check 16: <&i32 as std::ops::Mul>::mul.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+Check 17: <&i32 as std::ops::Mul>::mul.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+Check 18: <&i32 as std::ops::Mul>::mul.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Mul>::mul
+
+
+SUMMARY:
+ ** 3 of 18 failed
+Failed Checks: attempt to multiply with overflow
+Failed Checks: attempt to calculate the remainder with a divisor of zero
+ File: "immutable.rs", line 17, in immutable::takes_refs_and_other
+Failed Checks: attempt to calculate the remainder with overflow
+ File: "immutable.rs", line 17, in immutable::takes_refs_and_other
+
+VERIFICATION:- FAILED
+
+Autoharness: Checking function immutable::takes_refs against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: <i32 as std::ops::Sub>::sub.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to subtract with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:216:45 in function <i32 as std::ops::Sub>::sub
+
+Check 2: <&i32 as std::ops::Sub>::sub.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 3: <&i32 as std::ops::Sub>::sub.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 4: <&i32 as std::ops::Sub>::sub.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 5: <&i32 as std::ops::Sub>::sub.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 6: <&i32 as std::ops::Sub>::sub.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 7: <&i32 as std::ops::Sub>::sub.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Sub>::sub
+
+Check 8: <&i32 as std::ops::Sub>::sub.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+Check 9: <&i32 as std::ops::Sub>::sub.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+Check 10: <&i32 as std::ops::Sub>::sub.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+Check 11: <&i32 as std::ops::Sub>::sub.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+Check 12: <&i32 as std::ops::Sub>::sub.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+Check 13: <&i32 as std::ops::Sub>::sub.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Sub>::sub
+
+
+SUMMARY:
+ ** 1 of 13 failed
 Failed Checks: attempt to subtract with overflow
 
-Failed Checks: attempt to calculate the remainder with a divisor of zero
-Failed Checks: attempt to calculate the remainder with overflow
-Failed Checks: attempt to multiply with overflow
+VERIFICATION:- FAILED
+
+Autoharness: Checking function immutable::takes_ref against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: <i32 as std::ops::Add>::add.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to add with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:104:45 in function <i32 as std::ops::Add>::add
+
+Check 2: <&i32 as std::ops::Add>::add.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 3: <&i32 as std::ops::Add>::add.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 4: <&i32 as std::ops::Add>::add.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 5: <&i32 as std::ops::Add>::add.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 6: <&i32 as std::ops::Add>::add.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 7: <&i32 as std::ops::Add>::add.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:31 in function <&i32 as std::ops::Add>::add
+
+Check 8: <&i32 as std::ops::Add>::add.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+Check 9: <&i32 as std::ops::Add>::add.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+Check 10: <&i32 as std::ops::Add>::add.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+Check 11: <&i32 as std::ops::Add>::add.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+Check 12: <&i32 as std::ops::Add>::add.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+Check 13: <&i32 as std::ops::Add>::add.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:50:38 in function <&i32 as std::ops::Add>::add
+
+
+SUMMARY:
+ ** 1 of 13 failed
+Failed Checks: attempt to add with overflow
+
+VERIFICATION:- FAILED
+
+Manual Harness Summary:
+No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+-----------+----------------------+---------------------------+---------------------+
-| Crate     | Selected Function    | Kind of Automatic Harness | Verification Result |
-+====================================================================================+
-| immutable | takes_ref            | #[kani::proof]            | Failure             |
-|-----------+----------------------+---------------------------+---------------------|
-| immutable | takes_refs           | #[kani::proof]            | Failure             |
-|-----------+----------------------+---------------------------+---------------------|
-| immutable | takes_refs_and_other | #[kani::proof]            | Failure             |
-+-----------+----------------------+---------------------------+---------------------+
-
++-----------+---------------------------------+---------------------------+---------------------+
+| Crate     | Selected Function               | Kind of Automatic Harness | Verification Result |
++===============================================================================================+
+| immutable | immutable::takes_ref            | #[kani::proof]            | Failure             |
+|-----------+---------------------------------+---------------------------+---------------------|
+| immutable | immutable::takes_refs           | #[kani::proof]            | Failure             |
+|-----------+---------------------------------+---------------------------+---------------------|
+| immutable | immutable::takes_refs_and_other | #[kani::proof]            | Failure             |
++-----------+---------------------------------+---------------------------+---------------------+
+Note that `kani autoharness` sets default --harness-timeout of 60s and --default-unwind of 20.
+If verification failed because of timing out or too low of an unwinding bound, try passing larger values for these arguments (or, if possible, writing a loop contract).
 Complete - 0 successfully verified functions, 3 failures, 3 total.

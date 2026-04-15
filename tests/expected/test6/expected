@@ -1,4 +1,8 @@
-SUCCESS\
-assertion failed: add2(1, 1) == 2.0
-FAILURE\
-assertion failed: add2(2, 1) == 2.0
+Status: FAILURE
+Description: "assertion failed: add2(2, 1) == 2.0"
+Status: SUCCESS
+Description: "assertion failed: add2(1, 1) == 2.0"
+Status: SUCCESS
+Description: "NaN on addition"
+Failed Checks: assertion failed: add2(2, 1) == 2.0
+VERIFICATION:- FAILED

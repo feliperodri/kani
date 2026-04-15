@@ -5,7 +5,7 @@
 
 use std::mem;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Pair {
     value: u8,
     key: u16,
@@ -17,7 +17,7 @@ impl kani::Arbitrary for Pair {
     }
 }
 
-fn test<T: kani::Arbitrary + std::cmp::PartialEq + Clone>() {
+fn test<T: kani::Arbitrary + std::cmp::PartialEq + Clone + std::fmt::Debug>() {
     let mut var1 = kani::any::<T>();
     let var2 = kani::any::<T>();
     let old_var1 = var1.clone();

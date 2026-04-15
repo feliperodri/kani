@@ -1,6 +1,294 @@
-main.assertion\
-- Status: SUCCESS\
-- Description: "replaced"\
-in function main
-
+Status: UNREACHABLE
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: UNREACHABLE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "replaced"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL
+Status: UNREACHABLE
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: UNREACHABLE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "Check that *var_15 is assignable"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Check that ptr is freeable"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "Check that *var_4 is assignable"
+Status: SUCCESS
+Description: "Only a single top-level call to function _RNCNCNvCs4UcUzgGWnTo_19global_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs4UcUzgGWnTo_19global_replace_pass6modifys0_0s_0B5_"
+Status: SUCCESS
+Description: "Check that requires do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "Check that ensures do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "No recursive call to function _RNCNCNvCs4UcUzgGWnTo_19global_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs4UcUzgGWnTo_19global_replace_pass6modifys0_0s_0B5_"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "|result| PTR == src"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

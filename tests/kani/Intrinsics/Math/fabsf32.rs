@@ -1,15 +1,14 @@
 // Copyright Kani Contributors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-// Check that `fabsf32` returns the expected results: absolute value if argument
-// is not NaN, otherwise NaN
-#![feature(core_intrinsics)]
+// Check that `fabs` (f32) returns the expected results: absolute value if
+// argument is not NaN, otherwise NaN
 
 #[kani::proof]
 fn test_abs_finite() {
     let x: f32 = kani::any();
     kani::assume(!x.is_nan());
-    let abs_x = unsafe { std::intrinsics::fabsf32(x) };
+    let abs_x = x.abs();
     if x < 0.0 {
         assert!(-x == abs_x);
     } else {
@@ -21,6 +20,6 @@ fn test_abs_finite() {
 fn test_abs_nan() {
     let x: f32 = kani::any();
     kani::assume(x.is_nan());
-    let abs_x = unsafe { std::intrinsics::fabsf32(x) };
+    let abs_x = x.abs();
     assert!(abs_x.is_nan());
 }

@@ -1,0 +1,6 @@
+fn_name;inline_assembly;unsafe_dereference;unsafe_call;unsafe_static_access;unsafe_union_access;extern_call;transmute;unsafe_cast
+test::generic;0;0;1;0;0;0;0;0
+test::next_id;0;2;0;2;0;0;4;0
+test::current_id;0;1;0;1;0;0;2;0
+test::raw_to_ref;0;1;0;0;0;0;2;0
+test::call_external;0;0;1;0;0;1;0;0

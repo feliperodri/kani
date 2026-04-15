@@ -1,6 +1,8 @@
+Checking harness out_of_bounds_ub_check::test_offset_overflow...
 Failed Checks: Offset result and original pointer must point to the same allocation
+VERIFICATION:- FAILED
+Checking harness out_of_bounds_ub_check::check_ptr_end...
+VERIFICATION:- SUCCESSFUL
+Checking harness out_of_bounds_ub_check::check_ptr_oob...
 Failed Checks: Offset result and original pointer must point to the same allocation
-
-Verification failed for - test_offset_overflow
-Verification failed for - check_ptr_oob
-Complete - 1 successfully verified harnesses, 2 failures, 3 total.
+VERIFICATION:- FAILED (encountered failures other than panics, which were unexpected)

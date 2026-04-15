@@ -1,16 +1,6 @@
-Checking harness check_comparison...
-SUCCESS\
-"assertion failed: disc >= -1 && disc <= 1"
-
-SUCCESS\
-"assertion failed: disc == 1"
-
-SUCCESS\
-"assertion failed: disc == -1"
-
-SUCCESS\
-"assertion failed: disc == 0"
-
-
-Checking harness check_enum_wrapper...
-5 of 5 cover properties satisfied
+Checking harness enum::check_comparison...
+VERIFICATION:- SUCCESSFUL
+Checking harness enum::check_enum_wrapper...
+VERIFICATION:- SUCCESSFUL
+Manual Harness Summary:
+Complete - 2 successfully verified harnesses, 0 failures, 2 total.

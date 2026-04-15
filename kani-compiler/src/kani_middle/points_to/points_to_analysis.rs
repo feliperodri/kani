@@ -43,7 +43,7 @@ use rustc_middle::{
 use rustc_mir_dataflow::{Analysis, Forward, JoinSemiLattice};
 use rustc_public::mir::{Body as StableBody, mono::Instance as StableInstance};
 use rustc_public::rustc_internal;
-use rustc_span::{DUMMY_SP, source_map::Spanned};
+use rustc_span::{DUMMY_SP, Spanned};
 use std::collections::HashSet;
 
 /// Main points-to analysis object.
@@ -402,6 +402,7 @@ impl<'tcx> PointsToAnalysis<'_, 'tcx> {
                     HashSet::new()
                 }
             }
+            Operand::RuntimeChecks(_) => HashSet::new(),
         }
     }
 
@@ -424,6 +425,7 @@ impl<'tcx> PointsToAnalysis<'_, 'tcx> {
                     HashSet::new()
                 }
             }
+            Operand::RuntimeChecks(_) => HashSet::new(),
         }
     }
 
@@ -451,7 +453,7 @@ impl<'tcx> PointsToAnalysis<'_, 'tcx> {
                     initial_graph
                         .join(&state.transitive_closure(state.resolve_place(place, self.instance)));
                 }
-                Operand::Constant(_) => {}
+                Operand::Constant(_) | Operand::RuntimeChecks(_) => {}
             }
         }
 
@@ -522,7 +524,6 @@ impl<'tcx> PointsToAnalysis<'_, 'tcx> {
             // Using the operand unchanged requires determining where it could point, which
             // `successors_for_operand` does.
             Rvalue::Use(operand)
-            | Rvalue::ShallowInitBox(operand, _)
             | Rvalue::Cast(_, operand, _)
             | Rvalue::Repeat(operand, ..)
             | Rvalue::WrapUnsafeBinder(operand, _) => self.successors_for_operand(state, operand),
@@ -581,7 +582,7 @@ impl<'tcx> PointsToAnalysis<'_, 'tcx> {
                 // The same story from BinOp applies here, too. Need to track those things.
                 self.successors_for_operand(state, operand)
             }
-            Rvalue::NullaryOp(..) | Rvalue::Discriminant(..) => {
+            Rvalue::Discriminant(..) => {
                 // All of those should yield a constant.
                 HashSet::new()
             }

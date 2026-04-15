@@ -1,6 +1,4 @@
-main.assertion\
-SUCCESS\
-Some(10).and_then(|v| Some(v * 2)) == Some(20)\
-in function main
-
+Checking harness function::main...
 VERIFICATION:- SUCCESSFUL
+Manual Harness Summary:
+Complete - 1 successfully verified harnesses, 0 failures, 1 total.

@@ -1,4 +1,25 @@
+Checking harness write_bytes::check_valid_write...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "write_bytes: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "memset destination region writeable"
+VERIFICATION:- SUCCESSFUL
+Checking harness write_bytes::check_invalid_write...
+SAT checker: instance is UNSATISFIABLE
+Status: FAILURE
+Description: "Undefined Behavior: Invalid value of type `char`"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "write_bytes: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "memset destination region writeable"
 Failed Checks: Undefined Behavior: Invalid value of type `char`
-
-Verification failed for - check_invalid_write
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.
+VERIFICATION:- FAILED

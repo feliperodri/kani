@@ -1,11 +1,172 @@
-Status: UNDETERMINED\
-Description: "cover condition: sum == 10"\
-main.rs:15:5 in function cover_undetermined
-
- ** 0 of 1 cover properties satisfied (1 undetermined)
-
+Status: UNDETERMINED
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: UNDETERMINED
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "attempt to add with overflow"
+Status: UNDETERMINED
+Description: "cover condition: sum == 10"
+Status: UNDETERMINED
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: UNDETERMINED
+Description: "Rust intrinsic assumption failed"
+Status: UNDETERMINED
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "Offset value overflows isize"
+Status: UNDETERMINED
+Description: "internal error: entered unreachable code"
+Status: UNDETERMINED
+Description: "attempt to shift left with overflow"
+Status: UNDETERMINED
+Description: "attempt to compute `unchecked_add` which would overflow"
+Status: UNDETERMINED
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: UNDETERMINED
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "Offset in bytes overflows isize"
+Status: UNDETERMINED
+Description: "Offset result and original pointer must point to the same allocation"
+Status: UNDETERMINED
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: FAILURE
+Description: "unwinding assertion loop 0"
 Failed Checks: unwinding assertion loop 0
-
 VERIFICATION:- FAILED
-[Kani] info: Verification output shows one or more unwinding failures.
-[Kani] tip: Consider increasing the unwinding value or disabling `--unwinding-assertions`.

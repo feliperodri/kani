@@ -1,4 +1,18 @@
-FAILURE\
-assertion failed: 10 == foo()
-UNREACHABLE\
-assertion failed: 12 == foo()
+Status: SUCCESS
+Description: "assertion failed: 12 == foo()"
+Status: FAILURE
+Description: "assertion failed: 10 == foo()"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: assertion failed: 10 == foo()
+VERIFICATION:- FAILED

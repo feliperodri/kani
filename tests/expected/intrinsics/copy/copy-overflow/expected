@@ -1,2 +1,30 @@
-FAILURE\
-copy: attempt to compute number in bytes which would overflow
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: FAILURE
+Description: "copy: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "memmove source region readable"
+Status: SUCCESS
+Description: "memmove destination region writeable"
+Failed Checks: copy: attempt to compute number in bytes which would overflow
+VERIFICATION:- FAILED

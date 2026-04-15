@@ -6,7 +6,7 @@
 
 #[kani::requires(x != 0)]
 #[kani::recursion]
-fn foo<T: std::cmp::PartialEq<i32>>(x: T) {
+fn foo<T: std::cmp::PartialEq<i32> + std::fmt::Debug>(x: T) {
     assert_ne!(x, 0);
     foo(x);
 }

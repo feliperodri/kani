@@ -1,5 +1,24 @@
+Checking harness non_finite::check_neg_inf...
+SAT checker: instance is UNSATISFIABLE
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
 Failed Checks: float_to_int_unchecked: attempt to convert a non-finite value to an integer
-Verification failed for - check_neg_inf
-Verification failed for - check_inf
-Verification failed for - check_nan
-Complete - 0 successfully verified harnesses, 3 failures, 3 total.
+VERIFICATION:- FAILED
+Checking harness non_finite::check_inf...
+SAT checker: instance is UNSATISFIABLE
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a non-finite value to an integer
+VERIFICATION:- FAILED
+Checking harness non_finite::check_nan...
+SAT checker: instance is UNSATISFIABLE
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a non-finite value to an integer
+VERIFICATION:- FAILED

@@ -1,2 +1,15 @@
-UNREACHABLE\
+Status: UNREACHABLE
 Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL

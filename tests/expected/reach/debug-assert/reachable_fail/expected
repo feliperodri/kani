@@ -1,3 +1,4 @@
-FAILURE\
+Status: FAILURE
 Description: "assertion failed: x != -10"
 Failed Checks: assertion failed: x != -10
+VERIFICATION:- FAILED

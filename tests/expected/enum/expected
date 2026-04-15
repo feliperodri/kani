@@ -1,10 +1,14 @@
-SUCCESS\
-assertion failed: x == 10
-UNREACHABLE\
-assertion failed: false
-UNREACHABLE\
-assertion failed: false
-SUCCESS\
-assertion failed: x == 30 && y == 60.0
-FAILURE\
-assertion failed: x == 31
+Status: SUCCESS
+Description: "assertion failed: false"
+Status: SUCCESS
+Description: "unreachable code"
+Status: FAILURE
+Description: "assertion failed: x == 31"
+Status: SUCCESS
+Description: "assertion failed: x == 30 && y == 60.0"
+Status: SUCCESS
+Description: "assertion failed: false"
+Status: SUCCESS
+Description: "assertion failed: x == 10"
+Failed Checks: assertion failed: x == 31
+VERIFICATION:- FAILED

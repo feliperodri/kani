@@ -1,2 +1,18 @@
-FAILURE\
-memcpy source region readable
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy_nonoverlapping: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)src_invalid >= (const char *)(void *)dst + (signed long int)(1 * sizeof(int) /*4*/ )"
+Status: UNDETERMINED
+Description: "same object violation in (const char *)(void *)dst >= (const char *)(void *)src_invalid + (signed long int)(1 * sizeof(int) /*4*/ )"
+Status: UNDETERMINED
+Description: "memcpy src/dst overlap"
+Status: FAILURE
+Description: "memcpy source region readable"
+Status: UNDETERMINED
+Description: "memcpy destination region writeable"
+Failed Checks: memcpy source region readable
+VERIFICATION:- FAILED

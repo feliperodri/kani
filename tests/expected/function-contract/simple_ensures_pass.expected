@@ -1,6 +1,351 @@
-assertion\
-- Status: SUCCESS\
-- Description: "|result : &u32| (*result == x) | (*result == y)"\
-in function max
-
+Status: SUCCESS
+Description: "dynamic allocation is allowed"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "rust_dealloc must be called on an object whose allocated size matches its layout"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Check that *((unsigned char **)&temp_1) is assignable"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Check that *((unsigned char **)&temp_0) is assignable"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "Check that ptr is freeable"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "Check that *((unsigned char **)&temp_0) is assignable"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `align_of_val` for extern types"
+Status: SUCCESS
+Description: "failed to compute `align_of_val`"
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `size_of_val` for extern types"
+Status: SUCCESS
+Description: "failed to compute `size_of_val`"
+Status: SUCCESS
+Description: "|result : &u32| (*result == x) | (*result == y)"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Only a single top-level call to function _RNCNCNvCs5nwIiDF28RM_19simple_ensures_pass3maxs0_0s_0B5_ when checking contract _RNCNCNvCs5nwIiDF28RM_19simple_ensures_pass3maxs0_0s_0B5_"
+Status: SUCCESS
+Description: "Check that requires do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "Check that ensures do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "No recursive call to function _RNCNCNvCs5nwIiDF28RM_19simple_ensures_pass3maxs0_0s_0B5_ when checking contract _RNCNCNvCs5nwIiDF28RM_19simple_ensures_pass3maxs0_0s_0B5_"
+Status: SUCCESS
+Description: "Check that *ptr is assignable"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Check that *((unsigned char **)&temp_0) is assignable"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

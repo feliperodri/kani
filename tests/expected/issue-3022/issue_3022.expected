@@ -1,5 +1,3 @@
-main.assertion\
-- Status: SUCCESS\
-- Description: "assertion failed: inner == func2.inner"
-
+Status: SUCCESS
+Description: "assertion failed: inner == func2.inner"
 VERIFICATION:- SUCCESSFUL

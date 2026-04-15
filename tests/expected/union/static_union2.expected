@@ -1,11 +1,20 @@
-main.assertion.1\
-         - Status: SUCCESS\
-         - Description: "index out of bounds: the length is less than or equal to the given index"\
-
-Check 2: main.assertion.2\
-         - Status: FAILURE\
-         - Description: "assertion failed: unsafe { FOO.a[1] } == 5"\
-
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: FAILURE
+Description: "assertion failed: unsafe { FOO.a[1] } == 5"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
 Failed Checks: assertion failed: unsafe { FOO.a[1] } == 5
-
 VERIFICATION:- FAILED

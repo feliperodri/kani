@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use crate::codegen_cprover_gotoc::GotocCtx;
 use crate::codegen_cprover_gotoc::codegen::PropertyClass;
 use crate::unwrap_or_return_codegen_unimplemented_stmt;
-use cbmc::goto_program::{Expr, Location, Stmt, Symbol, Type};
+use cbmc::goto_program::{Expr, Location, Parameter, Stmt, Symbol, Type};
 use cbmc::{InternString, InternedString};
 use lazy_static::lazy_static;
 use rustc_public::CrateDef;
@@ -60,10 +60,16 @@ impl GotocCtx<'_, '_> {
             // Symbol has been added (a Rust allocation function)
             self.symbol_table.lookup(trimmed_fn_name).unwrap()
         } else if RUST_ALLOC_FNS.contains(&trimmed_fn_name) {
-            // Add a Rust alloc lib function as is declared by core.
-            // We use the trimmed name to ensure that it matches the function names in kani_lib.c
+            // Add a Rust alloc lib function with the C-compatible signature.
+            // As of Rust 1.97, the Rust declarations use `Alignment` (a newtype around
+            // NonZero<usize>) for the `align` parameter, but the C implementations in
+            // kani_lib.c use `size_t`. Since `Alignment` is #[repr(transparent)], the
+            // ABI is identical, but CBMC requires exact type matching. We codegen the
+            // type from the Rust declaration and then patch any `Alignment` struct
+            // parameters to `size_t`.
             self.ensure(trimmed_fn_name, |gcx, _| {
                 let typ = gcx.codegen_ffi_type(instance);
+                let typ = gcx.patch_alloc_fn_type(typ);
                 Symbol::function(trimmed_fn_name, typ, None, instance.name(), loc)
                     .with_is_extern(true)
             })
@@ -109,7 +115,17 @@ impl GotocCtx<'_, '_> {
             .unwrap()
             .iter()
             .zip(args)
-            .map(|(param, arg)| arg.cast_to(param.typ().clone()))
+            .map(|(param, arg)| {
+                if arg.typ() == param.typ() {
+                    arg
+                } else if arg.typ().is_struct_tag() && !param.typ().is_struct_tag() {
+                    // Handle #[repr(transparent)] wrappers like Alignment → size_t.
+                    // Reinterpret the struct bytes as the target primitive type.
+                    arg.transmute_to(param.typ().clone(), &self.symbol_table)
+                } else {
+                    arg.cast_to(param.typ().clone())
+                }
+            })
             .collect::<Vec<_>>();
         let call_expr = fn_expr.call(expected_args);
 
@@ -196,5 +212,25 @@ impl GotocCtx<'_, '_> {
             &GotocCtx::unsupported_msg(&msg, Some(url)),
             loc,
         )
+    }
+
+    /// Patch allocator function types: replace any non-primitive parameter types
+    /// (like `Alignment`) with `size_t` to match the C definitions in kani_lib.c.
+    fn patch_alloc_fn_type(&self, typ: Type) -> Type {
+        if let Type::Code { parameters, return_type } = typ {
+            let patched_params: Vec<_> = parameters
+                .into_iter()
+                .map(|p| {
+                    if p.typ().is_struct_tag() {
+                        Parameter::new(p.base_name(), p.identifier(), Type::size_t())
+                    } else {
+                        p
+                    }
+                })
+                .collect();
+            Type::code(patched_params, *return_type)
+        } else {
+            typ
+        }
     }
 }

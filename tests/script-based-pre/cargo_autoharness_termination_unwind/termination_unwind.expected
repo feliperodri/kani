@@ -1,34 +1,83 @@
+warning: function `infinite_loop` is never used
+ --> src/lib.rs:9:4
+  |
+9 | fn infinite_loop() {
+  |    ^^^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `gcd_recursion` is never used
+  --> src/lib.rs:13:4
+   |
+13 | fn gcd_recursion(x: u64, y: u64) -> u64 {
+   |    ^^^^^^^^^^^^^
+
+
 Kani generated automatic harnesses for 2 function(s):
-+--------------------------------------+-------------------+
-| Crate                                | Selected Function |
-+==========================================================+
-| cargo_autoharness_termination_unwind | gcd_recursion     |
-|--------------------------------------+-------------------|
-| cargo_autoharness_termination_unwind | infinite_loop     |
-+--------------------------------------+-------------------+
++--------------------------------------+-----------------------------------------------------+
+| Crate                                | Selected Function                                   |
++============================================================================================+
+| cargo_autoharness_termination_unwind | cargo_autoharness_termination_unwind::gcd_recursion |
+|--------------------------------------+-----------------------------------------------------|
+| cargo_autoharness_termination_unwind | cargo_autoharness_termination_unwind::infinite_loop |
++--------------------------------------+-----------------------------------------------------+
 
 Skipped Functions: None. Kani generated automatic harnesses for all functions in the available crate(s).
-Autoharness: Checking function gcd_recursion against all possible inputs...
-Not unwinding recursion gcd_recursion iteration 21
+Autoharness: Checking function cargo_autoharness_termination_unwind::gcd_recursion against all possible inputs...
+Not unwinding recursion cargo_autoharness_termination_unwind::gcd_recursion iteration 21
 
-gcd_recursion.assertion\
-	 - Status: FAILURE\
+RESULTS:
+Check 1: cargo_autoharness_termination_unwind::gcd_recursion.assertion.1
+	 - Status: FAILURE
 	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:21:15 in function cargo_autoharness_termination_unwind::gcd_recursion
 
-gcd_recursion.recursion\
-	 - Status: FAILURE\
+Check 2: cargo_autoharness_termination_unwind::gcd_recursion.arithmetic_overflow.1
+	 - Status: UNDETERMINED
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:21:15 in function cargo_autoharness_termination_unwind::gcd_recursion
+
+Check 3: cargo_autoharness_termination_unwind::gcd_recursion.assertion.2
+	 - Status: UNDETERMINED
+	 - Description: "attempt to add with overflow"
+	 - Location: src/lib.rs:22:51 in function cargo_autoharness_termination_unwind::gcd_recursion
+
+Check 4: cargo_autoharness_termination_unwind::gcd_recursion.division-by-zero.1
+	 - Status: UNDETERMINED
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:21:15 in function cargo_autoharness_termination_unwind::gcd_recursion
+
+Check 5: cargo_autoharness_termination_unwind::gcd_recursion.recursion.1
+	 - Status: FAILURE
 	 - Description: "recursion unwinding assertion"
+	 - Location: src/lib.rs:22:32 in function cargo_autoharness_termination_unwind::gcd_recursion
+
+
+SUMMARY:
+ ** 2 of 5 failed (3 undetermined)
+Failed Checks: attempt to calculate the remainder with a divisor of zero
+ File: "src/lib.rs", line 21, in cargo_autoharness_termination_unwind::gcd_recursion
+Failed Checks: recursion unwinding assertion
+ File: "src/lib.rs", line 22, in cargo_autoharness_termination_unwind::gcd_recursion
 
 VERIFICATION:- FAILED
 [Kani] info: Verification output shows one or more unwinding failures.
 [Kani] tip: Consider increasing the unwinding value or disabling `--unwinding-assertions`.
 
-Autoharness: Checking function infinite_loop against all possible inputs...
-Not unwinding loop
+Autoharness: Checking function cargo_autoharness_termination_unwind::infinite_loop against all possible inputs...
+Not unwinding loop _RNvCseUqwmvD3dVt_36cargo_autoharness_termination_unwind13infinite_loop.0 iteration 20 file src/lib.rs line 10 column 5 function cargo_autoharness_termination_unwind::infinite_loop thread 0
 
-infinite_loop.unwind.0\
-	 - Status: FAILURE\
+RESULTS:
+Check 1: cargo_autoharness_termination_unwind::infinite_loop.unwind.0
+	 - Status: FAILURE
 	 - Description: "unwinding assertion loop 0"
+	 - Location: src/lib.rs:10:5 in function cargo_autoharness_termination_unwind::infinite_loop
+
+
+SUMMARY:
+ ** 1 of 1 failed
+Failed Checks: unwinding assertion loop 0
+ File: "src/lib.rs", line 10, in cargo_autoharness_termination_unwind::infinite_loop
 
 VERIFICATION:- FAILED
 [Kani] info: Verification output shows one or more unwinding failures.
@@ -38,12 +87,13 @@ Manual Harness Summary:
 No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+--------------------------------------+-------------------+---------------------------+---------------------+
-| Crate                                | Selected Function | Kind of Automatic Harness | Verification Result |
-+============================================================================================================+
-| cargo_autoharness_termination_unwind | gcd_recursion     | #[kani::proof]            | Failure             |
-|--------------------------------------+-------------------+---------------------------+---------------------|
-| cargo_autoharness_termination_unwind | infinite_loop     | #[kani::proof]            | Failure             |
-+--------------------------------------+-------------------+---------------------------+---------------------+
++--------------------------------------+-----------------------------------------------------+---------------------------+---------------------+
+| Crate                                | Selected Function                                   | Kind of Automatic Harness | Verification Result |
++==============================================================================================================================================+
+| cargo_autoharness_termination_unwind | cargo_autoharness_termination_unwind::gcd_recursion | #[kani::proof]            | Failure             |
+|--------------------------------------+-----------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_termination_unwind | cargo_autoharness_termination_unwind::infinite_loop | #[kani::proof]            | Failure             |
++--------------------------------------+-----------------------------------------------------+---------------------------+---------------------+
 Note that `kani autoharness` sets default --harness-timeout of 60s and --default-unwind of 20.
 If verification failed because of timing out or too low of an unwinding bound, try passing larger values for these arguments (or, if possible, writing a loop contract).
+Complete - 0 successfully verified functions, 2 failures, 2 total.

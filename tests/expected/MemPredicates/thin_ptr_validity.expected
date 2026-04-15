@@ -1,5 +1,14 @@
+Checking harness thin_ptr_validity::invalid_access::check_invalid_zst...
+VERIFICATION:- SUCCESSFUL
+Checking harness thin_ptr_validity::invalid_access::check_invalid_array...
+Failed Checks: assertion failed: can_dereference(raw_ptr)
 Failed Checks: Kani does not support reasoning about pointer to unallocated memory
-
-Verification failed for - invalid_access::check_invalid_array
-Verification failed for - invalid_access::check_invalid_ptr
-Complete - 3 successfully verified harnesses, 2 failures, 5 total.
+VERIFICATION:- FAILED
+Checking harness thin_ptr_validity::invalid_access::check_invalid_ptr...
+Failed Checks: Kani does not support reasoning about pointer to unallocated memory
+Failed Checks: assertion failed: !can_dereference(raw_ptr)
+VERIFICATION:- FAILED
+Checking harness thin_ptr_validity::valid_access::check_valid_array...
+VERIFICATION:- SUCCESSFUL
+Checking harness thin_ptr_validity::valid_access::check_dangling_zst...
+VERIFICATION:- SUCCESSFUL

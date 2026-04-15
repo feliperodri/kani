@@ -1,2 +1,5 @@
-Checking harness check_no_variants...
-Failed Checks: Cannot create symbolic enum `Empty`. Enums with zero-variants cannot be instantiated
+Checking harness empty_enum::check_no_variants...
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+VERIFICATION:- FAILED
+Manual Harness Summary:
+Complete - 0 successfully verified harnesses, 1 failures, 1 total.

@@ -3,7 +3,7 @@
 
 //! Crate that defines a method to be stubbed as well its stubs.
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum StubConfig {
     NoStub,
     Stub1,

@@ -1,2 +1,3 @@
-SUCCESS\
+Status: SUCCESS
 Description: "assertion failed: x != -10"
+VERIFICATION:- SUCCESSFUL

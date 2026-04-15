@@ -1,13 +1,225 @@
-has_loop::{closure#2}::{closure#1}.loop_invariant_step.1\
-	 - Status: SUCCESS\
-	 - Description: "Check invariant after step for loop has_loop::{closure#2}::{closure#1}.0"\
-in function has_loop::{closure#2}::{closure#1}
-
-
-
-has_loop::{closure#2}::{closure#1}.precondition_instance.1\
-	 - Status: SUCCESS\
-	 - Description: "free argument must be NULL or valid pointer"\
-in function has_loop::{closure#2}::{closure#1}
-
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "Check that ptr is freeable"
+Status: SUCCESS
+Description: "ptr NULL or writable up to size"
+Status: SUCCESS
+Description: "CAR size is less than __CPROVER_max_malloc_size"
+Status: SUCCESS
+Description: "no offset bits overflow on CAR upper bound computation"
+Status: SUCCESS
+Description: "unwinding assertion loop 0"
+Status: SUCCESS
+Description: "Check invariant before entry for loop contract_proof_function_with_loop::has_loop.0"
+Status: SUCCESS
+Description: "Check assigns clause inclusion for loop contract_proof_function_with_loop::has_loop.0"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "Check that i is assignable"
+Status: SUCCESS
+Description: "Check invariant after step for loop contract_proof_function_with_loop::has_loop.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop contract_proof_function_with_loop::has_loop.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop contract_proof_function_with_loop::has_loop.0"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Only a single top-level call to function _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
+Status: SUCCESS
+Description: "Check that requires do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "Check that ensures do not allocate or deallocate memory"
+Status: SUCCESS
+Description: "No recursive call to function _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
+Status: SUCCESS
+Description: "|ret| *ret == 2"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Check invariant before entry for loop contract_proof_function_with_loop::has_loop::{closure#2}::{closure#1}.0"
+Status: SUCCESS
+Description: "Check assigns clause inclusion for loop contract_proof_function_with_loop::has_loop::{closure#2}::{closure#1}.0"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "Check that i is assignable"
+Status: SUCCESS
+Description: "Check invariant after step for loop contract_proof_function_with_loop::has_loop::{closure#2}::{closure#1}.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop contract_proof_function_with_loop::has_loop::{closure#2}::{closure#1}.0"
+Status: SUCCESS
+Description: "Check step was unwound for loop contract_proof_function_with_loop::has_loop::{closure#2}::{closure#1}.0"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "count leading zeros is undefined for value zero"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "free argument must be NULL or valid pointer"
+Status: SUCCESS
+Description: "free argument must be dynamic object"
+Status: SUCCESS
+Description: "free argument has offset zero"
+Status: SUCCESS
+Description: "double free"
+Status: SUCCESS
+Description: "free called for new[] object"
+Status: SUCCESS
+Description: "free called for stack-allocated object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL

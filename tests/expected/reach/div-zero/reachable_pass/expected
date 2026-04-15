@@ -1,2 +1,7 @@
-SUCCESS\
+Status: SUCCESS
 Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "division by zero"
+VERIFICATION:- SUCCESSFUL

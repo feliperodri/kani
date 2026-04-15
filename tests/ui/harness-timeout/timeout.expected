@@ -1,4 +1,4 @@
+Checking harness timeout::check_harness_timeout...
 VERIFICATION:- FAILED
-CBMC timed out. You may want to rerun your proof with a larger timeout or use stubbing to reduce the size of the code the verifier reasons about.
-
-Verification failed for - check_harness_timeout
+Manual Harness Summary:
+Complete - 0 successfully verified harnesses, 1 failures, 1 total.

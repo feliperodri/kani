@@ -1,2 +1,4 @@
-Checking harness check_arbitrary_point...
-6 of 6 cover properties satisfied
+Checking harness generic_struct::check_arbitrary_point...
+VERIFICATION:- SUCCESSFUL
+Manual Harness Summary:
+Complete - 1 successfully verified harnesses, 0 failures, 1 total.

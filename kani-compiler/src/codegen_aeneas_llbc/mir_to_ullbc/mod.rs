@@ -67,7 +67,7 @@ use rustc_public::rustc_internal;
 use rustc_public::ty::{
     AdtDef, AdtKind, Allocation, ConstantKind, FnDef, GenericArgKind, GenericArgs,
     GenericParamDefKind, IntTy, MirConst, Region, RegionKind, RigidTy, Span, TraitDecl, TraitDef,
-    Ty, TyConst, TyConstKind, TyKind, UintTy,
+    Ty, TyConst, TyConstKind, TyKind, UintTy, VariantIdx,
 };
 use rustc_public::{CrateDef, CrateDefType, DefId};
 use rustc_public_bridge::IndexedVal;
@@ -605,7 +605,7 @@ impl<'a, 'tcx> Context<'a, 'tcx> {
                 let c_typedeclid = self.register_type_decl_id(def_id);
                 let mut c_variants: CharonVector<CharonVariantId, CharonVariant> =
                     CharonVector::new();
-                for var_def in adt_def.variants_iter() {
+                for (var_idx, var_def) in adt_def.variants_iter().enumerate() {
                     let mut c_fields: CharonVector<CharonFieldId, CharonField> =
                         CharonVector::new();
                     for field_def in var_def.fields() {
@@ -629,7 +629,8 @@ impl<'a, 'tcx> Context<'a, 'tcx> {
                     let span = self.translate_span(adt_def.span());
 
                     let adtdef_internal = rustc_internal::internal(self.tcx, adt_def);
-                    let variant_index_internal = rustc_internal::internal(self.tcx, var_def.idx);
+                    let variant_index_internal =
+                        rustc_internal::internal(self.tcx, VariantIdx::to_val(var_idx));
                     let discr =
                         adtdef_internal.discriminant_for_variant(self.tcx, variant_index_internal);
                     let discr_val = discr.val;
@@ -649,7 +650,7 @@ impl<'a, 'tcx> Context<'a, 'tcx> {
                         discriminant: c_discr,
                     };
                     let c_varidx = c_variants.push(c_variant);
-                    assert_eq!(c_varidx.index(), var_def.idx.to_index());
+                    assert_eq!(c_varidx.index(), var_idx);
                 }
                 let typedecl = CharonTypeDecl {
                     def_id: c_typedeclid,
@@ -1695,7 +1696,6 @@ impl<'a, 'tcx> Context<'a, 'tcx> {
                 }
             }
 
-            Rvalue::ShallowInitBox(_, _) => todo!(),
             Rvalue::CopyForDeref(_) => todo!(),
             Rvalue::ThreadLocalRef(_) => todo!(),
             _ => todo!(),
@@ -1708,6 +1708,14 @@ impl<'a, 'tcx> Context<'a, 'tcx> {
             Operand::Constant(constant) => CharonOperand::Const(self.translate_constant(constant)),
             Operand::Copy(place) => CharonOperand::Copy(self.translate_place(&place)),
             Operand::Move(place) => CharonOperand::Move(self.translate_place(&place)),
+            Operand::RuntimeChecks(_) => {
+                // RuntimeChecks operands query compilation session flags.
+                // Treat as a constant false for LLBC translation.
+                CharonOperand::Const(CharonConstantExpr {
+                    value: CharonRawConstantExpr::Literal(CharonLiteral::Bool(false)),
+                    ty: CharonTy::new(CharonTyKind::Literal(CharonLiteralTy::Bool)),
+                })
+            }
         }
     }
 

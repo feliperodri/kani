@@ -1,3 +1,7 @@
+Checking harness test::check_max_object_size_fail...
 Failed Checks: The object size exceeds the maximum size supported by Kani's shadow memory model (64)
-Verification failed for - check_max_object_size_fail
+VERIFICATION:- FAILED
+Checking harness test::check_max_object_size_pass...
+VERIFICATION:- SUCCESSFUL
+Verification failed for - test::check_max_object_size_fail
 Complete - 1 successfully verified harnesses, 1 failures, 2 total.

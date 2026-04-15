@@ -1,4 +1,3 @@
-Checking harness harness...
-defs::no_op.cover\
-Status: SATISFIED
+Checking harness enabled::harness...
 VERIFICATION:- SUCCESSFUL
+Complete - 1 successfully verified harnesses, 0 failures, 1 total.

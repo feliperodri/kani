@@ -1,10 +1,5 @@
-Checking harness check_fn_ptr_not_called...
+Checking harness ffi_ptr::check_fn_ptr_not_called...
 VERIFICATION:- SUCCESSFUL
-
-Checking harness check_fn_ptr_called...
-Failed Checks: call to foreign "C" function `foreign` is not currently supported by Kani
+Checking harness ffi_ptr::check_fn_ptr_called...
+Failed Checks: call to foreign "C" function `foreign` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/2423
 VERIFICATION:- FAILED
-
-Summary:\
-Verification failed for - check_fn_ptr_called\
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.

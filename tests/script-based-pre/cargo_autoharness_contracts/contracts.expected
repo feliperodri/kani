@@ -1,68 +1,2295 @@
+warning: function `has_loop_contract` is never used
+  --> src/lib.rs:33:8
+   |
+33 |     fn has_loop_contract() {
+   |        ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `Alignment` is never constructed
+  --> src/lib.rs:56:20
+   |
+56 |         pub struct Alignment(AlignmentEnum);
+   |                    ^^^^^^^^^
+
+warning: enum `AlignmentEnum` is never used
+  --> src/lib.rs:59:14
+   |
+59 |         enum AlignmentEnum {
+   |              ^^^^^^^^^^^^^
+
+warning: Found the following unsupported constructs:
+             - caller_location (1)
+             - foreign function (1)
+         
+         Verification will fail if one or more of these constructs is reachable.
+         See https://model-checking.github.io/kani/rust-feature-support.html for more details.
+
+
 Kani generated automatic harnesses for 6 function(s):
-+-----------------------------+---------------------------------------------+
-| Crate                       | Selected Function                           |
-+===========================================================================+
-| cargo_autoharness_contracts | should_fail::max                            |
-|-----------------------------+---------------------------------------------|
-| cargo_autoharness_contracts | should_pass::alignment::Alignment::as_usize |
-|-----------------------------+---------------------------------------------|
-| cargo_autoharness_contracts | should_pass::div                            |
-|-----------------------------+---------------------------------------------|
-| cargo_autoharness_contracts | should_pass::has_loop_contract              |
-|-----------------------------+---------------------------------------------|
-| cargo_autoharness_contracts | should_pass::has_recursion_gcd              |
-|-----------------------------+---------------------------------------------|
-| cargo_autoharness_contracts | should_pass::unchecked_mul                  |
-+-----------------------------+---------------------------------------------+
++-----------------------------+--------------------------------------------------------------------------+
+| Crate                       | Selected Function                                                        |
++========================================================================================================+
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_fail::max                            |
+|-----------------------------+--------------------------------------------------------------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize |
+|-----------------------------+--------------------------------------------------------------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::div                            |
+|-----------------------------+--------------------------------------------------------------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::has_loop_contract              |
+|-----------------------------+--------------------------------------------------------------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::has_recursion_gcd              |
+|-----------------------------+--------------------------------------------------------------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::unchecked_mul                  |
++-----------------------------+--------------------------------------------------------------------------+
 
 Skipped Functions: None. Kani generated automatic harnesses for all functions in the available crate(s).
-Autoharness: Checking function should_fail::max's contract against all possible inputs...
-assertion\
-	 - Status: FAILURE\
+Autoharness: Checking function cargo_autoharness_contracts::should_fail::max's contract against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.single_top_level_call.1
+	 - Status: SUCCESS
+	 - Description: "Only a single top-level call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_fail3maxs0_0s_0B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_fail3maxs0_0s_0B7_"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 2: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.no_alloc_dealloc_in_requires.1
+	 - Status: SUCCESS
+	 - Description: "Check that requires do not allocate or deallocate memory"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 3: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.no_alloc_dealloc_in_ensures.1
+	 - Status: SUCCESS
+	 - Description: "Check that ensures do not allocate or deallocate memory"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 4: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.no_recursive_call.1
+	 - Status: SUCCESS
+	 - Description: "No recursive call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_fail3maxs0_0s_0B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_fail3maxs0_0s_0B7_"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 5: cargo_autoharness_contracts::should_fail::max::{closure#1}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#1}
+
+Check 6: cargo_autoharness_contracts::should_fail::max::{closure#2}.assertion.1
+	 - Status: FAILURE
 	 - Description: "|result : &u32| *result == x"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#2}
 
-Autoharness: Checking function should_pass::has_loop_contract against all possible inputs...
-should_pass::has_loop_contract.assertion\
-	 - Status: SUCCESS\
-	 - Description: "assertion failed: x == 2"
+Check 7: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
 
-Autoharness: Checking function should_pass::has_recursion_gcd's contract against all possible inputs...
-assertion\
-	 - Status: SUCCESS\
-	 - Description: "|result : &u8| *result != 0 && x % *result == 0 && y % *result == 0"
+Check 8: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
 
-Autoharness: Checking function should_pass::div's contract against all possible inputs...
+Check 9: cargo_autoharness_contracts::should_fail::max::{closure#0}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#0}
 
-Autoharness: Checking function should_pass::unchecked_mul's contract against all possible inputs...
-arithmetic_overflow\
-	 - Status: SUCCESS\
-	 - Description: "attempt to compute `unchecked_mul` which would overflow"
+Check 10: cargo_autoharness_contracts::should_fail::max::{closure#3}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:136:5 in function cargo_autoharness_contracts::should_fail::max::{closure#3}
 
-Autoharness: Checking function should_pass::alignment::Alignment::as_usize's contract against all possible inputs...
+Check 11: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
 
-should_pass::alignment::Alignment::as_usize\
-	 - Status: SUCCESS\
+Check 12: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 13: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 14: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 15: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 16: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 17: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 18: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 19: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 20: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 21: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 22: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 23: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 24: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 25: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:136:37 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 26: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 27: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 28: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 29: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 30: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 31: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 32: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 33: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 34: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 35: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 36: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 37: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:136:48 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#0}
+
+Check 38: kani::internal::automatic_harness.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 39: kani::internal::automatic_harness.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 40: kani::internal::automatic_harness.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 41: kani::internal::automatic_harness.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 42: kani::internal::automatic_harness.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 43: kani::internal::automatic_harness.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 44: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 45: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 46: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 47: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 48: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 49: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:138:12 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 50: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 51: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 52: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 53: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 54: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 55: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:138:16 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 56: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 57: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 58: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 59: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 60: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 61: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:138:20 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 62: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.19
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 63: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.20
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 64: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.21
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 65: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.22
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 66: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.23
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+Check 67: cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}.pointer_dereference.24
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:138:31 in function cargo_autoharness_contracts::should_fail::max::{closure#2}::{closure#1}
+
+
+SUMMARY:
+ ** 1 of 67 failed
+Failed Checks: |result : &u32| *result == x
+ File: "src/lib.rs", line 136, in cargo_autoharness_contracts::should_fail::max::{closure#2}
+
+VERIFICATION:- FAILED
+
+Autoharness: Checking function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize's contract against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
+
+Check 2: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
+
+Check 3: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#3}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:127:13 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#3}
+
+Check 4: <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}.single_top_level_call.1
+	 - Status: SUCCESS
+	 - Description: "Only a single top-level call to function _RNCNCNvMNtNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass9alignmentNtB6_9Alignment8as_usizes0_0s_0Ba_ when checking contract _RNCNCNvMNtNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass9alignmentNtB6_9Alignment8as_usizes0_0s_0Ba_"
+	 - Location: src/lib.rs:127:13 in function <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}
+
+Check 5: <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}.no_alloc_dealloc_in_requires.1
+	 - Status: SUCCESS
+	 - Description: "Check that requires do not allocate or deallocate memory"
+	 - Location: src/lib.rs:127:13 in function <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}
+
+Check 6: <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}.no_alloc_dealloc_in_ensures.1
+	 - Status: SUCCESS
+	 - Description: "Check that ensures do not allocate or deallocate memory"
+	 - Location: src/lib.rs:127:13 in function <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}
+
+Check 7: <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}.no_recursive_call.1
+	 - Status: SUCCESS
+	 - Description: "No recursive call to function _RNCNCNvMNtNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass9alignmentNtB6_9Alignment8as_usizes0_0s_0Ba_ when checking contract _RNCNCNvMNtNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass9alignmentNtB6_9Alignment8as_usizes0_0s_0Ba_"
+	 - Location: src/lib.rs:127:13 in function <cargo_autoharness_contracts::should_pass::alignment::Alignment>::as_usize::{closure#2}::{closure#1}
+
+Check 8: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}.assertion.1
+	 - Status: SUCCESS
 	 - Description: "|result| result.is_power_of_two()"
+	 - Location: src/lib.rs:127:13 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}
+
+Check 9: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#1}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:127:13 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#1}
+
+Check 10: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#0}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:127:13 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#0}
+
+Check 11: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 12: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 13: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 14: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 15: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 16: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 17: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 18: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 19: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 20: kani::internal::automatic_harness.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 21: kani::internal::automatic_harness.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 22: kani::internal::automatic_harness.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 23: kani::internal::automatic_harness.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 24: kani::internal::automatic_harness.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 25: kani::internal::automatic_harness.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 26: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+Check 27: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+Check 28: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+Check 29: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+Check 30: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+Check 31: cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:127:38 in function cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize::{closure#2}::{closure#0}
+
+
+SUMMARY:
+ ** 0 of 31 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_contracts::should_pass::unchecked_mul's contract against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
+
+Check 2: core::num::<impl u8>::unchecked_mul.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to compute `unchecked_mul` which would overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/uint_macros.rs:1284:17 in function core::num::<impl u8>::unchecked_mul
+
+Check 3: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
+
+Check 4: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 5: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.single_top_level_call.1
+	 - Status: SUCCESS
+	 - Description: "Only a single top-level call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass13unchecked_muls0_00B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass13unchecked_muls0_00B7_"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 6: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.no_alloc_dealloc_in_requires.1
+	 - Status: SUCCESS
+	 - Description: "Check that requires do not allocate or deallocate memory"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 7: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.no_alloc_dealloc_in_ensures.1
+	 - Status: SUCCESS
+	 - Description: "Check that ensures do not allocate or deallocate memory"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 8: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.no_recursive_call.1
+	 - Status: SUCCESS
+	 - Description: "No recursive call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass13unchecked_muls0_00B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass13unchecked_muls0_00B7_"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 9: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#3}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#3}
+
+Check 10: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 11: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#1}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#1}
+
+Check 12: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#0}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:45:5 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#0}
+
+Check 13: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 14: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 15: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 16: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 17: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 18: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 19: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 20: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 21: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 22: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 23: kani::internal::automatic_harness.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 24: kani::internal::automatic_harness.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 25: kani::internal::automatic_harness.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 26: kani::internal::automatic_harness.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 27: kani::internal::automatic_harness.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 28: kani::internal::automatic_harness.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 29: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 30: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 31: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 32: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 33: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 34: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:47:18 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 35: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 36: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 37: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 38: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 39: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 40: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:47:37 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}
+
+Check 41: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 42: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 43: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 44: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 45: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 46: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:45:23 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 47: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 48: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 49: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 50: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 51: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+Check 52: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:45:44 in function cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}
+
+
+SUMMARY:
+ ** 0 of 52 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_contracts::should_pass::has_loop_contract against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: __CPROVER_contracts_car_set_insert.assertion.1
+	 - Status: SUCCESS
+	 - Description: "ptr NULL or writable up to size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:174 in function __CPROVER_contracts_car_set_insert
+
+Check 2: __CPROVER_contracts_car_set_insert.assertion.2
+	 - Status: SUCCESS
+	 - Description: "CAR size is less than __CPROVER_max_malloc_size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:177 in function __CPROVER_contracts_car_set_insert
+
+Check 3: __CPROVER_contracts_car_set_insert.assertion.3
+	 - Status: SUCCESS
+	 - Description: "no offset bits overflow on CAR upper bound computation"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:181 in function __CPROVER_contracts_car_set_insert
+
+Check 4: __CPROVER_contracts_write_set_check_assignment.assertion.1
+	 - Status: SUCCESS
+	 - Description: "ptr NULL or writable up to size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:805 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 5: __CPROVER_contracts_write_set_check_assignment.assertion.2
+	 - Status: SUCCESS
+	 - Description: "CAR size is less than __CPROVER_max_malloc_size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:822 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 6: __CPROVER_contracts_write_set_check_assignment.assertion.3
+	 - Status: SUCCESS
+	 - Description: "no offset bits overflow on CAR upper bound computation"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:828 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 7: __CPROVER_contracts_write_set_check_assignment.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:837 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 8: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
+
+Check 9: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
+
+Check 10: cargo_autoharness_contracts::should_pass::has_loop_contract.loop_invariant_base.1
+	 - Status: SUCCESS
+	 - Description: "Check invariant before entry for loop cargo_autoharness_contracts::should_pass::has_loop_contract.0"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 11: cargo_autoharness_contracts::should_pass::has_loop_contract.loop_assigns.1
+	 - Status: SUCCESS
+	 - Description: "Check assigns clause inclusion for loop cargo_autoharness_contracts::should_pass::has_loop_contract.0"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 12: cargo_autoharness_contracts::should_pass::has_loop_contract.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to subtract with overflow"
+	 - Location: src/lib.rs:38:17 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 13: cargo_autoharness_contracts::should_pass::has_loop_contract.assigns.1
+	 - Status: SUCCESS
+	 - Description: "Check that x is assignable"
+	 - Location: src/lib.rs:38:13 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 14: cargo_autoharness_contracts::should_pass::has_loop_contract.loop_invariant_step.1
+	 - Status: SUCCESS
+	 - Description: "Check invariant after step for loop cargo_autoharness_contracts::should_pass::has_loop_contract.0"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 15: cargo_autoharness_contracts::should_pass::has_loop_contract.loop_step_unwinding.1
+	 - Status: SUCCESS
+	 - Description: "Check step was unwound for loop cargo_autoharness_contracts::should_pass::has_loop_contract.0"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 16: cargo_autoharness_contracts::should_pass::has_loop_contract.loop_step_unwinding.2
+	 - Status: SUCCESS
+	 - Description: "Check step was unwound for loop cargo_autoharness_contracts::should_pass::has_loop_contract.0"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 17: cargo_autoharness_contracts::should_pass::has_loop_contract.assertion.2
+	 - Status: SUCCESS
+	 - Description: "assertion failed: x == 2"
+	 - Location: src/lib.rs:41:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 18: pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+
+Check 19: pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+
+Check 20: pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+
+Check 21: pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+
+Check 22: pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+
+Check 23: pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+
+Check 24: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 25: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 26: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 27: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 28: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 29: cargo_autoharness_contracts::should_pass::has_loop_contract.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: src/lib.rs:36:9 in function cargo_autoharness_contracts::should_pass::has_loop_contract
+
+Check 30: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 31: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 32: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 33: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 34: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 35: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 36: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 37: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 38: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 39: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 40: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 41: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 42: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 43: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 44: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 45: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 46: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 47: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 48: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 49: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 50: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:36:32 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#1}
+
+Check 51: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+Check 52: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+Check 53: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+Check 54: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+Check 55: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+Check 56: cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:34:45 in function cargo_autoharness_contracts::should_pass::has_loop_contract::{closure#0}
+
+
+SUMMARY:
+ ** 0 of 56 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_contracts::should_pass::has_recursion_gcd's contract against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: __CPROVER_contracts_write_set_check_assignment.assertion.1
+	 - Status: SUCCESS
+	 - Description: "ptr NULL or writable up to size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:805 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 2: __CPROVER_contracts_write_set_check_assignment.assertion.2
+	 - Status: SUCCESS
+	 - Description: "CAR size is less than __CPROVER_max_malloc_size"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:822 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 3: __CPROVER_contracts_write_set_check_assignment.assertion.3
+	 - Status: SUCCESS
+	 - Description: "no offset bits overflow on CAR upper bound computation"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:828 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 4: __CPROVER_contracts_write_set_check_assignment.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:837 in function __CPROVER_contracts_write_set_check_assignment
+
+Check 5: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 6: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 7: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.assertion.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 8: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.arithmetic_overflow.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 9: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
+
+Check 10: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
+
+Check 11: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 12: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 13: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.assertion.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 14: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.arithmetic_overflow.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 15: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 16: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 17: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#3}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#3}
+
+Check 18: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.safety_check.1
+	 - Status: SUCCESS
+	 - Description: "null pointer dereference occurred"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 19: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.safety_check.2
+	 - Status: SUCCESS
+	 - Description: "null pointer dereference occurred"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 20: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.assigns.1
+	 - Status: SUCCESS
+	 - Description: "Check that *var_6 is assignable"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 21: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.safety_check.3
+	 - Status: SUCCESS
+	 - Description: "null pointer dereference occurred"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 22: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.assigns.2
+	 - Status: SUCCESS
+	 - Description: "Check that *var_10 is assignable"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 23: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "|result : &u8| *result != 0 && x % *result == 0 && y % *result == 0"
+	 - Location: src/lib.rs:18:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 24: cargo_autoharness_contracts::should_pass::has_recursion_gcd.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd
+
+Check 25: cargo_autoharness_contracts::should_pass::has_recursion_gcd.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd
+
+Check 26: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "x != 0 && y != 0"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 27: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#1}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#1}
+
+Check 28: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.single_top_level_call.1
+	 - Status: SUCCESS
+	 - Description: "Only a single top-level call to function _RNCNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass17has_recursion_gcd0s_0s_0B9_ when checking contract _RNCNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass17has_recursion_gcd0s_0s_0B9_"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 29: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.no_alloc_dealloc_in_requires.1
+	 - Status: SUCCESS
+	 - Description: "Check that requires do not allocate or deallocate memory"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 30: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.no_alloc_dealloc_in_ensures.1
+	 - Status: SUCCESS
+	 - Description: "Check that ensures do not allocate or deallocate memory"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 31: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.no_recursive_call.1
+	 - Status: SUCCESS
+	 - Description: "No recursive call to function _RNCNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass17has_recursion_gcd0s_0s_0B9_ when checking contract _RNCNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass17has_recursion_gcd0s_0s_0B9_"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 32: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#2}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#2}
+
+Check 33: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 34: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 35: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 36: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 37: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 38: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 39: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 40: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 41: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 42: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 43: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 44: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 45: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 46: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 47: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 48: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 49: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 50: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 51: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 52: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 53: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 54: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 55: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 56: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 57: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 58: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 59: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:5 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}
+
+Check 60: kani::internal::automatic_harness.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 61: kani::internal::automatic_harness.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 62: kani::internal::automatic_harness.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 63: kani::internal::automatic_harness.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 64: kani::internal::automatic_harness.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 65: kani::internal::automatic_harness.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 66: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 67: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 68: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 69: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 70: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 71: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:21:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 72: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 73: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 74: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 75: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 76: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 77: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:22:23 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 78: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#1}
+
+Check 79: cargo_autoharness_contracts::should_pass::has_recursion_gcd.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:29:19 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd
+
+Check 80: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 81: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 82: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 83: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 84: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 85: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 86: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 87: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 88: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 89: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 90: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 91: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 92: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 93: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 94: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 95: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 96: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 97: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 98: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 99: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.19
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 100: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.20
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 101: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.21
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 102: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.22
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 103: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.23
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 104: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.24
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 105: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.25
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 106: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.26
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 107: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.27
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 108: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.28
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 109: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.29
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 110: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.pointer_dereference.30
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 111: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}.division-by-zero.2
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}::{closure#0}
+
+Check 112: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 113: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 114: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 115: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 116: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 117: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 118: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 119: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 120: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 121: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 122: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 123: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#1}
+
+Check 124: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 125: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 126: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 127: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 128: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 129: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:22 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 130: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 131: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 132: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 133: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 134: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 135: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:17:32 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 136: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 137: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 138: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 139: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 140: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 141: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:20:26 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 142: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.19
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 143: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.20
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 144: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.21
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 145: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.22
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 146: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.23
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 147: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}.pointer_dereference.24
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:20:33 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}
+
+Check 148: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 149: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 150: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 151: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 152: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 153: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:36 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 154: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 155: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 156: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 157: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 158: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 159: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 160: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 161: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 162: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 163: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 164: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 165: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 166: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:18:52 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 167: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.19
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 168: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.20
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 169: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.21
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 170: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.22
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 171: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.23
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 172: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.24
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 173: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.25
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 174: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.26
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 175: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.27
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 176: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.28
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 177: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.29
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 178: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.pointer_dereference.30
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+Check 179: cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}.division-by-zero.2
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:18:72 in function cargo_autoharness_contracts::should_pass::has_recursion_gcd::{closure#0}::{closure#0}::{closure#0}
+
+
+SUMMARY:
+ ** 0 of 179 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_contracts::should_pass::div's contract against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: __CPROVER_contracts_write_set_record_deallocated.unwind.1
+	 - Status: SUCCESS
+	 - Description: "unwinding assertion loop 0"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:740 in function __CPROVER_contracts_write_set_record_deallocated
+
+Check 2: cargo_autoharness_contracts::should_pass::div::{closure#1}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#1}
+
+Check 3: free.frees.1
+	 - Status: SUCCESS
+	 - Description: "Check that ptr is freeable"
+	 - Location: <builtin-library-free>:43 in function free
+
+Check 4: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.single_top_level_call.1
+	 - Status: SUCCESS
+	 - Description: "Only a single top-level call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass3divs0_00B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass3divs0_00B7_"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 5: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.no_alloc_dealloc_in_requires.1
+	 - Status: SUCCESS
+	 - Description: "Check that requires do not allocate or deallocate memory"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 6: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.no_alloc_dealloc_in_ensures.1
+	 - Status: SUCCESS
+	 - Description: "Check that ensures do not allocate or deallocate memory"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 7: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.no_recursive_call.1
+	 - Status: SUCCESS
+	 - Description: "No recursive call to function _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass3divs0_00B7_ when checking contract _RNCNCNvNtCsjY9lvWd3WHG_27cargo_autoharness_contracts11should_pass3divs0_00B7_"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 8: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to divide by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 9: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to divide by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 10: cargo_autoharness_contracts::should_pass::div::{closure#3}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#3}
+
+Check 11: cargo_autoharness_contracts::should_pass::div.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to divide by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div
+
+Check 12: cargo_autoharness_contracts::should_pass::div.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to divide by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div
+
+Check 13: cargo_autoharness_contracts::should_pass::div::{closure#0}.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:12:5 in function cargo_autoharness_contracts::should_pass::div::{closure#0}
+
+Check 14: cargo_autoharness_contracts::should_pass::div.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div
+
+Check 15: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.1
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 16: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.2
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 17: __CPROVER_contracts_obj_set_create_indexed_by_object_id.bit_count.3
+	 - Status: SUCCESS
+	 - Description: "count leading zeros is undefined for value zero"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:264 in function __CPROVER_contracts_obj_set_create_indexed_by_object_id
+
+Check 18: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 19: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 20: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 21: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 22: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 23: __CPROVER_contracts_make_invalid_pointer.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: <builtin-library-__CPROVER_contracts_library>:1186 in function __CPROVER_contracts_make_invalid_pointer
+
+Check 24: kani::internal::automatic_harness.precondition_instance.1
+	 - Status: SUCCESS
+	 - Description: "free argument must be NULL or valid pointer"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 25: kani::internal::automatic_harness.precondition_instance.2
+	 - Status: SUCCESS
+	 - Description: "free argument must be dynamic object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 26: kani::internal::automatic_harness.precondition_instance.3
+	 - Status: SUCCESS
+	 - Description: "free argument has offset zero"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 27: kani::internal::automatic_harness.precondition_instance.4
+	 - Status: SUCCESS
+	 - Description: "double free"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 28: kani::internal::automatic_harness.precondition_instance.5
+	 - Status: SUCCESS
+	 - Description: "free called for new[] object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 29: kani::internal::automatic_harness.precondition_instance.6
+	 - Status: SUCCESS
+	 - Description: "free called for stack-allocated object"
+	 - Location: library/kani_core/src/lib.rs:483:13 in function kani::internal::automatic_harness
+
+Check 30: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 31: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 32: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 33: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 34: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 35: cargo_autoharness_contracts::should_pass::div::{closure#2}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:12:22 in function cargo_autoharness_contracts::should_pass::div::{closure#2}
+
+Check 36: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 37: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 38: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 39: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 40: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 41: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 42: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 43: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 44: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 45: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 46: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 47: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: src/lib.rs:14:20 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+Check 48: cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: src/lib.rs:14:9 in function cargo_autoharness_contracts::should_pass::div::{closure#2}::{closure#0}
+
+
+SUMMARY:
+ ** 0 of 48 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
 
 Manual Harness Summary:
 No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+-----------------------------+---------------------------------------------+-----------------------------+---------------------+
-| Crate                       | Selected Function                           | Kind of Automatic Harness   | Verification Result |
-+===============================================================================================================================+
-| cargo_autoharness_contracts | should_pass::alignment::Alignment::as_usize | #[kani::proof_for_contract] | Success             |
-|-----------------------------+---------------------------------------------+-----------------------------+---------------------|
-| cargo_autoharness_contracts | should_pass::div                            | #[kani::proof_for_contract] | Success             |
-|-----------------------------+---------------------------------------------+-----------------------------+---------------------|
-| cargo_autoharness_contracts | should_pass::has_loop_contract              | #[kani::proof]              | Success             |
-|-----------------------------+---------------------------------------------+-----------------------------+---------------------|
-| cargo_autoharness_contracts | should_pass::has_recursion_gcd              | #[kani::proof_for_contract] | Success             |
-|-----------------------------+---------------------------------------------+-----------------------------+---------------------|
-| cargo_autoharness_contracts | should_pass::unchecked_mul                  | #[kani::proof_for_contract] | Success             |
-|-----------------------------+---------------------------------------------+-----------------------------+---------------------|
-| cargo_autoharness_contracts | should_fail::max                            | #[kani::proof_for_contract] | Failure             |
-+-----------------------------+---------------------------------------------+-----------------------------+---------------------+
++-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------+
+| Crate                       | Selected Function                                                        | Kind of Automatic Harness   | Verification Result |
++============================================================================================================================================================+
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::alignment::Alignment::as_usize | #[kani::proof_for_contract] | Success             |
+|-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::div                            | #[kani::proof_for_contract] | Success             |
+|-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::has_loop_contract              | #[kani::proof]              | Success             |
+|-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::has_recursion_gcd              | #[kani::proof_for_contract] | Success             |
+|-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_pass::unchecked_mul                  | #[kani::proof_for_contract] | Success             |
+|-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------|
+| cargo_autoharness_contracts | cargo_autoharness_contracts::should_fail::max                            | #[kani::proof_for_contract] | Failure             |
++-----------------------------+--------------------------------------------------------------------------+-----------------------------+---------------------+
 Note that `kani autoharness` sets default --harness-timeout of 60s and --default-unwind of 20.
 If verification failed because of timing out or too low of an unwinding bound, try passing larger values for these arguments (or, if possible, writing a loop contract).
 Complete - 5 successfully verified functions, 1 failures, 6 total.

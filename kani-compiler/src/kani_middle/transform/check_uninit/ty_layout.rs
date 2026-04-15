@@ -260,12 +260,8 @@ fn data_bytes_for_ty(
                                         let mut field_data_bytes_for_variant = vec![];
                                         let fields = ty_variants[index].fields();
                                         // Get offsets of all fields in a variant.
-                                        let FieldsShape::Arbitrary { offsets: field_offsets } =
-                                            variant.fields.clone()
-                                        else {
-                                            unreachable!()
-                                        };
-                                        for field_idx in variant.fields.fields_by_offset_order() {
+                                        let field_offsets = &variant.offsets;
+                                        for field_idx in variant.fields_by_offset_order() {
                                             let field_offset = field_offsets[field_idx].bytes();
                                             let field_ty = fields[field_idx].ty_with_args(args);
                                             field_data_bytes_for_variant.append(

@@ -1,3 +1,4 @@
-Status: SUCCESS\
-Next is greater\
-in function check_version
+Checking harness mir_linker::check_version...
+VERIFICATION:- FAILED
+Verification failed for - mir_linker::check_version
+Complete - 0 successfully verified harnesses, 1 failures, 1 total.

@@ -1,2 +1,12 @@
-FAILURE\
-memmove source region readable
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy: attempt to compute number in bytes which would overflow"
+Status: FAILURE
+Description: "memmove source region readable"
+Status: SUCCESS
+Description: "memmove destination region writeable"
+Failed Checks: memmove source region readable
+VERIFICATION:- FAILED

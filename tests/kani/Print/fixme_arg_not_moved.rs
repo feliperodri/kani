@@ -1,6 +1,7 @@
 // Copyright Kani Contributors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
-
+// FIXME: Blocked on https://github.com/rust-lang/project-stable-mir/issues/120
+// PatternKind::NotNull not implemented in stable MIR conversion
 // This test checks that Kani's overridden versions of the print macros do not
 // take ownership of variables passed as arguments
 

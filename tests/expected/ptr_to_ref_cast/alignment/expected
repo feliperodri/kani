@@ -1,4 +1,22 @@
-check_misaligned_ptr_cast_fail.safety_check\
-Status: FAILURE\
-Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"\
-in function check_misaligned_ptr_cast_fail
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: FAILURE
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: UNREACHABLE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Failed Checks: misaligned pointer dereference: address must be a multiple of its type's alignment
+VERIFICATION:- FAILED

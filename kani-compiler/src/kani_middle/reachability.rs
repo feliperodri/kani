@@ -170,6 +170,9 @@ impl<'tcx, 'a> MonoItemsCollector<'tcx, 'a> {
     /// Visit a function and collect all mono-items reachable from its instructions.
     fn visit_fn(&mut self, instance: Instance) -> Vec<CollectedItem> {
         let _guard = debug_span!("visit_fn", function=?instance).entered();
+        if !instance.has_body() {
+            return vec![];
+        }
         let body = self.transformer.body_ref(self.tcx, instance);
         let mut collector =
             MonoItemsFnCollector { tcx: self.tcx, collected: FxHashSet::default(), body };
@@ -348,7 +351,7 @@ impl MirVisitor for MonoItemsFnCollector<'_, '_> {
                 }
             }
             Rvalue::Cast(
-                CastKind::PointerCoercion(PointerCoercion::ReifyFnPointer),
+                CastKind::PointerCoercion(PointerCoercion::ReifyFnPointer(_)),
                 ref operand,
                 _,
             ) => {
@@ -545,6 +548,7 @@ struct Node(pub MonoItem);
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 struct CollectedNode(pub CollectedItem);
 
+#[allow(dead_code)] // Debug/diagnostic methods kept for future use
 impl CallGraph {
     /// Add a new node into a graph.
     fn add_node(&mut self, item: MonoItem) {

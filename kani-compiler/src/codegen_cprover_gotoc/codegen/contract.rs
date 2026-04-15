@@ -130,17 +130,10 @@ impl GotocCtx<'_, '_> {
             .clone();
 
         let shadow_memory_assign = self
-            .tcx
-            .all_diagnostic_items(())
-            .name_to_id
-            .get(&rustc_span::symbol::Symbol::intern("KaniMemoryInitializationState"))
-            .map(|attr_id| {
-                self.tcx
-                    .symbol_name(rustc_middle::ty::Instance::mono(self.tcx, *attr_id))
-                    .name
-                    .to_string()
-            })
-            .and_then(|shadow_memory_table| self.symbol_table.lookup(&shadow_memory_table).cloned())
+            .symbol_table
+            .iter()
+            .find(|(name, _)| name.to_string().contains("MEM_INIT_STATE"))
+            .map(|(_, sym)| sym.clone())
             .map(|shadow_memory_symbol| {
                 vec![Lambda::as_contract_for(
                     &goto_annotated_fn_typ,

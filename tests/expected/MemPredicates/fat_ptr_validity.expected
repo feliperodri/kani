@@ -1,5 +1,15 @@
+Checking harness fat_ptr_validity::invalid_access::check_invalid_slice_len...
+Failed Checks: assertion failed: can_dereference(ptr)
+VERIFICATION:- SUCCESSFUL (encountered one or more panics as expected)
+Checking harness fat_ptr_validity::invalid_access::check_invalid_slice_ptr...
 Failed Checks: Kani does not support reasoning about pointer to unallocated memory
-
-Verification failed for - invalid_access::check_invalid_slice_ptr
-Verification failed for - invalid_access::check_invalid_dyn_ptr
-Complete - 4 successfully verified harnesses, 2 failures, 6 total.
+VERIFICATION:- FAILED
+Checking harness fat_ptr_validity::invalid_access::check_invalid_dyn_ptr...
+Failed Checks: Kani does not support reasoning about pointer to unallocated memory
+VERIFICATION:- FAILED
+Checking harness fat_ptr_validity::valid_access::check_valid_zst...
+VERIFICATION:- SUCCESSFUL
+Checking harness fat_ptr_validity::valid_access::check_valid_slice_ptr...
+VERIFICATION:- SUCCESSFUL
+Checking harness fat_ptr_validity::valid_access::check_valid_dyn_ptr...
+VERIFICATION:- SUCCESSFUL

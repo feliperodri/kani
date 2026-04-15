@@ -3,7 +3,7 @@
 
 //! Testcase for niche encoding where there are multiple variants but only one contains
 //! non-zero sized data with niche, making it a great candidate for niche optimization.
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum MyEnum {
     NoFields,
     DataFul(bool),
@@ -12,7 +12,7 @@ enum MyEnum {
     ZSTStruct { field: ZeroSized, unit: () },
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 struct ZeroSized {}
 
 impl ZeroSized {

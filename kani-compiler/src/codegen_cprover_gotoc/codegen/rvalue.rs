@@ -23,7 +23,7 @@ use rustc_middle::ty::{TyCtxt, VtblEntry};
 use rustc_public::abi::{Primitive, Scalar, ValueAbi};
 use rustc_public::mir::mono::Instance;
 use rustc_public::mir::{
-    AggregateKind, BinOp, CastKind, NullOp, Operand, Place, PointerCoercion, Rvalue, UnOp,
+    AggregateKind, BinOp, CastKind, Operand, Place, PointerCoercion, Rvalue, UnOp,
 };
 use rustc_public::rustc_internal;
 use rustc_public::ty::{
@@ -824,17 +824,6 @@ impl GotocCtx<'_, '_> {
             Rvalue::CheckedBinaryOp(op, e1, e2) => {
                 self.codegen_rvalue_checked_binary_op(op, e1, e2, res_ty)
             }
-            Rvalue::NullaryOp(NullOp::RuntimeChecks(_)) => Expr::c_false(),
-            Rvalue::ShallowInitBox(operand, content_ty) => {
-                // The behaviour of ShallowInitBox is simply transmuting *mut u8 to Box<T>.
-                // See https://github.com/rust-lang/compiler-team/issues/460 for more details.
-                let operand = self.codegen_operand_stable(operand);
-                let box_ty = Ty::new_box(*content_ty);
-                let box_ty = self.codegen_ty_stable(box_ty);
-                let cbmc_t = self.codegen_ty_stable(*content_ty);
-                let box_contents = operand.cast_to(cbmc_t.to_pointer());
-                self.box_value(box_contents, box_ty)
-            }
             Rvalue::UnaryOp(op, e) => match op {
                 UnOp::Not => {
                     if self.operand_ty_stable(e).kind().is_bool() {
@@ -956,7 +945,11 @@ impl GotocCtx<'_, '_> {
     pub fn codegen_get_discriminant(&mut self, e: Expr, ty: Ty, res_ty: Ty) -> Expr {
         let layout = self.layout_of_stable(ty);
         match &layout.variants {
-            Variants::Empty => unreachable!("Discriminant for uninhabited enum with no variants"),
+            Variants::Empty => {
+                // Uninhabited type — this code is unreachable at runtime.
+                // Return a dummy discriminant value of 0.
+                Expr::int_constant(0, self.codegen_ty_stable(res_ty))
+            }
             Variants::Single { index } => {
                 let discr_val = layout
                     .ty
@@ -1321,7 +1314,7 @@ impl GotocCtx<'_, '_> {
     ) -> Expr {
         debug!(cast=?coercion, op=?operand, ?loc, "codegen_pointer_cast");
         match coercion {
-            PointerCoercion::ReifyFnPointer => match self.operand_ty_stable(operand).kind() {
+            PointerCoercion::ReifyFnPointer(_) => match self.operand_ty_stable(operand).kind() {
                 TyKind::RigidTy(RigidTy::FnDef(def, args)) => {
                     let instance = Instance::resolve(def, &args).unwrap();
                     // We need to handle this case in a special way because `codegen_operand_stable` compiles FnDefs to dummy structs.

@@ -1,16 +1,16 @@
 
 Contracts:
-|       | Crate | Function                      | Contract Harnesses (#[kani::proof_for_contract])               |
-| ----- | ----- | ----------------------------- | -------------------------------------------------------------- |
-|       | lib   | example::implementation::bar  | example::verify::check_bar                                     |
-|       | lib   | example::implementation::foo  | example::verify::check_foo_u32, example::verify::check_foo_u64 |
-|       | lib   | example::implementation::func | example::verify::check_func                                    |
-|       | lib   | example::prep::parse          | NONE                                                           |
-| Total |       | 4                             | 4                                                              |
+|       | Crate | Function                           | Contract Harnesses (#[kani::proof_for_contract])                         |
+| ----- | ----- | ---------------------------------- | ------------------------------------------------------------------------ |
+|       | lib   | lib::example::implementation::bar  | lib::example::verify::check_bar                                          |
+|       | lib   | lib::example::implementation::foo  | lib::example::verify::check_foo_u32, lib::example::verify::check_foo_u64 |
+|       | lib   | lib::example::implementation::func | lib::example::verify::check_func                                         |
+|       | lib   | lib::example::prep::parse          | NONE                                                                     |
+| Total |       | 4                                  | 4                                                                        |
 
 Standard Harnesses (#[kani::proof]):
-|       | Crate | Harness                       |
-| ----- | ----- | ----------------------------- |
-|       | lib   | example::verify::check_modify |
-|       | lib   | example::verify::check_new    |
-| Total |       | 2                             |
+|       | Crate | Harness                            |
+| ----- | ----- | ---------------------------------- |
+|       | lib   | lib::example::verify::check_modify |
+|       | lib   | lib::example::verify::check_new    |
+| Total |       | 2                                  |

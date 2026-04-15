@@ -10,7 +10,7 @@ extern crate kani;
 use std::convert::TryFrom;
 
 /// Dummy structure to check different patterns in contract.
-#[derive(Copy, Clone, PartialEq, Eq, kani::Arbitrary)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, kani::Arbitrary)]
 struct MyStruct {
     c: char,
     u: u32,

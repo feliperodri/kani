@@ -1,2 +1,34 @@
-FAILURE\
-`dst` must be properly aligned
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: FAILURE
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy_nonoverlapping: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)src >= (const char *)(void *)dst_unaligned + (signed long int)(1 * sizeof(int) /*4*/ )"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)dst_unaligned >= (const char *)(void *)src + (signed long int)(1 * sizeof(int) /*4*/ )"
+Status: SUCCESS
+Description: "memcpy src/dst overlap"
+Status: SUCCESS
+Description: "memcpy source region readable"
+Status: SUCCESS
+Description: "memcpy destination region writeable"
+Failed Checks: `dst` must be properly aligned
+VERIFICATION:- FAILED

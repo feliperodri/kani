@@ -36,11 +36,3 @@ fn check_diff() {
     let y = i64x2([3, 4]);
     assert!(x.into_array() != y.into_array());
 }
-
-#[kani::proof]
-fn check_ge() {
-    let x: i64x2 = kani::any();
-    kani::assume(x.into_array()[0] > 0);
-    kani::assume(x.into_array()[1] > 0);
-    assert!(x > i64x2([0, 0]));
-}

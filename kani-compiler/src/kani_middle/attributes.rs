@@ -177,6 +177,7 @@ impl<'tcx> KaniAttributes<'tcx> {
     }
 
     pub fn for_item(tcx: TyCtxt<'tcx>, def_id: DefId) -> Self {
+        #[allow(deprecated)] // TODO: migrate to rustc_hir::find_attr!
         let all_attributes = tcx.get_all_attrs(def_id);
         let map = all_attributes.iter().fold(
             <BTreeMap<KaniAttributeKind, Vec<&'tcx Attribute>>>::default(),
@@ -722,7 +723,7 @@ impl<'tcx> KaniAttributes<'tcx> {
                     ));
                 }
                 ResolveError::MissingTraitImpl { tcx: _, trait_fn_id, ty: _ } => {
-                    let generics = self.tcx.generics_of(trait_fn_id);
+                    let generics = self.tcx.generics_of(*trait_fn_id);
                     let parent_generics =
                         generics.parent.map(|parent| self.tcx.generics_of(parent));
                     if !generics.own_params.is_empty()
@@ -858,6 +859,7 @@ fn has_kani_attribute<F: Fn(KaniAttributeKind) -> bool>(
     def_id: DefId,
     predicate: F,
 ) -> bool {
+    #[allow(deprecated)] // TODO: migrate to rustc_hir::find_attr!
     tcx.get_all_attrs(def_id).iter().filter_map(|a| attr_kind(tcx, a)).any(predicate)
 }
 

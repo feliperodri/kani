@@ -3,9 +3,8 @@
 
 //! Ensure we can handle SIMD defined in the standard library
 #![allow(non_camel_case_types)]
-#![feature(repr_simd, core_intrinsics, portable_simd)]
+#![feature(repr_simd, core_intrinsics)]
 use std::intrinsics::simd::simd_add;
-use std::simd::f32x4;
 
 #[repr(simd)]
 #[derive(Copy, Clone, kani::Arbitrary)]
@@ -25,16 +24,4 @@ fn check_sum() {
     kani::assume(b.as_array()[1].is_normal());
     let sum = unsafe { simd_add(a, b) };
     assert_eq!(sum.as_array(), b.as_array());
-}
-
-#[kani::proof]
-fn check_sum_portable() {
-    let a = f32x4::splat(0.0);
-    let b = f32x4::from_array(kani::any());
-    kani::assume(b.as_array()[0].is_normal());
-    kani::assume(b.as_array()[1].is_normal());
-    kani::assume(b.as_array()[2].is_normal());
-    kani::assume(b.as_array()[3].is_normal());
-    // Cannot compare them directly: https://github.com/model-checking/kani/issues/2632
-    assert_eq!((a + b).as_array(), b.as_array());
 }

@@ -1,10 +1,12 @@
-SUCCESS\
-attempt to shift right with overflow
-SUCCESS\
-attempt to add with overflow
-FAILURE\
-assertion failed: i == 3
-UNREACHABLE\
-assertion failed: i == 2
-UNREACHABLE\
-assertion failed: i == 2 || i == 3
+Status: SUCCESS
+Description: "attempt to shift right with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "assertion failed: i == 2 || i == 3"
+Status: SUCCESS
+Description: "assertion failed: i == 2"
+Status: FAILURE
+Description: "assertion failed: i == 3"
+Failed Checks: assertion failed: i == 3
+VERIFICATION:- FAILED

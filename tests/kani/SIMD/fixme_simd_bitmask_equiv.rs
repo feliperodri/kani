@@ -1,5 +1,7 @@
 // Copyright Kani Contributors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
+//! Tracking issue: Kani compiler panic "Discriminant for uninhabited enum with no variants"
+//! after nightly-2026-04-13 toolchain update.
 #![feature(repr_simd, core_intrinsics)]
 #![feature(generic_const_exprs)]
 #![feature(portable_simd)]
@@ -7,7 +9,7 @@
 // This test checks the equivalence of Kani's old and new implementations of the
 // `simd_bitmask` intrinsic
 
-pub trait MaskElement: PartialEq {
+pub trait MaskElement: PartialEq + std::fmt::Debug {
     const TRUE: Self;
     const FALSE: Self;
 }

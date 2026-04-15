@@ -1,13 +1,96 @@
-Verification failed for - check_cast_i16
-Verification failed for - check_cast_i128
-Verification failed for - check_cast_u8
-Verification failed for - check_cast_u32
-Verification failed for - check_cast_u64
-Verification failed for - check_cast_u16
-Verification failed for - check_cast_u128
-Verification failed for - check_cast_usize
-Verification failed for - check_cast_i8
-Verification failed for - check_cast_i64
-Verification failed for - check_cast_isize
-Verification failed for - check_cast_i32
-Complete - 0 successfully verified harnesses, 12 failures, 12 total.
+Checking harness oob_f128::check_cast_i64...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_u8...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_isize...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_i8...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_u64...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_u16...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_u128...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_i128...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_i16...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_u32...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_i32...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED
+Checking harness oob_f128::check_cast_usize...
+SAT checker: instance is UNSATISFIABLE
+Status: SUCCESS
+Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
+Status: FAILURE
+Description: "float_to_int_unchecked: attempt to convert a value out of range of the target integer"
+Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
+VERIFICATION:- FAILED

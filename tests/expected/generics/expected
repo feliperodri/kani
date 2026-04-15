@@ -1,4 +1,5 @@
-SUCCESS\
-assertion failed: x == y.data
-SUCCESS\
-assertion failed: z == w.data
+Status: SUCCESS
+Description: "assertion failed: z == w.data"
+Status: SUCCESS
+Description: "assertion failed: x == y.data"
+VERIFICATION:- SUCCESSFUL

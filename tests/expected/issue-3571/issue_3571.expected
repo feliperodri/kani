@@ -1,9 +1,21 @@
+Checking harness issue_3571::rust_ub_should_fail...
+SAT checker: instance is UNSATISFIABLE
+Status: FAILURE
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: UNREACHABLE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
 Failed Checks: misaligned pointer dereference: address must be a multiple of its type's alignment
-
-Failed Checks: null pointer dereference occurred
-
 VERIFICATION:- FAILED (encountered failures other than panics, which were unexpected)
-
-Verification failed for - rust_ub_should_fail
-Verification failed for - rust_ub_fails
-Complete - 0 successfully verified harnesses, 2 failures, 2 total.
+Checking harness issue_3571::rust_ub_fails...
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Failed Checks: null pointer dereference occurred
+VERIFICATION:- FAILED (encountered failures other than panics, which were unexpected)

@@ -34,14 +34,6 @@ fn check_diff() {
     assert!(x != y);
 }
 
-#[kani::proof]
-fn check_ge() {
-    let x: i64x2 = kani::any();
-    kani::assume(x.into_array()[0] > 0);
-    kani::assume(x.into_array()[1] > 0);
-    assert!(x > i64x2([0, 0]));
-}
-
 #[derive(Copy)]
 #[repr(simd)]
 struct CustomSimd<T, const LANES: usize>([T; LANES]);

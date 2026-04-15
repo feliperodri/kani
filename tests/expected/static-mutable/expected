@@ -1,8 +1,43 @@
-FAILURE\
-assertion failed: 10 == foo()
-SUCCESS\
-assertion failed: 12 == foo()
-SUCCESS\
-assertion failed: 10 == foo()
-FAILURE\
-assertion failed: 12 == foo()
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: FAILURE
+Description: "assertion failed: 10 == foo()"
+Status: FAILURE
+Description: "assertion failed: 12 == foo()"
+Status: SUCCESS
+Description: "assertion failed: 10 == foo()"
+Status: SUCCESS
+Description: "assertion failed: 12 == foo()"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: assertion failed: 10 == foo()
+Failed Checks: assertion failed: 12 == foo()
+VERIFICATION:- FAILED

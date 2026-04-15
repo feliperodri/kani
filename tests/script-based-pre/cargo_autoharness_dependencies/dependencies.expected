@@ -1,22 +1,52 @@
+warning: function `no_harness` is never used
+ --> other_crate/src/lib.rs:4:4
+  |
+4 | fn no_harness(x: u8) -> u8 {
+  |    ^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `other_crate`
+ --> src/lib.rs:6:5
+  |
+6 | use other_crate;
+  |     ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `yes_harness` is never used
+ --> src/lib.rs:8:4
+  |
+8 | fn yes_harness(x: u8) -> u8 {
+  |    ^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
 Kani generated automatic harnesses for 1 function(s):
-+--------------------------------+-------------------+
-| Crate                          | Selected Function |
-+====================================================+
-| cargo_autoharness_dependencies | yes_harness       |
-+--------------------------------+-------------------+
++--------------------------------+---------------------------------------------+
+| Crate                          | Selected Function                           |
++==============================================================================+
+| cargo_autoharness_dependencies | cargo_autoharness_dependencies::yes_harness |
++--------------------------------+---------------------------------------------+
 
 Skipped Functions: None. Kani generated automatic harnesses for all functions in the available crate(s).
+Autoharness: Checking function cargo_autoharness_dependencies::yes_harness against all possible inputs...
 
-Autoharness: Checking function yes_harness against all possible inputs...
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
 VERIFICATION:- SUCCESSFUL
 
 Manual Harness Summary:
 No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+--------------------------------+-------------------+---------------------------+---------------------+
-| Crate                          | Selected Function | Kind of Automatic Harness | Verification Result |
-+======================================================================================================+
-| cargo_autoharness_dependencies | yes_harness       | #[kani::proof]            | Success             |
-+--------------------------------+-------------------+---------------------------+---------------------+
++--------------------------------+---------------------------------------------+---------------------------+---------------------+
+| Crate                          | Selected Function                           | Kind of Automatic Harness | Verification Result |
++================================================================================================================================+
+| cargo_autoharness_dependencies | cargo_autoharness_dependencies::yes_harness | #[kani::proof]            | Success             |
++--------------------------------+---------------------------------------------+---------------------------+---------------------+
 Complete - 1 successfully verified functions, 0 failures, 1 total.

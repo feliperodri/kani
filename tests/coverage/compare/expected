@@ -1,16 +1,16 @@
-   1|     | // Copyright Kani Contributors\
-   2|     | // SPDX-License-Identifier: Apache-2.0 OR MIT\
-   3|     | \
-   4|    1| fn compare(x: u16, y: u16) -> u16 {\
-   5|    1|     // The case where `x < y` isn't possible so its region is `UNCOVERED`\
-   6|    1|     if x >= y { 1 } else { ```0''' }\
-   7|     | }\
-   8|     | \
-   9|     | #[kani::proof]\
-  10|    1| fn main() {\
-  11|    1|     let x: u16 = kani::any();\
-  12|    1|     let y: u16 = kani::any();\
-  13|    1|     if x >= y {\
-  14|    1|         compare(x, y);\
-  15|    1|     } \
-  16|     | }\
+   1|     | // Copyright Kani Contributors
+   2|     | // SPDX-License-Identifier: Apache-2.0 OR MIT
+   3|     | 
+   4|    0| ```fn compare(x: u16, y: u16) -> u16 {'''
+   5|    0| ```    // The case where `x < y` isn't possible so its region is `UNCOVERED`'''
+   6|    0| ```    if x >= y { 1 } else { 0 }'''
+   7|    0| ```}'''
+   8|     | 
+   9|     | #[kani::proof]
+  10|    0| ```fn main() {'''
+  11|    0| ```    let x: u16 = kani::any();'''
+  12|    0| ```    let y: u16 = kani::any();'''
+  13|    0| ```    if x >= y {'''
+  14|    0| ```        compare(x, y);'''
+  15|    0| ```    }'''
+  16|    0| ```}'''

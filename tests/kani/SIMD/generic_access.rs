@@ -33,7 +33,7 @@ mod array_based {
         }
     }
 
-    fn check_fields<T: SimdElement + PartialEq, const LANES: usize>(
+    fn check_fields<T: SimdElement + PartialEq + std::fmt::Debug, const LANES: usize>(
         simd: CustomSimd<T, LANES>,
         expected: [T; LANES],
     ) {
@@ -75,7 +75,7 @@ mod fields_based {
         }
     }
 
-    fn check_fields<T: SimdElement + PartialEq, const LANES: usize>(
+    fn check_fields<T: SimdElement + PartialEq + std::fmt::Debug, const LANES: usize>(
         simd: CustomSimd<T>,
         expected: [T; LANES],
     ) {

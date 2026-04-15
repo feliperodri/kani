@@ -21,7 +21,7 @@ pub mod str_check {
 
 /// Check that we can stub slices
 pub mod slices_check {
-    #[derive(kani::Arbitrary, Ord, PartialOrd, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, kani::Arbitrary, Ord, PartialOrd, Copy, Clone, PartialEq, Eq)]
     pub struct MyStruct(u8, i32);
 
     pub fn stub_sort_noop<T>(_: &mut [T]) {}

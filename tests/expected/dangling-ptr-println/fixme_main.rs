@@ -1,6 +1,7 @@
 // Copyright Kani Contributors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
-
+// FIXME: Blocked on https://github.com/rust-lang/project-stable-mir/issues/120
+// PatternKind::NotNull not implemented in stable MIR conversion
 //! These tests check that Kani correctly detects dangling pointer dereference inside println macro.
 //! Related issue: <https://github.com/model-checking/kani/issues/3235>.
 

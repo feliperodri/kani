@@ -27,9 +27,8 @@ use rustc_codegen_ssa::back::archive::{
 };
 use rustc_codegen_ssa::back::link::link_binary;
 use rustc_codegen_ssa::traits::CodegenBackend;
-use rustc_codegen_ssa::{CodegenResults, CrateInfo, TargetConfig};
+use rustc_codegen_ssa::{CompiledModules, CrateInfo, TargetConfig};
 use rustc_data_structures::fx::{FxHashMap, FxIndexMap};
-use rustc_errors::DEFAULT_LOCALE_RESOURCE;
 use rustc_hir::def_id::{DefId as InternalDefId, LOCAL_CRATE};
 use rustc_metadata::EncodedMetadata;
 use rustc_middle::dep_graph::{WorkProduct, WorkProductId};
@@ -163,6 +162,9 @@ impl GotocCodegenBackend {
                 for item in &items {
                     match *item {
                         MonoItem::Fn(instance) => {
+                            if !instance.has_body() {
+                                continue; // Declared above, no body to codegen.
+                            }
                             gcx.call_with_panic_debug_info(
                                 |ctx| ctx.codegen_function(instance),
                                 move || {
@@ -292,9 +294,8 @@ impl CodegenBackend for GotocCodegenBackend {
         "kani-cprover"
     }
 
-    fn locale_resource(&self) -> &'static str {
-        // We don't currently support multiple languages.
-        DEFAULT_LOCALE_RESOURCE
+    fn target_cpu(&self, _sess: &Session) -> String {
+        String::new()
     }
 
     fn target_config(&self, sess: &Session) -> TargetConfig {
@@ -331,7 +332,7 @@ impl CodegenBackend for GotocCodegenBackend {
         }
     }
 
-    fn codegen_crate(&self, tcx: TyCtxt) -> Box<dyn Any> {
+    fn codegen_crate(&self, tcx: TyCtxt, _crate_info: &CrateInfo) -> Box<dyn Any> {
         let ret_val = rustc_internal::run(tcx, || {
             super::utils::init();
 
@@ -500,8 +501,9 @@ impl CodegenBackend for GotocCodegenBackend {
         ongoing_codegen: Box<dyn Any>,
         _sess: &Session,
         _filenames: &OutputFilenames,
-    ) -> (CodegenResults, FxIndexMap<WorkProductId, WorkProduct>) {
-        match ongoing_codegen.downcast::<(CodegenResults, FxIndexMap<WorkProductId, WorkProduct>)>()
+    ) -> (CompiledModules, FxIndexMap<WorkProductId, WorkProduct>) {
+        match ongoing_codegen
+            .downcast::<(CompiledModules, FxIndexMap<WorkProductId, WorkProduct>)>()
         {
             Ok(val) => *val,
             Err(val) => panic!("unexpected error: {:?}", (*val).type_id()),
@@ -519,18 +521,20 @@ impl CodegenBackend for GotocCodegenBackend {
     fn link(
         &self,
         sess: &Session,
-        codegen_results: CodegenResults,
+        compiled_modules: CompiledModules,
+        crate_info: CrateInfo,
         rustc_metadata: EncodedMetadata,
         outputs: &OutputFilenames,
     ) {
-        let requested_crate_types = &codegen_results.crate_info.crate_types.clone();
-        let local_crate_name = codegen_results.crate_info.local_crate_name;
+        let requested_crate_types = &crate_info.crate_types.clone();
+        let local_crate_name = crate_info.local_crate_name;
         // Create the rlib if one was requested.
         if requested_crate_types.contains(&CrateType::Rlib) {
             link_binary(
                 sess,
                 &ArArchiveBuilderBuilder,
-                codegen_results,
+                compiled_modules,
+                crate_info,
                 rustc_metadata,
                 outputs,
                 self.name(),
@@ -631,15 +635,9 @@ fn check_options(session: &Session) {
 
 /// Return a struct that contains information about the codegen results as expected by `rustc`.
 fn codegen_results(tcx: TyCtxt, machine: &MachineModel) -> Box<dyn Any> {
+    let _ = (tcx, machine);
     let work_products = FxIndexMap::<WorkProductId, WorkProduct>::default();
-    Box::new((
-        CodegenResults {
-            modules: vec![],
-            allocator_module: None,
-            crate_info: CrateInfo::new(tcx, machine.architecture.clone()),
-        },
-        work_products,
-    ))
+    Box::new((CompiledModules { modules: vec![], allocator_module: None }, work_products))
 }
 
 pub fn write_file<T>(base_path: &Path, file_type: ArtifactType, source: &T, pretty: bool)

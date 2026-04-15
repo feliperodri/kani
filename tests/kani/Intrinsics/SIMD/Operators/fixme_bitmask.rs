@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! Checks that we support `simd_bitmask` intrinsic.
+//! Tracking issue: Kani compiler panic "Discriminant for uninhabited enum with no variants"
+//! after nightly-2026-04-13 toolchain update.
 //!
 //! This is done by initializing vectors with the contents of 2-member tuples
 //! with symbolic values. The result of using each of the intrinsics is compared

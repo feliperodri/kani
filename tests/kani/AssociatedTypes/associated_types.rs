@@ -26,7 +26,7 @@ impl<T: U8Wrapper> Convert for T {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 struct MyU8 {
     inner: u8,
 }

@@ -1,13 +1,5 @@
-SUMMARY:
-
+Checking harness atomic::local_atomic_uninit...
 Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`
-
 Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
-
 Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`
-
 VERIFICATION:- FAILED
-
-Summary:\
-Verification failed for - local_atomic_uninit\
-Complete - 0 successfully verified harnesses, 1 failures, 1 total.

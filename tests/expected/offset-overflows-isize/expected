@@ -1,8 +1,31 @@
-<usize as kani::rustc_intrinsics::ToISize>::to_isize.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Offset value overflows isize"
-
+Status: SUCCESS
+Description: "unreachable code"
+Status: FAILURE
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "attempt to add with overflow"
 Failed Checks: Offset value overflows isize
-
-Verification failed for - test_non_zst
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+VERIFICATION:- SUCCESSFUL

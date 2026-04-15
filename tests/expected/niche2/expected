@@ -1,8 +1,19 @@
-UNREACHABLE\
-assertion failed: false
-SUCCESS\
-assertion failed: x == 10
-UNREACHABLE\
-assertion failed: false
-UNREACHABLE\
-assertion failed: false
+Status: SUCCESS
+Description: "assertion failed: false"
+Status: SUCCESS
+Description: "assertion failed: false"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "assertion failed: false"
+Status: SUCCESS
+Description: "assertion failed: x == 10"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+VERIFICATION:- SUCCESSFUL

@@ -1,75 +1,126 @@
-Checking harness check_zst_deref...
-
-Status: FAILURE\
-Description: "dereference failure: pointer invalid"\
-in function zst_deref
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "dereference failure: pointer invalid"
+Failed Checks: dereference failure: pointer invalid
 VERIFICATION:- FAILED
-
-Checking harness check_equal_size_deref...
-
-Status: SUCCESS\
-Description: "dereference failure: pointer invalid"\
-in function equal_size_deref
-
-Status: SUCCESS\
-Description: "dereference failure: pointer invalid"\
-in function equal_size_deref
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
 VERIFICATION:- SUCCESSFUL
-
-Checking harness check_smaller_deref...
-
-Status: SUCCESS\
-Description: "dereference failure: pointer invalid"\
-in function smaller_deref
-
-Status: SUCCESS\
-Description: "dereference failure: pointer invalid"\
-in function smaller_deref
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
 VERIFICATION:- SUCCESSFUL
-
-Checking harness check_larger_deref_struct...
-
-Status: FAILURE\
-Description: "dereference failure: pointer invalid"\
-in function larger_deref_struct
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "dereference failure: pointer invalid"
+Failed Checks: dereference failure: pointer invalid
 VERIFICATION:- FAILED
-
-Checking harness check_larger_deref_into_ptr...
-
-Status: FAILURE\
-Description: "dereference failure: pointer invalid"\
-in function larger_deref_into_ptr
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "dereference failure: pointer invalid"
+Failed Checks: dereference failure: pointer invalid
 VERIFICATION:- FAILED
-
-Checking harness check_larger_deref...
-
-Status: FAILURE\
-Description: "dereference failure: pointer invalid"\
-in function larger_deref
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "dereference failure: pointer invalid"
+Failed Checks: dereference failure: pointer invalid
 VERIFICATION:- FAILED
-
-Checking harness check_store...
-
-Status: FAILURE\
-Description: "dereference failure: pointer invalid"\
-in function Store::<'_, 3>::from
-
-Status: SUCCESS\
-Description: "assertion failed: broken.data.len() == 3"\
-in function check_store
-
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Failed Checks: dereference failure: pointer invalid
 VERIFICATION:- FAILED
-
-Summary:
-Verification failed for - check_zst_deref
-Verification failed for - check_larger_deref_struct
-Verification failed for - check_larger_deref_into_ptr
-Verification failed for - check_larger_deref
-Verification failed for - check_store
-Complete - 2 successfully verified harnesses, 5 failures, 7 total.

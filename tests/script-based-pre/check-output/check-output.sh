@@ -49,8 +49,8 @@ fi
 echo "Checking that demangling works as expected..."
 
 declare -a PATTERNS=(
-    'struct PrettyStruct pretty_function(struct PrettyStruct' # expected demangled struct and function name
-    'monomorphize::<usize>(' # monomorphized function name
+    'struct PrettyStruct singlefile::pretty_function(struct PrettyStruct' # expected demangled struct and function name
+    'singlefile::monomorphize::<usize>(' # monomorphized function name
     'struct ()' # pretty-printed unit struct
     'struct &str' # pretty-printed reference type
     'TestEnum::Variant1' # pretty-printed variant
@@ -89,7 +89,7 @@ then
     exit 1
 fi
 
-if ! grep -Fq "struct PrettyStruct pretty_function(struct PrettyStruct" "${demangled}";
+if ! grep -Fq "struct PrettyStruct multifile::pretty_function(struct PrettyStruct" "${demangled}";
 then
     echo "Error: demangled file ${demangled} did not contain expected demangled struct and function name."
     exit 1

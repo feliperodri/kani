@@ -1,2 +1,7 @@
-SUCCESS\
+Status: SUCCESS
 Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "division by zero"
+VERIFICATION:- SUCCESSFUL

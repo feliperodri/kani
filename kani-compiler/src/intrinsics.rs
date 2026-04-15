@@ -279,6 +279,18 @@ impl Intrinsic {
                 assert_sig_matches!(sig, _, _ => _);
                 Self::ExactDiv
             }
+            "fabs" => {
+                assert_sig_matches!(sig, RigidTy::Float(_) => RigidTy::Float(_));
+                match sig.inputs()[0].kind() {
+                    TyKind::RigidTy(RigidTy::Float(FloatTy::F32)) => Self::FabsF32,
+                    TyKind::RigidTy(RigidTy::Float(FloatTy::F64)) => Self::FabsF64,
+                    _ => Self::Unimplemented {
+                        name: intrinsic_str,
+                        issue_link: "https://github.com/model-checking/kani/issues/new/choose"
+                            .into(),
+                    },
+                }
+            }
             "fadd_fast" => {
                 assert_sig_matches!(sig, _, _ => _);
                 Self::FaddFast
@@ -677,11 +689,11 @@ fn try_match_f32(intrinsic_instance: &Instance) -> Option<Intrinsic> {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F32) => RigidTy::Float(FloatTy::F32));
             Some(Intrinsic::LogF32)
         }
-        "maxnumf32" => {
+        "maxnumf32" | "maximum_number_nsz_f32" => {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F32), RigidTy::Float(FloatTy::F32) => RigidTy::Float(FloatTy::F32));
             Some(Intrinsic::MaxNumF32)
         }
-        "minnumf32" => {
+        "minnumf32" | "minimum_number_nsz_f32" => {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F32), RigidTy::Float(FloatTy::F32) => RigidTy::Float(FloatTy::F32));
             Some(Intrinsic::MinNumF32)
         }
@@ -767,11 +779,11 @@ fn try_match_f64(intrinsic_instance: &Instance) -> Option<Intrinsic> {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F64) => RigidTy::Float(FloatTy::F64));
             Some(Intrinsic::LogF64)
         }
-        "maxnumf64" => {
+        "maxnumf64" | "maximum_number_nsz_f64" => {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F64), RigidTy::Float(FloatTy::F64) => RigidTy::Float(FloatTy::F64));
             Some(Intrinsic::MaxNumF64)
         }
-        "minnumf64" => {
+        "minnumf64" | "minimum_number_nsz_f64" => {
             assert_sig_matches!(sig, RigidTy::Float(FloatTy::F64), RigidTy::Float(FloatTy::F64) => RigidTy::Float(FloatTy::F64));
             Some(Intrinsic::MinNumF64)
         }

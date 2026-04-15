@@ -1,4 +1,18 @@
-- Status: FAILURE\
-- Description: "null pointer dereference occurred"
-
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: FAILURE
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: null pointer dereference occurred
 VERIFICATION:- FAILED

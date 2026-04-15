@@ -1,36 +1,2962 @@
-check_typed_swap_nonoverlapping.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
-
-check_typed_swap_nonoverlapping.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
-
-check_volatile_load.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
-
-check_compare_bytes.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
-
-check_compare_bytes.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
-
-std::ptr::read::<u8>.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
-
-std::ptr::read::<u8>.safety_check.\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u8`"
-
-Summary:
-Verification failed for - check_typed_swap_nonoverlapping_safe
-Verification failed for - check_typed_swap_nonoverlapping
-Verification failed for - check_volatile_load
-Verification failed for - check_compare_bytes
-Verification failed for - check_copy_read
-Verification failed for - check_copy_nonoverlapping_read
-Complete - 7 successfully verified harnesses, 6 failures, 13 total.
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Transmuting between types of incompatible layouts."
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `size_of_val` for extern types"
+Status: SUCCESS
+Description: "failed to compute `size_of_val`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_add` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "cold_path", issue_link: "https://github.com/model-checking/kani/issues/new/choose" }`."
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Failed Checks: Transmuting between types of incompatible layouts.
+Failed Checks: Interaction between raw pointers and unions is not yet supported.
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Transmuting between types of incompatible layouts."
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_add` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `size_of_val` for extern types"
+Status: SUCCESS
+Description: "failed to compute `size_of_val`"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "cold_path", issue_link: "https://github.com/model-checking/kani/issues/new/choose" }`."
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Interaction between raw pointers and unions is not yet supported."
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: Transmuting between types of incompatible layouts.
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*mut u8`
+Failed Checks: Interaction between raw pointers and unions is not yet supported.
+VERIFICATION:- FAILED
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "memcmp region 1 readable"
+Status: SUCCESS
+Description: "memcpy region 2 readable"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "write_bytes: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "write_bytes: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "memset destination region writeable"
+Status: SUCCESS
+Description: "memset destination region writeable"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "memcmp region 1 readable"
+Status: SUCCESS
+Description: "memcpy region 2 readable"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "memcmp region 1 readable"
+Status: SUCCESS
+Description: "memcpy region 2 readable"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "memmove source region readable"
+Status: SUCCESS
+Description: "memmove destination region writeable"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "memmove source region readable"
+Status: SUCCESS
+Description: "memmove destination region writeable"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `u8`
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "memmove source region readable"
+Status: SUCCESS
+Description: "memmove destination region writeable"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy_nonoverlapping: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)var_5 >= (const char *)(void *)dst + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)dst >= (const char *)(void *)var_5 + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "memcpy src/dst overlap"
+Status: SUCCESS
+Description: "memcpy source region readable"
+Status: SUCCESS
+Description: "memcpy destination region writeable"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u8`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u8`"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy_nonoverlapping: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)var_5 >= (const char *)(void *)dst + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)dst >= (const char *)(void *)var_5 + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "memcpy src/dst overlap"
+Status: SUCCESS
+Description: "memcpy source region readable"
+Status: SUCCESS
+Description: "memcpy destination region writeable"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `u8`
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "max allocation size exceeded"
+Status: SUCCESS
+Description: "max allocation may fail"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "__rust_alloc must be called with a size greater than 0"
+Status: SUCCESS
+Description: "Alignment is power of two"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: UNREACHABLE
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "`src` must be properly aligned"
+Status: SUCCESS
+Description: "`dst` must be properly aligned"
+Status: SUCCESS
+Description: "copy_nonoverlapping: attempt to compute number in bytes which would overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
+Status: SUCCESS
+Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+Status: UNREACHABLE
+Description: "attempt to multiply with overflow"
+Status: UNREACHABLE
+Description: "attempt to add with overflow"
+Status: UNREACHABLE
+Description: "attempt to subtract with overflow"
+Status: UNREACHABLE
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: UNREACHABLE
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)var_5 >= (const char *)(void *)dst + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "same object violation in (const char *)(void *)dst >= (const char *)(void *)var_5 + (signed long int)(2 * sizeof(unsigned char) /*1*/ )"
+Status: SUCCESS
+Description: "memcpy src/dst overlap"
+Status: SUCCESS
+Description: "memcpy source region readable"
+Status: SUCCESS
+Description: "memcpy destination region writeable"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL

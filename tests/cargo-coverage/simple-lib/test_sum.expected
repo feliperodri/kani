@@ -1,10 +1,10 @@
 Source-based code coverage results:
 
-src/lib.rs (kani_tests::test_sum)\
+src/lib.rs (simple_lib::kani_tests::test_sum)\
  * 19:5 - 24:6 COVERED
 
-src/pair.rs (pair::Pair::new)\
+src/pair.rs (simple_lib::pair::Pair::new)\
  * 6:5 - 8:6 COVERED
 
-src/pair.rs (pair::Pair::sum)\
+src/pair.rs (simple_lib::pair::Pair::sum)\
  * 9:5 - 11:6 COVERED

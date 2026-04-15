@@ -1,10 +1,12 @@
-SUCCESS\
-attempt to add with overflow
-SUCCESS\
-attempt to subtract with overflow
-FAILURE\
-assertion failed: a == 54
-UNREACHABLE\
-assertion failed: a == 55
-UNREACHABLE\
-assertion failed: a >= 55
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "assertion failed: a >= 55"
+Status: SUCCESS
+Description: "assertion failed: a == 55"
+Status: FAILURE
+Description: "assertion failed: a == 54"
+Failed Checks: assertion failed: a == 54
+VERIFICATION:- FAILED

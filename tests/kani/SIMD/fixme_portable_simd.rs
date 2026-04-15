@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! Ensure we have basic support of portable SIMD.
+//! Tracking issue: simd_splat not currently supported by Kani after nightly-2026-04-13.
 #![feature(portable_simd)]
 
 use std::simd::{mask32x4, u32x4, u64x16};

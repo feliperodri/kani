@@ -56,6 +56,7 @@ impl InitialTargetVisitor {
                     }
                 }
             }
+            Operand::RuntimeChecks(_) => {}
         }
     }
 }

@@ -1,15 +1,21 @@
-Status: SATISFIED\
-Description: "foo may return Err"\
-main.rs:17:20 in function cover_match
-
-Status: SATISFIED\
-Description: "y may be greater than 20"\
-main.rs:15:28 in function cover_match
-
-Status: UNSATISFIABLE\
-Description: "y may be greater than 10"\
-main.rs:16:18 in function cover_match
-
- ** 2 of 3 cover properties satisfied
-
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SATISFIED
+Description: "foo may return Err"
+Status: SATISFIED
+Description: "y may be greater than 20"
+Status: UNSATISFIABLE
+Description: "y may be greater than 10"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL

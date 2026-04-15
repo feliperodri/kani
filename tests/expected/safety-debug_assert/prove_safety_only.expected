@@ -1,14 +1,36 @@
-<usize as kani::rustc_intrinsics::ToISize>::to_isize.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Offset value overflows isize"
-
-kani::rustc_intrinsics::offset::<u8, *const u8, usize>.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Offset result and original pointer must point to the same allocation"
-
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: FAILURE
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: FAILURE
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SUCCESS
+Description: "Offset result and original pointer should point to the same allocation"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "division by zero"
+Status: SUCCESS
+Description: "division by zero"
 Failed Checks: Offset value overflows isize
 Failed Checks: Offset result and original pointer must point to the same allocation
-
 VERIFICATION:- FAILED
-Verification failed for - debug_assert_does_not_hide_ub
-Complete - 0 successfully verified harnesses, 1 failures, 1 total.

@@ -1,4 +1,5 @@
-SUCCESS\
-assertion failed: bar.a() == 3
-SUCCESS\
-assertion failed: bar.b() == 5
+Status: SUCCESS
+Description: "assertion failed: bar.b() == 5"
+Status: SUCCESS
+Description: "assertion failed: bar.a() == 3"
+VERIFICATION:- SUCCESSFUL

@@ -1,10 +1,54 @@
-SUCCESS\
-address must be a multiple of its type's alignment
-SUCCESS\
-pointer NULL
-SUCCESS\
-pointer invalid
-SUCCESS\
-deallocated dynamic object
-FAILURE\
-dead object
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: UNDETERMINED
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNDETERMINED
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: FAILURE
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Failed Checks: dereference failure: dead object
+VERIFICATION:- FAILED

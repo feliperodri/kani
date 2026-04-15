@@ -1,4 +1,5 @@
+Checking harness access_padding_enum_single_variant::access_padding_uninit...
 Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `*const u8`
-
-Verification failed for - access_padding_uninit
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.
+VERIFICATION:- FAILED
+Checking harness access_padding_enum_single_variant::access_padding_init...
+VERIFICATION:- SUCCESSFUL

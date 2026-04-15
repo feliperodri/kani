@@ -1,9 +1,29 @@
-Check 1: check_safety_constraint_cfg.assertion.1\
-         - Status: SUCCESS\
-         - Description: "assertion failed: pos_point.x >= 0"
-
-Check 2: check_safety_constraint_cfg.assertion.2\
-         - Status: SUCCESS\
-         - Description: "assertion failed: pos_point.y >= 0"
-
-Complete - 1 successfully verified harnesses, 0 failures, 1 total.
+Status: SUCCESS
+Description: "assertion failed: pos_point.y >= 0"
+Status: SUCCESS
+Description: "assertion failed: pos_point.x >= 0"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+VERIFICATION:- SUCCESSFUL

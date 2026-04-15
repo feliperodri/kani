@@ -7,8 +7,8 @@
 // downstream crates to enable these features as well.
 // So we have to enable this on the commandline (see kani-rustc) with:
 //   RUSTFLAGS="-Zcrate-attr=feature(register_tool) -Zcrate-attr=register_tool(kanitool)"
+#![allow(unused_features)] // proc_macro_diagnostic used conditionally
 #![feature(proc_macro_diagnostic)]
-#![feature(proc_macro_span)]
 mod derive;
 mod derive_bounded;
 

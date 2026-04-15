@@ -1,3 +1,7 @@
-SUCCESS\
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
 Description: "assertion failed: x == 0"
+Status: SUCCESS
+Description: "TerminatorKind::InlineAsm is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/2"
 VERIFICATION:- SUCCESSFUL

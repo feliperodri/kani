@@ -1,48 +1,45 @@
-Checking harness check_random...
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_random
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_random
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_random
-
-Checking harness check_basic...
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_basic
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_basic
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_basic
-
-Checking harness check_continuous...
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_continuous
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_continuous
-
-Status: SATISFIED\
-Description: "This should be reachable"\
-in function check_continuous
-
- ** 3 of 3 cover properties satisfied
-
-
+Status: SUCCESS
+Description: "unreachable code"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 12"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 11"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 10"
 VERIFICATION:- SUCCESSFUL
-
-Complete - 3 successfully verified harnesses, 0 failures, 3 total.
+Status: SUCCESS
+Description: "unreachable code"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 0"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 100"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == -10"
+VERIFICATION:- SUCCESSFUL
+Status: SUCCESS
+Description: "unreachable code"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 2"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 1"
+Status: SATISFIED
+Description: "This should be reachable"
+Status: SUCCESS
+Description: "assertion failed: val == 0"
+VERIFICATION:- SUCCESSFUL

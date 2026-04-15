@@ -1,9 +1,5 @@
-Checking harness verify::bar_harness...
-Status: SATISFIED\
-Description: "Cover `bar`"
-
-Checking harness verify::foo_harness...
-Status: SATISFIED\
-Description: "Cover `foo`"
-
+Checking harness bar::verify::bar_harness...
+VERIFICATION:- SUCCESSFUL
+Checking harness foo::verify::foo_harness...
+VERIFICATION:- SUCCESSFUL
 Complete - 2 successfully verified harnesses, 0 failures, 2 total.

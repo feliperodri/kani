@@ -1,20 +1,185 @@
-multiple_instrumentations_different_vars.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
-
-multiple_instrumentations_different_vars.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u64`"
-
-multiple_instrumentations.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
-
-multiple_instrumentations.safety_check\
-	 - Status: FAILURE\
-	 - Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
-
-Summary:
-Verification failed for - multiple_instrumentations_different_vars
-Verification failed for - multiple_instrumentations
-Complete - 0 successfully verified harnesses, 2 failures, 2 total.
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u64`"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `u128`
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `u64`
+VERIFICATION:- FAILED
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: FAILURE
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
+Status: SUCCESS
+Description: "Undefined Behavior: Reading from an uninitialized pointer of type `u128`"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "index out of bounds: the length is less than or equal to the given index"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: Undefined Behavior: Reading from an uninitialized pointer of type `u128`
+VERIFICATION:- FAILED

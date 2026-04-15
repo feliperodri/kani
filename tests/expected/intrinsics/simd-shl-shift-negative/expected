@@ -1,2 +1,6 @@
-FAILURE\
-attempt simd_shl with negative shift distance
+Status: SUCCESS
+Description: "attempt simd_shl with excessive shift distance"
+Status: FAILURE
+Description: "attempt simd_shl with negative shift distance"
+Failed Checks: attempt simd_shl with negative shift distance
+VERIFICATION:- FAILED

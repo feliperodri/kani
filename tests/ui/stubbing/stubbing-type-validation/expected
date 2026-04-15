@@ -1,15 +1,20 @@
-error: mismatch in the number of generic parameters: original function/method `h1` takes 1 generic parameters(s), stub `h2` takes 2
-
-error: Cannot stub `g1` by `g2`.\
-        - Expected return type `bool`, but found `i32`\
-        - Expected type `i32` for parameter 2, but found `u32`\
-        - Expected type `&bool` for parameter 3, but found `&mut bool`\
-
-error: Cannot stub `i1` by `i2`.\
-        - Expected return type `X`, but found `Y`
-
-error: arity mismatch: original function/method `f1` takes 1 argument(s), stub `f2` takes 0
-
-error: Cannot stub `<MyStruct as TraitA>::method_a` by `<MyStruct as TraitB>::method_b`.\
-        - Expected return type `i32`, but found `bool`\
-        - Expected type `std::string::String` for parameter 2, but found `i32`
+warning: function `f1` is never used
+warning: function `f2` is never used
+warning: function `g1` is never used
+warning: function `g2` is never used
+warning: function `h1` is never used
+warning: function `h2` is never used
+warning: function `i1` is never used
+warning: function `i2` is never used
+warning: function `j1` is never used
+warning: function `j2` is never used
+warning: trait `TraitA` is never used
+warning: trait `TraitB` is never used
+warning: struct `MyStruct` is never constructed
+error: arity mismatch: original function/method `type_mismatch::f1` takes 1 argument(s), stub `type_mismatch::f2` takes 0
+error: Cannot stub `type_mismatch::j1` by `type_mismatch::j2`.
+error: Cannot stub `type_mismatch::g1` by `type_mismatch::g2`.
+error: mismatch in the number of generic parameters: original function/method `type_mismatch::h1` takes 1 generic parameters(s), stub `type_mismatch::h2` takes 2
+error: Cannot stub `<type_mismatch::MyStruct as type_mismatch::TraitA>::method_a` by `<type_mismatch::MyStruct as type_mismatch::TraitB>::method_b`.
+error: Cannot stub `type_mismatch::i1` by `type_mismatch::i2`.
+error: aborting due to 6 previous errors; 13 warnings emitted

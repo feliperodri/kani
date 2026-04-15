@@ -1,22 +1,86 @@
-SUCCESS\
-assertion failed: foo().x == 12
-FAILURE\
-assertion failed: foo().y == 12
-FAILURE\
-assertion failed: foo().x == 14
-SUCCESS\
-assertion failed: foo().y == 14
-SUCCESS\
-assertion failed: foo().x == 1
-FAILURE\
-assertion failed: foo().y == 1
-FAILURE\
-assertion failed: foo().x == 2
-SUCCESS\
-assertion failed: foo().y == 2
-SUCCESS\
-assertion failed: foo().x == 1 << 62
-FAILURE\
-assertion failed: foo().x == 1 << 31
-SUCCESS\
-assertion failed: foo().y == 1 << 31
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: SUCCESS
+Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "null pointer dereference occurred"
+Status: FAILURE
+Description: "assertion failed: foo().y == 12"
+Status: FAILURE
+Description: "assertion failed: foo().x == 14"
+Status: FAILURE
+Description: "assertion failed: foo().y == 1"
+Status: FAILURE
+Description: "assertion failed: foo().x == 2"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "assertion failed: foo().x == 1 << 31"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "assertion failed: foo().y == 1 << 31"
+Status: SUCCESS
+Description: "assertion failed: foo().x == 1 << 62"
+Status: SUCCESS
+Description: "assertion failed: foo().y == 2"
+Status: SUCCESS
+Description: "assertion failed: foo().x == 1"
+Status: SUCCESS
+Description: "assertion failed: foo().y == 14"
+Status: SUCCESS
+Description: "assertion failed: foo().x == 12"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Failed Checks: assertion failed: foo().y == 12
+Failed Checks: assertion failed: foo().x == 14
+Failed Checks: assertion failed: foo().y == 1
+Failed Checks: assertion failed: foo().x == 2
+Failed Checks: assertion failed: foo().x == 1 << 31
+VERIFICATION:- FAILED

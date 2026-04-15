@@ -1,254 +1,1661 @@
+warning: Found the following unsupported constructs:
+             - caller_location (1)
+             - foreign function (1)
+         
+         Verification will fail if one or more of these constructs is reachable.
+         See https://model-checking.github.io/kani/rust-feature-support.html for more details.
+
+
 Kani generated automatic harnesses for 44 function(s):
-+--------------------------+----------------------------------------------+
-| Crate                    | Selected Function                            |
-+=========================================================================+
-| cargo_autoharness_filter | yes_harness::empty_body                      |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_array                         |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_bool                          |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_char                          |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_compiler_derives_arbitrary    |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_derives_arbitrary             |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_f128                          |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_f16                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_f32                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_f64                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_i128                          |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_i16                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_i32                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_i64                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_i8                            |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_isize                         |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_manually_implements_arbitrary |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_maybe_uninit                  |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_multiple_args                 |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i128                  |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i16                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i32                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i64                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i8                    |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_isize                 |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u128                  |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u16                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u32                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u64                   |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u8                    |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_usize                 |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_option                        |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_phantom_data                  |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_phantom_pinned                |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_ref                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_result                        |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_tuple                         |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_u128                          |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_u16                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_u32                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_u64                           |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_u8                            |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_unsupported_return_type       |
-|--------------------------+----------------------------------------------|
-| cargo_autoharness_filter | yes_harness::f_usize                         |
-+--------------------------+----------------------------------------------+
++--------------------------+------------------------------------------------------------------------+
+| Crate                    | Selected Function                                                      |
++===================================================================================================+
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::empty_body                      |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_array                         |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_bool                          |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_char                          |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_compiler_derives_arbitrary    |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_derives_arbitrary             |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f128                          |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f16                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f32                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f64                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i128                          |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i16                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i32                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i64                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i8                            |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_isize                         |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_manually_implements_arbitrary |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_maybe_uninit                  |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_multiple_args                 |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i128                  |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i16                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i32                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i64                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i8                    |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_isize                 |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u128                  |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u16                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u32                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u64                   |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u8                    |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_usize                 |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_option                        |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_phantom_data                  |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_phantom_pinned                |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_ref                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_result                        |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_tuple                         |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u128                          |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u16                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u32                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u64                           |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u8                            |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_unsupported_return_type       |
+|--------------------------+------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_usize                         |
++--------------------------+------------------------------------------------------------------------+
 
 Kani did not generate automatic harnesses for 7 function(s).
 If you believe that the provided reason is incorrect and Kani should have generated an automatic harness, please comment on this issue: https://github.com/model-checking/kani/issues/3832
-+--------------------------+----------------------------------------+----------------------------------------------------------------------------------+
-| Crate                    | Skipped Function                       | Reason for Skipping                                                              |
-+======================================================================================================================================================+
-| cargo_autoharness_filter | no_harness::doesnt_implement_arbitrary | Missing Arbitrary implementation for argument(s) x: DoesntImplementArbitrary<'_> |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_const_pointer  | Missing Arbitrary implementation for argument(s) _y: *const i32                  |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_generic        | Generic Function                                                                 |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_mut_pointer    | Missing Arbitrary implementation for argument(s) _y: *mut i32                    |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_no_arg_name    | Missing Arbitrary implementation for argument(s) _: *const i32                   |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_slice          | Missing Arbitrary implementation for argument(s) _y: &[u8]                       |
-|--------------------------+----------------------------------------+----------------------------------------------------------------------------------|
-| cargo_autoharness_filter | no_harness::unsupported_vec            | Missing Arbitrary implementation for argument(s) _y: std::vec::Vec<u8>           |
-+--------------------------+----------------------------------------+----------------------------------------------------------------------------------+
++--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------+
+| Crate                    | Skipped Function                                                 | Reason for Skipping                                                              |
++================================================================================================================================================================================+
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::doesnt_implement_arbitrary | Missing Arbitrary implementation for argument(s) x: DoesntImplementArbitrary<'_> |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_const_pointer  | Missing Arbitrary implementation for argument(s) _y: *const i32                  |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_generic        | Generic Function                                                                 |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_mut_pointer    | Missing Arbitrary implementation for argument(s) _y: *mut i32                    |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_no_arg_name    | Missing Arbitrary implementation for argument(s) _: *const i32                   |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_slice          | Missing Arbitrary implementation for argument(s) _y: &[u8]                       |
+|--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::no_harness::unsupported_vec            | Missing Arbitrary implementation for argument(s) _y: std::vec::Vec<u8>           |
++--------------------------+------------------------------------------------------------------+----------------------------------------------------------------------------------+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_ref against all possible inputs...
 
-Autoharness: Checking function yes_harness::f_ref against all possible inputs...
-Autoharness: Checking function yes_harness::f_tuple against all possible inputs...
-Autoharness: Checking function yes_harness::f_maybe_uninit against all possible inputs...
-Autoharness: Checking function yes_harness::f_result against all possible inputs...
-Autoharness: Checking function yes_harness::f_option against all possible inputs...
-Autoharness: Checking function yes_harness::f_array against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_isize against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_i128 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_i64 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_i32 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_i16 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_i8 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_usize against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_u128 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_u64 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_u32 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_u16 against all possible inputs...
-Autoharness: Checking function yes_harness::f_nonzero_u8 against all possible inputs...
-Autoharness: Checking function yes_harness::f_f128 against all possible inputs...
-Autoharness: Checking function yes_harness::f_f16 against all possible inputs...
-Autoharness: Checking function yes_harness::f_f64 against all possible inputs...
-Autoharness: Checking function yes_harness::f_f32 against all possible inputs...
-Autoharness: Checking function yes_harness::f_compiler_derives_arbitrary against all possible inputs...
-Autoharness: Checking function yes_harness::f_char against all possible inputs...
-Autoharness: Checking function yes_harness::f_bool against all possible inputs...
-Autoharness: Checking function yes_harness::f_isize against all possible inputs...
-Autoharness: Checking function yes_harness::f_i128 against all possible inputs...
-Autoharness: Checking function yes_harness::f_i64 against all possible inputs...
-Autoharness: Checking function yes_harness::f_i32 against all possible inputs...
-Autoharness: Checking function yes_harness::f_i16 against all possible inputs...
-Autoharness: Checking function yes_harness::f_i8 against all possible inputs...
-Autoharness: Checking function yes_harness::f_usize against all possible inputs...
-Autoharness: Checking function yes_harness::f_u128 against all possible inputs...
-Autoharness: Checking function yes_harness::f_u64 against all possible inputs...
-Autoharness: Checking function yes_harness::f_u32 against all possible inputs...
-Autoharness: Checking function yes_harness::f_u16 against all possible inputs...
-Autoharness: Checking function yes_harness::f_u8 against all possible inputs...
-Autoharness: Checking function yes_harness::f_unsupported_return_type against all possible inputs...
-Autoharness: Checking function yes_harness::f_multiple_args against all possible inputs...
-Autoharness: Checking function yes_harness::f_derives_arbitrary against all possible inputs...
-Autoharness: Checking function yes_harness::f_manually_implements_arbitrary against all possible inputs...
-Autoharness: Checking function yes_harness::f_phantom_data against all possible inputs...
-Autoharness: Checking function yes_harness::f_phantom_pinned against all possible inputs...
-Autoharness: Checking function yes_harness::empty_body against all possible inputs...
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::empty_body against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_phantom_pinned against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_phantom_data against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_manually_implements_arbitrary against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_compiler_derives_arbitrary against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_derives_arbitrary against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_multiple_args against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_unsupported_return_type against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: __rust_alloc_zeroed.assertion.1
+	 - Status: SUCCESS
+	 - Description: "__rust_alloc_zeroed must be called with a size greater than 0"
+	 - Location: ../../../library/kani/kani_lib.c:62 in function __rust_alloc_zeroed
+
+Check 2: __rust_alloc_zeroed.assertion.2
+	 - Status: SUCCESS
+	 - Description: "Alignment is power of two"
+	 - Location: ../../../library/kani/kani_lib.c:65 in function __rust_alloc_zeroed
+
+Check 3: malloc.assertion.1
+	 - Status: SUCCESS
+	 - Description: "max allocation size exceeded"
+	 - Location: <builtin-library-malloc>:31 in function malloc
+
+Check 4: malloc.assertion.2
+	 - Status: SUCCESS
+	 - Description: "max allocation may fail"
+	 - Location: <builtin-library-malloc>:36 in function malloc
+
+Check 5: __rust_alloc.assertion.1
+	 - Status: SUCCESS
+	 - Description: "__rust_alloc must be called with a size greater than 0"
+	 - Location: ../../../library/kani/kani_lib.c:43 in function __rust_alloc
+
+Check 6: __rust_alloc.assertion.2
+	 - Status: SUCCESS
+	 - Description: "Alignment is power of two"
+	 - Location: ../../../library/kani/kani_lib.c:46 in function __rust_alloc
+
+Check 7: std::alloc::handle_alloc_error::rt_error.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:510:5 in function std::alloc::handle_alloc_error::rt_error
+
+Check 8: std::boxed::Box::<[u8]>::into_raw_with_allocator.safety_check.1
+	 - Status: SUCCESS
+	 - Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 9: std::boxed::Box::<[u8]>::into_raw_with_allocator.safety_check.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 10: calloc.assertion.1
+	 - Status: SUCCESS
+	 - Description: "max allocation size exceeded"
+	 - Location: <builtin-library-calloc>:31 in function calloc
+
+Check 11: calloc.assertion.2
+	 - Status: SUCCESS
+	 - Description: "max allocation may fail"
+	 - Location: <builtin-library-calloc>:36 in function calloc
+
+Check 12: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 13: std::alloc::Global::alloc_impl_runtime.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:211:27 in function std::alloc::Global::alloc_impl_runtime
+
+Check 14: std::boxed::box_new_uninit.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:248:11 in function std::boxed::box_new_uninit
+
+Check 15: std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1338:15 in function std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>
+
+Check 16: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.safety_check.1
+	 - Status: SUCCESS
+	 - Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 17: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.safety_check.2
+	 - Status: SUCCESS
+	 - Description: "null pointer dereference occurred"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 18: <std::result::Result<std::ptr::NonNull<[u8]>, std::alloc::AllocError> as std::ops::FromResidual<std::result::Result<std::convert::Infallible, std::alloc::AllocError>>>::from_residual.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:2188:15 in function <std::result::Result<std::ptr::NonNull<[u8]>, std::alloc::AllocError> as std::ops::FromResidual<std::result::Result<std::convert::Infallible, std::alloc::AllocError>>>::from_residual
+
+Check 19: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 20: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 21: std::slice::<impl [u8]>::into_vec::<std::alloc::Global>.safety_check.1
+	 - Status: SUCCESS
+	 - Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/slice.rs:482:23 in function std::slice::<impl [u8]>::into_vec::<std::alloc::Global>
+
+Check 22: std::slice::<impl [u8]>::into_vec::<std::alloc::Global>.safety_check.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/slice.rs:482:23 in function std::slice::<impl [u8]>::into_vec::<std::alloc::Global>
+
+Check 23: <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:2173:15 in function <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch
+
+Check 24: std::alloc::Layout::alignment.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 25: std::alloc::Layout::alignment.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 26: std::alloc::Layout::alignment.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 27: std::alloc::Layout::alignment.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 28: std::alloc::Layout::alignment.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 29: std::alloc::Layout::alignment.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:198:9 in function std::alloc::Layout::alignment
+
+Check 30: <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:2173:15 in function <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch
+
+Check 31: <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:2175:23 in function <std::result::Result<std::ptr::NonNull<u8>, std::alloc::AllocError> as std::ops::Try>::branch
+
+Check 32: calloc.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: <builtin-library-calloc>:14 in function calloc
+
+Check 33: std::alloc::Layout::dangling_ptr.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 34: std::alloc::Layout::dangling_ptr.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 35: std::alloc::Layout::dangling_ptr.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 36: std::alloc::Layout::dangling_ptr.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 37: std::alloc::Layout::dangling_ptr.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 38: std::alloc::Layout::dangling_ptr.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:271:37 in function std::alloc::Layout::dangling_ptr
+
+Check 39: std::ptr::NonNull::<u8>::new.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ptr/non_null.rs:274:13 in function std::ptr::NonNull::<u8>::new
+
+Check 40: <std::result::Result<std::ptr::NonNull<[u8]>, std::alloc::AllocError> as std::ops::FromResidual<std::result::Result<std::convert::Infallible, std::alloc::AllocError>>>::from_residual.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:2189:23 in function <std::result::Result<std::ptr::NonNull<[u8]>, std::alloc::AllocError> as std::ops::FromResidual<std::result::Result<std::convert::Infallible, std::alloc::AllocError>>>::from_residual
+
+Check 41: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 42: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 43: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 44: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 45: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 46: cargo_autoharness_filter::yes_harness::f_unsupported_return_type.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:59:86 in function cargo_autoharness_filter::yes_harness::f_unsupported_return_type
+
+Check 47: std::boxed::box_new_uninit.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:248:11 in function std::boxed::box_new_uninit
+
+Check 48: std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1338:15 in function std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>
+
+Check 49: std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1340:21 in function std::option::Option::<std::ptr::NonNull<u8>>::ok_or::<std::alloc::AllocError>
+
+Check 50: std::alloc::Layout::align.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 51: std::alloc::Layout::align.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 52: std::alloc::Layout::align.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 53: std::alloc::Layout::align.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 54: std::alloc::Layout::align.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 55: std::alloc::Layout::align.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:188:9 in function std::alloc::Layout::align
+
+Check 56: std::alloc::Global::alloc_impl_runtime.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/alloc.rs:211:27 in function std::alloc::Global::alloc_impl_runtime
+
+Check 57: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 58: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 59: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 60: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 61: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 62: std::boxed::Box::<[u8]>::into_raw_with_allocator.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/boxed.rs:1659:19 in function std::boxed::Box::<[u8]>::into_raw_with_allocator
+
+Check 63: std::alloc::Layout::size.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+Check 64: std::alloc::Layout::size.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+Check 65: std::alloc::Layout::size.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+Check 66: std::alloc::Layout::size.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+Check 67: std::alloc::Layout::size.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+Check 68: std::alloc::Layout::size.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/alloc/layout.rs:176:9 in function std::alloc::Layout::size
+
+
+SUMMARY:
+ ** 0 of 68 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_tuple against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_maybe_uninit against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_result against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_option against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_array against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_isize against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 2: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 3: std::num::NonZero::<isize>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<isize>::new_unchecked
+
+Check 4: std::num::NonZero::<isize>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<isize>::new_unchecked
+
+Check 5: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 6: std::num::NonZero::<isize>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<isize>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_i128 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 2: std::num::NonZero::<i128>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i128>::new_unchecked
+
+Check 3: std::num::NonZero::<i128>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<i128>::new_unchecked
+
+Check 4: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 5: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 6: std::num::NonZero::<i128>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i128>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_i64 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 2: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 3: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 4: std::num::NonZero::<i64>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i64>::new_unchecked
+
+Check 5: std::num::NonZero::<i64>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<i64>::new_unchecked
+
+Check 6: std::num::NonZero::<i64>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i64>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_i32 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::num::NonZero::<i32>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i32>::new_unchecked
+
+Check 2: std::num::NonZero::<i32>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<i32>::new_unchecked
+
+Check 3: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 4: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 5: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 6: std::num::NonZero::<i32>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i32>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_i16 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 2: std::num::NonZero::<i16>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i16>::new_unchecked
+
+Check 3: std::num::NonZero::<i16>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<i16>::new_unchecked
+
+Check 4: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 5: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 6: std::num::NonZero::<i16>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i16>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_i8 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 2: std::num::NonZero::<i8>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i8>::new_unchecked
+
+Check 3: std::num::NonZero::<i8>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<i8>::new_unchecked
+
+Check 4: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 5: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 6: std::num::NonZero::<i8>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<i8>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_usize against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 2: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 3: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 4: std::num::NonZero::<usize>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<usize>::new_unchecked
+
+Check 5: std::num::NonZero::<usize>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<usize>::new_unchecked
+
+Check 6: std::num::NonZero::<usize>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<usize>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_u128 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 2: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 3: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 4: std::num::NonZero::<u128>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u128>::new_unchecked
+
+Check 5: std::num::NonZero::<u128>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<u128>::new_unchecked
+
+Check 6: std::num::NonZero::<u128>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u128>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_u64 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::num::NonZero::<u64>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u64>::new_unchecked
+
+Check 2: std::num::NonZero::<u64>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<u64>::new_unchecked
+
+Check 3: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 4: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 5: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 6: std::num::NonZero::<u64>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u64>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_u32 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::num::NonZero::<u32>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u32>::new_unchecked
+
+Check 2: std::num::NonZero::<u32>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<u32>::new_unchecked
+
+Check 3: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 4: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 5: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 6: std::num::NonZero::<u32>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u32>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_u16 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 2: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 3: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 4: std::num::NonZero::<u16>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u16>::new_unchecked
+
+Check 5: std::num::NonZero::<u16>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<u16>::new_unchecked
+
+Check 6: std::num::NonZero::<u16>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u16>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_nonzero_u8 against all possible inputs...
+Running propositional reduction
+
+RESULTS:
+Check 1: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 2: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 3: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 4: std::num::NonZero::<u8>::new_unchecked.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u8>::new_unchecked
+
+Check 5: std::num::NonZero::<u8>::new_unchecked.unreachable.2
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:432:21 in function std::num::NonZero::<u8>::new_unchecked
+
+Check 6: std::num::NonZero::<u8>::new_unchecked.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/nonzero.rs:422:15 in function std::num::NonZero::<u8>::new_unchecked
+
+
+SUMMARY:
+ ** 0 of 6 failed (1 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_f128 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_f16 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_f64 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_f32 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_char against all possible inputs...
+
+RESULTS:
+Check 1: std::panic::Location::<'_>::caller.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panic/location.rs:181:9 in function std::panic::Location::<'_>::caller
+
+Check 2: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
+	 - Status: SUCCESS
+	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
+
+Check 3: std::result::Result::<char, std::char::CharTryFromError>::is_ok.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:593:5 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 4: std::fmt::Arguments::<'_>::from_str.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to shift left with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:820:38 in function std::fmt::Arguments::<'_>::from_str
+
+Check 5: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::contains::<u32>.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/lib.rs:0:0 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::contains::<u32>
+
+Check 6: std::char::convert::char_try_from_u32.assertion.1
+	 - Status: UNREACHABLE
+	 - Description: "attempt to subtract with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/char/convert.rs:293:44 in function std::char::convert::char_try_from_u32
+
+Check 7: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 8: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 9: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 10: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 11: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 12: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 13: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 14: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 15: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 16: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 17: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 18: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1917:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::le
+
+Check 19: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 20: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 21: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 22: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 23: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 24: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 25: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 26: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 27: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 28: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 29: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 30: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2141:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::lt
+
+Check 31: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 32: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 33: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 34: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 35: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 36: std::result::Result::<char, std::char::CharTryFromError>::is_ok.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:594:18 in function std::result::Result::<char, std::char::CharTryFromError>::is_ok
+
+Check 37: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 38: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 39: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 40: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 41: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 42: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:50 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 43: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 44: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 45: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 46: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 47: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 48: std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:1915:59 in function std::cmp::impls::<impl std::cmp::PartialOrd for u32>::lt
+
+Check 49: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 50: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 51: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 52: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 53: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 54: <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/range.rs:1129:12 in function <std::ops::RangeInclusive<u32> as std::ops::RangeBounds<u32>>::end_bound
+
+Check 55: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 56: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 57: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 58: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 59: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 60: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:28 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 61: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 62: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 63: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 64: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 65: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 66: std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cmp.rs:2145:35 in function std::cmp::impls::<impl std::cmp::PartialOrd for &u32>::le
+
+Check 67: std::char::convert::char_try_from_u32.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/char/convert.rs:294:9 in function std::char::convert::char_try_from_u32
+
+
+SUMMARY:
+ ** 0 of 67 failed (2 unreachable)
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_bool against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_isize against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_i128 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_i64 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_i32 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_i16 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_i8 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_usize against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_u128 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_u64 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_u32 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_u16 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
+
+Autoharness: Checking function cargo_autoharness_filter::yes_harness::f_u8 against all possible inputs...
+
+RESULTS:
+
+SUMMARY:
+ ** 0 of 0 failed
+
+VERIFICATION:- SUCCESSFUL
 
 Manual Harness Summary:
 No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+--------------------------+----------------------------------------------+---------------------------+---------------------+
-| Crate                    | Selected Function                            | Kind of Automatic Harness | Verification Result |
-+===========================================================================================================================+
-| cargo_autoharness_filter | yes_harness::empty_body                      | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_array                         | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_bool                          | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_char                          | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_compiler_derives_arbitrary    | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_derives_arbitrary             | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_f128                          | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_f16                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_f32                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_f64                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_i128                          | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_i16                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_i32                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_i64                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_i8                            | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_isize                         | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_manually_implements_arbitrary | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_maybe_uninit                  | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_multiple_args                 | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i128                  | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i16                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i32                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i64                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_i8                    | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_isize                 | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u128                  | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u16                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u32                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u64                   | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_u8                    | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_nonzero_usize                 | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_option                        | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_phantom_data                  | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_phantom_pinned                | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_ref                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_result                        | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_tuple                         | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_u128                          | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_u16                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_u32                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_u64                           | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_u8                            | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_unsupported_return_type       | #[kani::proof]            | Success             |
-|--------------------------+----------------------------------------------+---------------------------+---------------------|
-| cargo_autoharness_filter | yes_harness::f_usize                         | #[kani::proof]            | Success             |
-+--------------------------+----------------------------------------------+---------------------------+---------------------+
++--------------------------+------------------------------------------------------------------------+---------------------------+---------------------+
+| Crate                    | Selected Function                                                      | Kind of Automatic Harness | Verification Result |
++=====================================================================================================================================================+
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::empty_body                      | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_array                         | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_bool                          | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_char                          | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_compiler_derives_arbitrary    | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_derives_arbitrary             | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f128                          | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f16                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f32                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_f64                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i128                          | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i16                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i32                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i64                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_i8                            | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_isize                         | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_manually_implements_arbitrary | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_maybe_uninit                  | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_multiple_args                 | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i128                  | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i16                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i32                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i64                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_i8                    | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_isize                 | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u128                  | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u16                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u32                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u64                   | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_u8                    | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_nonzero_usize                 | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_option                        | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_phantom_data                  | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_phantom_pinned                | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_ref                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_result                        | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_tuple                         | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u128                          | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u16                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u32                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u64                           | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_u8                            | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_unsupported_return_type       | #[kani::proof]            | Success             |
+|--------------------------+------------------------------------------------------------------------+---------------------------+---------------------|
+| cargo_autoharness_filter | cargo_autoharness_filter::yes_harness::f_usize                         | #[kani::proof]            | Success             |
++--------------------------+------------------------------------------------------------------------+---------------------------+---------------------+
 Complete - 44 successfully verified functions, 0 failures, 44 total.

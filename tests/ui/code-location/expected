@@ -1,7 +1,6 @@
-module/mod.rs:10:5 in function module::not_empty
-main.rs:13:5 in function same_file
-/toolchains/
-alloc/src/vec/mod.rs:
-in function <std::vec::Vec<i32> as std::ops::Drop>::drop
-
+Checking harness main::harness...
 VERIFICATION:- SUCCESSFUL
+Checking harness main::module::empty_harness...
+VERIFICATION:- SUCCESSFUL
+Manual Harness Summary:
+Complete - 2 successfully verified harnesses, 0 failures, 2 total.

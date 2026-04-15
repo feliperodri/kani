@@ -7,7 +7,7 @@ use crate::codegen_cprover_gotoc::GotocCtx;
 use crate::codegen_cprover_gotoc::codegen::block::reverse_postorder;
 use cbmc::InternString;
 use cbmc::InternedString;
-use cbmc::goto_program::{Expr, Stmt, Symbol};
+use cbmc::goto_program::{Expr, Stmt, Symbol, Type};
 use rustc_public::CrateDef;
 use rustc_public::mir::mono::Instance;
 use rustc_public::mir::{Body, Local};
@@ -212,6 +212,37 @@ impl GotocCtx<'_, '_> {
 
     pub fn declare_function(&mut self, instance: Instance) {
         debug!("declaring {}; {:?}", instance.name(), instance);
+        let fname = instance.mangled_name();
+        if !instance.has_body() {
+            // Bodyless items (e.g., enum variant constructors, function trait
+            // shims in newer toolchains). Provide a body that asserts false
+            // so CBMC doesn't report "missing definition" errors.
+            if !self.symbol_table.contains((&fname).into()) {
+                let loc = self.codegen_span_stable(instance.def.span());
+                let fn_abi = instance.fn_abi().unwrap();
+                let params: Vec<_> = fn_abi
+                    .args
+                    .iter()
+                    .filter_map(|arg| {
+                        let ty = self.codegen_ty_stable(arg.ty);
+                        if ty.sizeof_in_bits(&self.symbol_table) == 0 {
+                            None
+                        } else {
+                            Some(ty.as_parameter(None, None))
+                        }
+                    })
+                    .collect();
+                let ret_ty = self.codegen_ty_stable(fn_abi.ret.ty);
+                let fn_typ = if fn_abi.c_variadic {
+                    Type::variadic_code(params, ret_ty)
+                } else {
+                    Type::code(params, ret_ty)
+                };
+                let sym = Symbol::function(&fname, fn_typ, None, instance.name(), loc);
+                self.symbol_table.insert(sym);
+            }
+            return;
+        }
         let body = self.transformer.body(self.tcx, instance);
         self.set_current_fn(instance, &body);
         debug!(krate=?instance.def.krate(), is_std=self.current_fn().is_std(), "declare_function");

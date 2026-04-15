@@ -1,6 +1,16 @@
-Failed Checks: internal error: entered unreachable code: msg
-Failed Checks: internal error: entered unreachable code:
-Failed Checks: internal error: entered unreachable code: Error message
-Failed Checks: internal error: entered unreachable code: "Unreachable message with arg {}", "str"
-Failed Checks: internal error: entered unreachable code: "{}", msg
-Failed Checks: internal error: entered unreachable code: concat!("My", " error", " message")
+Checking harness unreach_msg::check_unreachable...
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "internal error: entered unreachable code"
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: internal error: entered unreachable code
+VERIFICATION:- FAILED

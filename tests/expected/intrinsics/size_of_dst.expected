@@ -1,20 +1,94 @@
-Checking harness check_size_of_overflows...
-
-safety_check\
-Status: FAILURE\
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `size_of_val` for extern types"
+Status: FAILURE
 Description: "failed to compute `size_of_val`"
-
-Status: SUCCESS\
-Description: "assertion failed: unsafe { size_of_val_raw(new_ptr) } == expected_size"
-
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
 Failed Checks: failed to compute `size_of_val`
 VERIFICATION:- FAILED
-
-Checking harness check_size_of_adt_overflows...
-
-0 of 2 cover properties satisfied (2 unreachable)
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "cannot compute `size_of_val` for extern types"
+Status: FAILURE
+Description: "failed to compute `size_of_val`"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_add` which would overflow"
+Status: UNREACHABLE
+Description: "Expected unreachable"
+Status: SUCCESS
+Description: "unreachable code"
+Status: UNREACHABLE
+Description: "Expected unreachable"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: pointer NULL"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "dereference failure: deallocated dynamic object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: pointer outside object bounds"
+Status: SUCCESS
+Description: "dereference failure: invalid integer address"
+Status: SUCCESS
+Description: "dereference failure: dead object"
+Status: SUCCESS
+Description: "dereference failure: dead object"
 Failed Checks: failed to compute `size_of_val`
 VERIFICATION:- FAILED
-
-Verification failed for - check_size_of_overflows
-Verification failed for - check_size_of_adt_overflows

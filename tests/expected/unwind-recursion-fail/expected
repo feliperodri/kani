@@ -1,8 +1,42 @@
-UNDETERMINED\
-assertion failed: f == 120
-UNDETERMINED\
-attempt to subtract with overflow
-UNDETERMINED\
-attempt to multiply with overflow
-[Kani] info: Verification output shows one or more unwinding failures.
-[Kani] tip: Consider increasing the unwinding value or disabling `--unwinding-assertions`.
+Status: UNDETERMINED
+Description: "unreachable code"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNDETERMINED
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: UNDETERMINED
+Description: "attempt to subtract with overflow"
+Status: UNDETERMINED
+Description: "attempt to multiply with overflow"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: pointer NULL"
+Status: UNDETERMINED
+Description: "dereference failure: pointer invalid"
+Status: UNDETERMINED
+Description: "dereference failure: deallocated dynamic object"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: UNDETERMINED
+Description: "dereference failure: pointer outside object bounds"
+Status: UNDETERMINED
+Description: "dereference failure: invalid integer address"
+Status: UNDETERMINED
+Description: "dereference failure: dead object"
+Status: FAILURE
+Description: "recursion unwinding assertion"
+Failed Checks: recursion unwinding assertion
+VERIFICATION:- FAILED

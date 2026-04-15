@@ -1,10 +1,40 @@
-SUCCESS\
-assertion failed: 1.0 / f != 0.0 / f
-SUCCESS\
-assertion failed: !(1.0 / f == 0.0 / f)
-FAILURE\
-assertion failed: 1.0 / f == 0.0 / f
-FAILURE\
-assertion failed: 0.0 / f == 0.0 / f
-SUCCESS\
-assertion failed: 0.0 / f != 0.0 / f
+Status: SUCCESS
+Description: "assertion failed: 0.0 / f != 0.0 / f"
+Status: FAILURE
+Description: "assertion failed: 0.0 / f == 0.0 / f"
+Status: FAILURE
+Description: "assertion failed: 1.0 / f == 0.0 / f"
+Status: SUCCESS
+Description: "assertion failed: !(1.0 / f == 0.0 / f)"
+Status: SUCCESS
+Description: "assertion failed: 1.0 / f != 0.0 / f"
+Status: FAILURE
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Status: SUCCESS
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Status: SUCCESS
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Status: SUCCESS
+Description: "NaN on division"
+Status: FAILURE
+Description: "NaN on division"
+Failed Checks: assertion failed: 0.0 / f == 0.0 / f
+Failed Checks: assertion failed: 1.0 / f == 0.0 / f
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+Failed Checks: NaN on division
+VERIFICATION:- FAILED

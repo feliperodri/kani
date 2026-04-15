@@ -1,10 +1,29 @@
-Failed Checks: concat!("Panic: {} code: ", 10), msg
-Failed Checks: msg
-Failed Checks: explicit panic
+Checking harness messages::check_user_panic_macro...
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+VERIFICATION:- FAILED
+Checking harness messages::check_panic_2018...
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: FAILURE
+Description: "Panic message"
+Status: FAILURE
+Description: "explicit panic"
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
+Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
 Failed Checks: Panic message
-Failed Checks: "Panic message with arg {}", "str"
-Failed Checks: "{}", msg
-
-Failed Checks: concat!\
-("ArrayVec::", "try_insert",\
-": index {} is out of bounds in vector of length {}"), 5, 3
+Failed Checks: explicit panic
+VERIFICATION:- FAILED

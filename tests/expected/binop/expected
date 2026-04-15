@@ -1,84 +1,120 @@
-SUCCESS\
-attempt to add with overflow
-SUCCESS\
-assertion failed: a + b == correct
-SUCCESS\
-attempt to add with overflow
-FAILURE\
-assertion failed: a + b == wrong
-SUCCESS\
-attempt to subtract with overflow
-SUCCESS\
-assertion failed: a - b == correct
-SUCCESS\
-attempt to subtract with overflow
-FAILURE\
-assertion failed: a - b == wrong
-SUCCESS\
-attempt to multiply with overflow
-SUCCESS\
-assertion failed: a * b == correct
-SUCCESS\
-attempt to multiply with overflow
-FAILURE\
-assertion failed: a * b == wrong
-SUCCESS\
-attempt to divide by zero
-SUCCESS\
-attempt to divide with overflow
-SUCCESS\
-assertion failed: a / b == correct
-SUCCESS\
-attempt to divide by zero
-SUCCESS\
-attempt to divide with overflow
-FAILURE\
-assertion failed: a / b == wrong
-SUCCESS\
-attempt to calculate the remainder with a divisor of zero
-SUCCESS\
-attempt to calculate the remainder with overflow
-SUCCESS\
-assertion failed: a % b == correct
-SUCCESS\
-attempt to calculate the remainder with a divisor of zero
-SUCCESS\
-attempt to calculate the remainder with overflow
-FAILURE\
-assertion failed: a % b == wrong
-SUCCESS\
-attempt to shift left with overflow
-SUCCESS\
-assertion failed: a << b == correct
-SUCCESS\
-attempt to shift left with overflow
-FAILURE\
-assertion failed: a << b == wrong
-SUCCESS\
-attempt to shift right with overflow
-SUCCESS\
-assertion failed: a >> b == correct
-SUCCESS\
-attempt to shift right with overflow
-FAILURE\
-assertion failed: a >> b == wrong
-SUCCESS\
-attempt to shift right with overflow
-SUCCESS\
-assertion failed: a >> b == correct
-SUCCESS\
-attempt to shift right with overflow
-FAILURE\
-assertion failed: a >> b == wrong
-SUCCESS\
-assertion failed: a & b == correct
-FAILURE\
-assertion failed: a & b == wrong
-SUCCESS\
-assertion failed: a | b == correct
-FAILURE\
-assertion failed: a | b == wrong
-SUCCESS\
-assertion failed: a ^ b == correct
-FAILURE\
-assertion failed: a ^ b == wrong
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: FAILURE
+Description: "assertion failed: a - b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a - b == correct"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: SUCCESS
+Description: "attempt to shift left with overflow"
+Status: FAILURE
+Description: "assertion failed: a << b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a << b == correct"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with overflow"
+Status: SUCCESS
+Description: "attempt to calculate the remainder with a divisor of zero"
+Status: FAILURE
+Description: "assertion failed: a % b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a % b == correct"
+Status: SUCCESS
+Description: "attempt to shift right with overflow"
+Status: SUCCESS
+Description: "attempt to shift right with overflow"
+Status: FAILURE
+Description: "assertion failed: a >> b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a >> b == correct"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide with overflow"
+Status: SUCCESS
+Description: "attempt to divide by zero"
+Status: FAILURE
+Description: "assertion failed: a / b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a / b == correct"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: SUCCESS
+Description: "attempt to multiply with overflow"
+Status: FAILURE
+Description: "assertion failed: a * b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a * b == correct"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: SUCCESS
+Description: "attempt to add with overflow"
+Status: FAILURE
+Description: "assertion failed: a + b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a + b == correct"
+Status: FAILURE
+Description: "assertion failed: a | b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a | b == correct"
+Status: FAILURE
+Description: "assertion failed: a ^ b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a ^ b == correct"
+Status: FAILURE
+Description: "assertion failed: a & b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a & b == correct"
+Status: SUCCESS
+Description: "attempt to shift right with overflow"
+Status: SUCCESS
+Description: "attempt to shift right with overflow"
+Status: FAILURE
+Description: "assertion failed: a >> b == wrong"
+Status: SUCCESS
+Description: "assertion failed: a >> b == correct"
+Status: SUCCESS
+Description: "division by zero"
+Status: SUCCESS
+Description: "division by zero"
+Status: SUCCESS
+Description: "division by zero"
+Status: SUCCESS
+Description: "division by zero"
+Failed Checks: assertion failed: a - b == wrong
+Failed Checks: assertion failed: a << b == wrong
+Failed Checks: assertion failed: a % b == wrong
+Failed Checks: assertion failed: a >> b == wrong
+Failed Checks: assertion failed: a / b == wrong
+Failed Checks: assertion failed: a * b == wrong
+Failed Checks: assertion failed: a + b == wrong
+Failed Checks: assertion failed: a | b == wrong
+Failed Checks: assertion failed: a ^ b == wrong
+Failed Checks: assertion failed: a & b == wrong
+Failed Checks: assertion failed: a >> b == wrong
+VERIFICATION:- FAILED

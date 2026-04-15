@@ -24,6 +24,7 @@ use rustc_public::mir::{
 };
 use rustc_public::ty::{
     AdtDef, AdtKind, FnDef, GenericArgKind, GenericArgs, RigidTy, Ty, TyKind, UintTy, VariantDef,
+    VariantIdx,
 };
 use rustc_public_bridge::IndexedVal;
 use tracing::debug;
@@ -175,6 +176,7 @@ impl AutomaticArbitraryPass {
         body: &mut MutableBody,
         source: &mut SourceInstruction,
         variant: VariantDef,
+        variant_index: usize,
     ) -> BasicBlockIdx {
         let fields = variant.fields();
         let mut field_locals = vec![];
@@ -193,7 +195,13 @@ impl AutomaticArbitraryPass {
         );
         let mut assign_instr = SourceInstruction::Terminator { bb: source.bb() - 1 };
         let rvalue = Rvalue::Aggregate(
-            AggregateKind::Adt(adt_def, variant.idx, adt_args.clone(), None, None),
+            AggregateKind::Adt(
+                adt_def,
+                VariantIdx::to_val(variant_index),
+                adt_args.clone(),
+                None,
+                None,
+            ),
             field_locals.into_iter().map(|lcl| Operand::Move(lcl.into())).collect(),
         );
         body.assign_to(Place::from(0), rvalue, &mut assign_instr, InsertPosition::Before);
@@ -240,10 +248,16 @@ impl AutomaticArbitraryPass {
         let switch_int_instr = SourceInstruction::Terminator { bb: source.bb() - 1 };
 
         let mut branches: Vec<(u128, BasicBlockIdx)> = vec![];
-        for variant in def.variants_iter() {
-            let target_bb =
-                self.call_kani_any_for_variant(def, &args, &mut new_body, &mut source, variant);
-            branches.push((variant.idx.to_index() as u128, target_bb));
+        for (variant_index, variant) in def.variants_iter().enumerate() {
+            let target_bb = self.call_kani_any_for_variant(
+                def,
+                &args,
+                &mut new_body,
+                &mut source,
+                variant,
+                variant_index,
+            );
+            branches.push((variant_index as u128, target_bb));
         }
 
         let otherwise = branches.pop().unwrap().1;
@@ -276,7 +290,7 @@ impl AutomaticArbitraryPass {
         let mut source = SourceInstruction::Terminator { bb: 0 };
 
         let variant = def.variants()[0];
-        self.call_kani_any_for_variant(def, &args, &mut new_body, &mut source, variant);
+        self.call_kani_any_for_variant(def, &args, &mut new_body, &mut source, variant, 0);
 
         new_body.into()
     }

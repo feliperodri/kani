@@ -214,6 +214,7 @@ impl ValidValueReq {
                 ValueAbi::Scalar(_)
                 | ValueAbi::ScalarPair(_, _)
                 | ValueAbi::Vector { .. }
+                | ValueAbi::ScalableVector { .. }
                 | ValueAbi::Aggregate { .. } => None,
             }
         }
@@ -647,10 +648,6 @@ impl MirVisitor for CheckValueVisitor<'_, '_> {
                 | CastKind::IntToFloat
                 | CastKind::FnPtrToPtr => {}
             },
-            Rvalue::ShallowInitBox(_, _) => {
-                // The contents of the box is considered uninitialized.
-                // This should already be covered by the Assign detection.
-            }
             Rvalue::Aggregate(kind, operands) => match kind {
                 // If the aggregated structure has invalid value, this could generate invalid value.
                 // But only if the operands don't have the exact same restrictions.
@@ -699,7 +696,6 @@ impl MirVisitor for CheckValueVisitor<'_, '_> {
             | Rvalue::Ref(_, _, _)
             | Rvalue::Repeat(_, _)
             | Rvalue::ThreadLocalRef(_)
-            | Rvalue::NullaryOp(_)
             | Rvalue::UnaryOp(_, _)
             | Rvalue::Use(_) => {}
         }
@@ -978,7 +974,7 @@ pub fn ty_validity_per_offset(
                                     let mut fields_validity = vec![];
                                     for (index, variant) in variants.iter().enumerate() {
                                         let fields = ty_variants[index].fields();
-                                        for field_idx in variant.fields.fields_by_offset_order() {
+                                        for field_idx in variant.fields_by_offset_order() {
                                             let field_offset = offsets[field_idx].bytes();
                                             let field_ty = fields[field_idx].ty_with_args(args);
                                             fields_validity.append(&mut ty_validity_per_offset(

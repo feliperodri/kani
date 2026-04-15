@@ -1,4 +1,3 @@
-__CPROVER_contracts_\
-- Status: SUCCESS\
-
-VERIFICATION:- SUCCESSFUL
+Checking harness zst_pass::check_replace_unit...
+Failed Checks: Function `<() as core::clone::Clone>::clone` with missing definition is unreachable
+VERIFICATION:- FAILED

@@ -1,18 +1,23 @@
-SUCCESS\
-attempt to subtract with overflow
-FAILURE\
-assertion failed: a == 10.0 && i == 1
-FAILURE\
-assertion failed: a == 9.0 && i == 0
-FAILURE\
-assertion failed: a == 9.0 && i == 1
-SUCCESS\
-assertion failed: a == 10.0 && i == 0
-SUCCESS\
-assertion failed: a == 9.0 || i == 0
-SUCCESS\
-assertion failed: a == 10.0 || i == 1
-FAILURE\
-assertion failed: a == 9.0 || i == 1
-SUCCESS\
-assertion failed: a == 10.0 || i == 0
+Status: SUCCESS
+Description: "attempt to subtract with overflow"
+Status: SUCCESS
+Description: "assertion failed: a == 10.0 || i == 0"
+Status: FAILURE
+Description: "assertion failed: a == 9.0 || i == 1"
+Status: SUCCESS
+Description: "assertion failed: a == 10.0 || i == 1"
+Status: SUCCESS
+Description: "assertion failed: a == 9.0 || i == 0"
+Status: SUCCESS
+Description: "assertion failed: a == 10.0 && i == 0"
+Status: FAILURE
+Description: "assertion failed: a == 9.0 && i == 1"
+Status: FAILURE
+Description: "assertion failed: a == 9.0 && i == 0"
+Status: FAILURE
+Description: "assertion failed: a == 10.0 && i == 1"
+Failed Checks: assertion failed: a == 9.0 || i == 1
+Failed Checks: assertion failed: a == 9.0 && i == 1
+Failed Checks: assertion failed: a == 9.0 && i == 0
+Failed Checks: assertion failed: a == 10.0 && i == 1
+VERIFICATION:- FAILED

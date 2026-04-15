@@ -99,7 +99,7 @@ mod verify {
         check_replace_impl::<char>();
     }
 
-    fn check_replace_impl<T: kani::Arbitrary + Eq + Clone>() {
+    fn check_replace_impl<T: kani::Arbitrary + Eq + Clone + std::fmt::Debug>() {
         let mut dst = T::any();
         let orig = dst.clone();
         let src = T::any();

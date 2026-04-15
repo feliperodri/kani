@@ -16,8 +16,9 @@
 // Required for `rustc_diagnostic_item` and `core_intrinsics`
 #![allow(internal_features)]
 // Required for implementing memory predicates.
-#![feature(layout_for_ptr)]
+#![allow(unused_features)] // layout_for_ptr is used via kani_core macro expansion
 #![feature(ptr_metadata)]
+#![feature(layout_for_ptr)]
 #![feature(f16)]
 #![feature(f128)]
 #![feature(convert_float_to_int)]

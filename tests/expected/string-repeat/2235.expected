@@ -1,3 +1,5 @@
-Failed Checks: called `Option::unwrap()` on a `None` value
-Verification failed for - repeat_panic
-Complete - 1 successfully verified harnesses, 1 failures, 2 total.
+Checking harness 2235::repeat_panic...
+Failed Checks: Function `<core::result::Result<(), core::num::nonzero::NonZero<usize>>::Err as core::ops::function::FnOnce<(core::num::nonzero::NonZero<usize>,)>>::call_once` with missing definition is unreachable
+VERIFICATION:- FAILED
+Checking harness 2235::repeat_const...
+VERIFICATION:- SUCCESSFUL

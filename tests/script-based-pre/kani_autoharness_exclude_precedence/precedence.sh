@@ -22,7 +22,7 @@ FUNCTIONS=(
 check_selected() {
     local output="$1"
     local function_name="$2"
-    if echo "$output" | grep -q "| $function_name *|"; then
+    if echo "$output" | grep -q "| lib::$function_name *|"; then
         return 0
     else
         return 1
@@ -33,7 +33,7 @@ check_selected() {
 check_skipped() {
     local output="$1"
     local function_name="$2"
-    if echo "$output" | grep -q "| $function_name *|.*Did not match provided filters"; then
+    if echo "$output" | grep -q "| lib::$function_name *|.*Did not match provided filters"; then
         return 0
     else
         return 1

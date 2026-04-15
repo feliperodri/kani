@@ -1,2 +1,9 @@
-FAILURE\
-division by zero
+Status: SUCCESS
+Description: "attempt to compute simd_rem which would overflow"
+Status: FAILURE
+Description: "division by zero"
+Status: FAILURE
+Description: "division by zero"
+Failed Checks: division by zero
+Failed Checks: division by zero
+VERIFICATION:- FAILED

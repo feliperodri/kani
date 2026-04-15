@@ -1,22 +1,542 @@
+
+Kani generated automatic harnesses for 3 function(s):
++---------+-----------------------------------+
+| Crate   | Selected Function                 |
++=============================================+
+| mutable | mutable::takes_mut_ref            |
+|---------+-----------------------------------|
+| mutable | mutable::takes_mut_refs           |
+|---------+-----------------------------------|
+| mutable | mutable::takes_mut_refs_and_other |
++---------+-----------------------------------+
+
 Skipped Functions: None. Kani generated automatic harnesses for all functions in the available crate(s).
+Autoharness: Checking function mutable::takes_mut_refs_and_other against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
 
-Failed Checks: attempt to add with overflow
+RESULTS:
+Check 1: <i32 as std::ops::Mul>::mul.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to multiply with overflow"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:350:45 in function <i32 as std::ops::Mul>::mul
 
-Failed Checks: attempt to subtract with overflow
+Check 2: mutable::takes_mut_refs_and_other.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: mutable.rs:20:10 in function mutable::takes_mut_refs_and_other
 
-Failed Checks: attempt to calculate the remainder with a divisor of zero
-Failed Checks: attempt to calculate the remainder with overflow
+Check 3: mutable::takes_mut_refs_and_other.assertion.2
+	 - Status: FAILURE
+	 - Description: "attempt to calculate the remainder with overflow"
+	 - Location: mutable.rs:20:10 in function mutable::takes_mut_refs_and_other
+
+Check 4: mutable::takes_mut_refs_and_other.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with overflow"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 5: mutable::takes_mut_refs_and_other.arithmetic_overflow.2
+	 - Status: SUCCESS
+	 - Description: "attempt to calculate the remainder with a divisor of zero"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 6: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 7: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 8: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 9: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 10: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 11: <&i32 as std::ops::Mul<i32>>::mul.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:28:31 in function <&i32 as std::ops::Mul<i32>>::mul
+
+Check 12: mutable::takes_mut_refs_and_other.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 13: mutable::takes_mut_refs_and_other.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 14: mutable::takes_mut_refs_and_other.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 15: mutable::takes_mut_refs_and_other.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 16: mutable::takes_mut_refs_and_other.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 17: mutable::takes_mut_refs_and_other.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:20:14 in function mutable::takes_mut_refs_and_other
+
+Check 18: mutable::takes_mut_refs_and_other.division-by-zero.1
+	 - Status: SUCCESS
+	 - Description: "division by zero"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 19: mutable::takes_mut_refs_and_other.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 20: mutable::takes_mut_refs_and_other.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 21: mutable::takes_mut_refs_and_other.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 22: mutable::takes_mut_refs_and_other.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 23: mutable::takes_mut_refs_and_other.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 24: mutable::takes_mut_refs_and_other.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:20:5 in function mutable::takes_mut_refs_and_other
+
+Check 25: mutable::takes_mut_refs_and_other.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+Check 26: mutable::takes_mut_refs_and_other.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+Check 27: mutable::takes_mut_refs_and_other.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+Check 28: mutable::takes_mut_refs_and_other.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+Check 29: mutable::takes_mut_refs_and_other.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+Check 30: mutable::takes_mut_refs_and_other.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:21:5 in function mutable::takes_mut_refs_and_other
+
+
+SUMMARY:
+ ** 3 of 30 failed
 Failed Checks: attempt to multiply with overflow
+Failed Checks: attempt to calculate the remainder with a divisor of zero
+ File: "mutable.rs", line 20, in mutable::takes_mut_refs_and_other
+Failed Checks: attempt to calculate the remainder with overflow
+ File: "mutable.rs", line 20, in mutable::takes_mut_refs_and_other
+
+VERIFICATION:- FAILED
+
+Autoharness: Checking function mutable::takes_mut_refs against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: mutable::takes_mut_refs.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to subtract with overflow"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 2: mutable::takes_mut_refs.assertion.2
+	 - Status: FAILURE
+	 - Description: "attempt to subtract with overflow"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 3: mutable::takes_mut_refs.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 4: mutable::takes_mut_refs.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 5: mutable::takes_mut_refs.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 6: mutable::takes_mut_refs.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 7: mutable::takes_mut_refs.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 8: mutable::takes_mut_refs.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:13:10 in function mutable::takes_mut_refs
+
+Check 9: mutable::takes_mut_refs.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 10: mutable::takes_mut_refs.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 11: mutable::takes_mut_refs.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 12: mutable::takes_mut_refs.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 13: mutable::takes_mut_refs.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 14: mutable::takes_mut_refs.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:13:15 in function mutable::takes_mut_refs
+
+Check 15: mutable::takes_mut_refs.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 16: mutable::takes_mut_refs.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 17: mutable::takes_mut_refs.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 18: mutable::takes_mut_refs.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 19: mutable::takes_mut_refs.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 20: mutable::takes_mut_refs.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:13:5 in function mutable::takes_mut_refs
+
+Check 21: mutable::takes_mut_refs.pointer_dereference.19
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 22: mutable::takes_mut_refs.pointer_dereference.20
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 23: mutable::takes_mut_refs.pointer_dereference.21
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 24: mutable::takes_mut_refs.pointer_dereference.22
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 25: mutable::takes_mut_refs.pointer_dereference.23
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 26: mutable::takes_mut_refs.pointer_dereference.24
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:14:10 in function mutable::takes_mut_refs
+
+Check 27: mutable::takes_mut_refs.pointer_dereference.25
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 28: mutable::takes_mut_refs.pointer_dereference.26
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 29: mutable::takes_mut_refs.pointer_dereference.27
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 30: mutable::takes_mut_refs.pointer_dereference.28
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 31: mutable::takes_mut_refs.pointer_dereference.29
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 32: mutable::takes_mut_refs.pointer_dereference.30
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:14:15 in function mutable::takes_mut_refs
+
+Check 33: mutable::takes_mut_refs.pointer_dereference.31
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 34: mutable::takes_mut_refs.pointer_dereference.32
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 35: mutable::takes_mut_refs.pointer_dereference.33
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 36: mutable::takes_mut_refs.pointer_dereference.34
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 37: mutable::takes_mut_refs.pointer_dereference.35
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 38: mutable::takes_mut_refs.pointer_dereference.36
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:14:5 in function mutable::takes_mut_refs
+
+Check 39: mutable::takes_mut_refs.pointer_dereference.37
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+Check 40: mutable::takes_mut_refs.pointer_dereference.38
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+Check 41: mutable::takes_mut_refs.pointer_dereference.39
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+Check 42: mutable::takes_mut_refs.pointer_dereference.40
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+Check 43: mutable::takes_mut_refs.pointer_dereference.41
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+Check 44: mutable::takes_mut_refs.pointer_dereference.42
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:15:5 in function mutable::takes_mut_refs
+
+
+SUMMARY:
+ ** 2 of 44 failed
+Failed Checks: attempt to subtract with overflow
+ File: "mutable.rs", line 13, in mutable::takes_mut_refs
+Failed Checks: attempt to subtract with overflow
+ File: "mutable.rs", line 14, in mutable::takes_mut_refs
+
+VERIFICATION:- FAILED
+
+Autoharness: Checking function mutable::takes_mut_ref against all possible inputs...
+Running propositional reduction
+Running propositional reduction
+
+RESULTS:
+Check 1: mutable::takes_mut_ref.assertion.1
+	 - Status: FAILURE
+	 - Description: "attempt to add with overflow"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 2: mutable::takes_mut_ref.pointer_dereference.1
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 3: mutable::takes_mut_ref.pointer_dereference.2
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 4: mutable::takes_mut_ref.pointer_dereference.3
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 5: mutable::takes_mut_ref.pointer_dereference.4
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 6: mutable::takes_mut_ref.pointer_dereference.5
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 7: mutable::takes_mut_ref.pointer_dereference.6
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:7:10 in function mutable::takes_mut_ref
+
+Check 8: mutable::takes_mut_ref.pointer_dereference.7
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 9: mutable::takes_mut_ref.pointer_dereference.8
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 10: mutable::takes_mut_ref.pointer_dereference.9
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 11: mutable::takes_mut_ref.pointer_dereference.10
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 12: mutable::takes_mut_ref.pointer_dereference.11
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 13: mutable::takes_mut_ref.pointer_dereference.12
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:7:5 in function mutable::takes_mut_ref
+
+Check 14: mutable::takes_mut_ref.pointer_dereference.13
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer NULL"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+Check 15: mutable::takes_mut_ref.pointer_dereference.14
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer invalid"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+Check 16: mutable::takes_mut_ref.pointer_dereference.15
+	 - Status: SUCCESS
+	 - Description: "dereference failure: deallocated dynamic object"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+Check 17: mutable::takes_mut_ref.pointer_dereference.16
+	 - Status: SUCCESS
+	 - Description: "dereference failure: dead object"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+Check 18: mutable::takes_mut_ref.pointer_dereference.17
+	 - Status: SUCCESS
+	 - Description: "dereference failure: pointer outside object bounds"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+Check 19: mutable::takes_mut_ref.pointer_dereference.18
+	 - Status: SUCCESS
+	 - Description: "dereference failure: invalid integer address"
+	 - Location: mutable.rs:8:5 in function mutable::takes_mut_ref
+
+
+SUMMARY:
+ ** 1 of 19 failed
+Failed Checks: attempt to add with overflow
+ File: "mutable.rs", line 7, in mutable::takes_mut_ref
+
+VERIFICATION:- FAILED
+
+Manual Harness Summary:
+No proof harnesses (functions with #[kani::proof]) were found to verify.
 
 Autoharness Summary:
-+---------+--------------------------+---------------------------+---------------------+
-| Crate   | Selected Function        | Kind of Automatic Harness | Verification Result |
-+======================================================================================+
-| mutable | takes_mut_ref            | #[kani::proof]            | Failure             |
-|---------+--------------------------+---------------------------+---------------------|
-| mutable | takes_mut_refs           | #[kani::proof]            | Failure             |
-|---------+--------------------------+---------------------------+---------------------|
-| mutable | takes_mut_refs_and_other | #[kani::proof]            | Failure             |
-|---------+--------------------------+---------------------------+---------------------|
-
++---------+-----------------------------------+---------------------------+---------------------+
+| Crate   | Selected Function                 | Kind of Automatic Harness | Verification Result |
++===============================================================================================+
+| mutable | mutable::takes_mut_ref            | #[kani::proof]            | Failure             |
+|---------+-----------------------------------+---------------------------+---------------------|
+| mutable | mutable::takes_mut_refs           | #[kani::proof]            | Failure             |
+|---------+-----------------------------------+---------------------------+---------------------|
+| mutable | mutable::takes_mut_refs_and_other | #[kani::proof]            | Failure             |
++---------+-----------------------------------+---------------------------+---------------------+
+Note that `kani autoharness` sets default --harness-timeout of 60s and --default-unwind of 20.
+If verification failed because of timing out or too low of an unwinding bound, try passing larger values for these arguments (or, if possible, writing a loop contract).
 Complete - 0 successfully verified functions, 3 failures, 3 total.

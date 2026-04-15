@@ -1,14 +1,39 @@
-Status: SATISFIED\
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
+Status: SUCCESS
+Description: "dereference failure: pointer invalid"
+Status: SUCCESS
+Description: "unreachable code"
+Status: SUCCESS
+Description: "Offset value overflows isize"
+Status: SUCCESS
+Description: "internal error: entered unreachable code"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "attempt to compute `unchecked_sub` which would overflow"
+Status: SUCCESS
+Description: "Kani does not support reasoning about pointer to unallocated memory"
+Status: SUCCESS
+Description: "Offset in bytes overflows isize"
+Status: SUCCESS
+Description: "Offset result and original pointer must point to the same allocation"
+Status: SATISFIED
 Description: "cover condition: s.len() == 0"
-
-Status: SATISFIED\
+Status: SATISFIED
 Description: "cover condition: s.len() == 1"
-
-Status: SATISFIED\
+Status: SATISFIED
 Description: "cover condition: s.len() == 2"
-
-Status: SATISFIED\
+Status: SATISFIED
 Description: "cover condition: s.len() == 3"
-
-Status: SATISFIED\
+Status: SATISFIED
 Description: "cover condition: s.len() == 4"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+Status: SUCCESS
+Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
+VERIFICATION:- SUCCESSFUL

@@ -1,7 +1,8 @@
+Checking harness non_null::check_valid_dangling...
+VERIFICATION:- SUCCESSFUL
+Checking harness non_null::check_invalid_value_cfg...
 Failed Checks: Undefined Behavior: Invalid value of type `std::ptr::NonNull<u8>`
-
+VERIFICATION:- FAILED
+Checking harness non_null::check_invalid_value...
 Failed Checks: Undefined Behavior: Invalid value of type `std::ptr::NonNull<u8>`
-
-Verification failed for - check_invalid_value_cfg
-Verification failed for - check_invalid_value
-Complete - 1 successfully verified harnesses, 2 failures, 3 total.
+VERIFICATION:- FAILED

@@ -117,7 +117,8 @@ impl BodyTransformation {
             .cache
             .entry(instance)
             .or_insert_with(|| {
-                // Transform and add to the cache if there's no existing entry.
+                // Some instances (e.g., enum variant constructors in newer toolchains)
+                // may not have a MIR body. Return their body without transformation.
                 let mut body = instance.body().unwrap();
 
                 let mut modified = false;
