@@ -515,6 +515,22 @@ impl GotocCtx<'_, '_> {
             return original_expr.clone();
         }
 
+        // Lower known pointer arithmetic intrinsics directly to CBMC expressions.
+        // These intrinsics have no GOTO body to inline, so we handle them specially.
+        let fn_name = fn_id.to_string();
+        if fn_name.contains("wrapping_add")
+            || fn_name.contains("wrapping_byte_offset")
+            || fn_name.contains("arith_offset")
+            || fn_name.contains("offset")
+                && (fn_name.contains("ptr") || fn_name.contains("const_ptr"))
+        {
+            if arguments.len() >= 2 {
+                let ptr = self.inline_as_pure_expr(&arguments[0], visited);
+                let offset = self.inline_as_pure_expr(&arguments[1], visited);
+                return ptr.plus(offset);
+            }
+        }
+
         let function_body = self.symbol_table.lookup(*fn_id).and_then(|sym| match &sym.value {
             SymbolValues::Stmt(stmt) => Some(stmt.clone()),
             _ => None,
