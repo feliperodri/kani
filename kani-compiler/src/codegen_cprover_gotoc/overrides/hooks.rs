@@ -15,7 +15,7 @@ use crate::kani_middle::kani_functions::{KaniFunction, KaniHook, try_get_kani_fu
 use crate::unwrap_or_return_codegen_unimplemented_stmt;
 use cbmc::goto_program::CIntType;
 use cbmc::goto_program::Symbol as GotoSymbol;
-use cbmc::goto_program::{BuiltinFn, Expr, Stmt, StmtBody, SymbolValues, Type};
+use cbmc::goto_program::{BuiltinFn, Expr, Location, Stmt, StmtBody, SymbolValues, Type};
 use cbmc::{InternedString, goto_program::ExprValue};
 use rustc_hir::LangItem;
 use rustc_middle::ty::TyCtxt;
