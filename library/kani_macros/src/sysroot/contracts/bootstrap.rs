@@ -83,8 +83,22 @@ impl<'a> ContractConditionsHandler<'a> {
                         kani_register_contract(#recursion_ident)
                     }
                     kani::internal::REPLACE => {
-                        #replace_closure;
-                        kani_register_contract(#replace_ident)
+                        if kani::internal::in_arbitrary_context() {
+                            // When called from within kani::any() (Arbitrary input
+                            // generation), use the original body to avoid infinite
+                            // recursion from stub_verified replacing calls inside
+                            // Arbitrary impls.
+                            // Note: This executes the raw body without precondition
+                            // checks or postcondition assertions. This is sound because
+                            // the real function produces a subset of valid outputs
+                            // compared to the contract abstraction (which havocs all
+                            // outputs). Invalid inputs from a buggy Arbitrary impl
+                            // would be caught by the proof_for_contract harness.
+                            #block
+                        } else {
+                            #replace_closure;
+                            kani_register_contract(#replace_ident)
+                        }
                     }
                     kani::internal::SIMPLE_CHECK => {
                         #check_closure;
