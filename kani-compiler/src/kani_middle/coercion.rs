@@ -264,6 +264,15 @@ fn custom_coerce_unsize_info<'tcx>(
 }
 
 /// Extract pointee type from builtin pointer types.
+/// Handles `Pat(RawPtr(T, _), _)` pattern types (e.g., `NonNull<T>`).
 fn extract_pointee(tcx: TyCtxt<'_>, typ: TyStable) -> Option<Ty<'_>> {
-    rustc_internal::internal(tcx, typ).builtin_deref(true)
+    let ty = rustc_internal::internal(tcx, typ);
+    ty.builtin_deref(true).or_else(|| {
+        // Peel Pat wrapper (e.g., NonNull is Pat(RawPtr(T), NotNull))
+        if let rustc_middle::ty::TyKind::Pat(inner, _) = ty.kind() {
+            inner.builtin_deref(true)
+        } else {
+            None
+        }
+    })
 }

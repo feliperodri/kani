@@ -191,7 +191,7 @@ impl CodegenUnits {
 }
 
 fn stub_def(tcx: TyCtxt, def_id: DefId) -> FnDef {
-    let ty_internal = tcx.type_of(def_id).instantiate_identity();
+    let ty_internal = tcx.type_of(def_id).instantiate_identity().skip_norm_wip();
     let ty = rustc_internal::stable(ty_internal);
     if let TyKind::RigidTy(RigidTy::FnDef(def, _)) = ty.kind() {
         def

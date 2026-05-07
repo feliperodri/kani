@@ -848,29 +848,31 @@ impl GotocCtx<'_, '_> {
                             dst_goto_typ.lookup_components(&self.symbol_table).unwrap();
                         assert_eq!(dst_components.len(), 2);
                         assert_eq!(dst_components[0].name(), "_vtable_ptr");
-                        assert!(dst_components[0].typ().is_struct_like());
                         assert_eq!(dst_components[1].name(), "_phantom");
                         self.assert_is_rust_phantom_data_like(&dst_components[1].typ());
-                        // accessing pointer type of _vtable_ptr, which is wrapped in NonNull
-                        let vtable_ptr_typ = dst_goto_typ
+                        // _vtable_ptr is NonNull<VTable>. NonNull is a struct with a
+                        // `pointer` field of Pat type, which is now transparent (just a pointer).
+                        let vtable_ptr_field_typ = dst_goto_typ
                             .lookup_field_type("_vtable_ptr", &self.symbol_table)
-                            .unwrap()
-                            .lookup_components(&self.symbol_table)
-                            .unwrap()[0]
-                            .typ();
+                            .unwrap();
+                        let vtable_ptr_val = if vtable_ptr_field_typ.is_pointer() {
+                            // Pat is transparent, so NonNull's `pointer` field is a raw pointer.
+                            vtable_expr.clone().cast_to(vtable_ptr_field_typ.clone())
+                        } else {
+                            // NonNull is a struct wrapping a pointer.
+                            let nonnull_components =
+                                vtable_ptr_field_typ.lookup_components(&self.symbol_table).unwrap();
+                            let inner_ptr_typ = nonnull_components[0].typ();
+                            Expr::struct_expr_from_values(
+                                vtable_ptr_field_typ.clone(),
+                                vec![vtable_expr.clone().cast_to(inner_ptr_typ)],
+                                &self.symbol_table,
+                            )
+                        };
                         Expr::struct_expr(
                             dst_goto_typ.clone(),
                             btree_string_map![
-                                (
-                                    "_vtable_ptr",
-                                    Expr::struct_expr_from_values(
-                                        dst_goto_typ
-                                            .lookup_field_type("_vtable_ptr", &self.symbol_table)
-                                            .unwrap(),
-                                        vec![vtable_expr.clone().cast_to(vtable_ptr_typ)],
-                                        &self.symbol_table
-                                    )
-                                ),
+                                ("_vtable_ptr", vtable_ptr_val),
                                 (
                                     "_phantom",
                                     Expr::struct_expr(

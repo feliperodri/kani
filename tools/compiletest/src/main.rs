@@ -23,6 +23,7 @@ use std::str::FromStr;
 use std::time::{Duration, SystemTime};
 use test::ColorConfig;
 use test::test::TestTimeOptions;
+use test::{TestList, TestListOrder};
 use tracing::*;
 use walkdir::WalkDir;
 
@@ -264,7 +265,7 @@ pub fn run_tests(config: Config) {
         return;
     }
 
-    let res = test::run_tests_console(&opts, tests);
+    let res = test::run_tests_console(&opts, TestList::new(tests, TestListOrder::Unsorted));
     match res {
         Ok(true) => {}
         Ok(false) => {

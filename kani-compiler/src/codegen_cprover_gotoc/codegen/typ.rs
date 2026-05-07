@@ -583,8 +583,10 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
     ///      c.f. <https://rust-lang.github.io/unsafe-code-guidelines/introduction.html>
     pub fn codegen_ty(&mut self, ty: Ty<'tcx>) -> Type {
         // TODO: Remove all monomorphize calls
-        let normalized =
-            self.tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), ty);
+        let normalized = self.tcx.normalize_erasing_regions(
+            ty::TypingEnv::fully_monomorphized(),
+            ty::Unnormalized::new_wip(ty),
+        );
         let goto_typ = self.codegen_ty_inner(normalized);
         if let Some(tag) = goto_typ.tag() {
             self.type_map.entry(tag).or_insert_with(|| {
@@ -667,13 +669,11 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
                     )
                 }
             }
-            // This object has the same layout as base. For now, translate this into `(base)`.
-            // The only difference is the niche.
-            ty::Pat(base_ty, ..) => {
-                self.ensure_struct(self.ty_mangled_name(ty), self.ty_pretty_name(ty), |tcx, _| {
-                    tcx.codegen_ty_tuple_like(ty, vec![*base_ty])
-                })
-            }
+            // Pat types have the same layout as their base type. The pattern only
+            // constrains the value range (e.g., NonNull = Pat(*const T, NotNull)).
+            // Codegen as the base type directly to avoid extra struct wrapping that
+            // breaks pointer extraction in unsized coercions and fat pointers.
+            ty::Pat(base_ty, ..) => self.codegen_ty(*base_ty),
             ty::Alias(..) => {
                 unreachable!("Type should've been normalized already")
             }
@@ -1046,8 +1046,10 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
     pub fn codegen_ty_ref(&mut self, pointee_type: Ty<'tcx>) -> Type {
         // Normalize pointee_type to remove projection and opaque types
         trace!(?pointee_type, "codegen_ty_ref");
-        let pointee_type =
-            self.tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), pointee_type);
+        let pointee_type = self.tcx.normalize_erasing_regions(
+            ty::TypingEnv::fully_monomorphized(),
+            ty::Unnormalized::new_wip(pointee_type),
+        );
 
         if !self.use_thin_pointer(pointee_type) {
             return self.codegen_fat_ptr(pointee_type);

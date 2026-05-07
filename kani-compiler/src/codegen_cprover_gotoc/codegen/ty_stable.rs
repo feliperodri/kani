@@ -128,6 +128,8 @@ pub fn pointee_type_stable(ty: Ty) -> Option<Ty> {
     match ty.kind() {
         TyKind::RigidTy(RigidTy::Ref(_, pointee_ty, _))
         | TyKind::RigidTy(RigidTy::RawPtr(pointee_ty, ..)) => Some(pointee_ty),
+        // Handle Pat types (e.g., NonNull<T> = Pat(RawPtr(T), NotNull))
+        TyKind::RigidTy(RigidTy::Pat(inner, _)) => pointee_type_stable(inner),
         _ => None,
     }
 }
