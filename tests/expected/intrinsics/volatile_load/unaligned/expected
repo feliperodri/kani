@@ -45,7 +45,7 @@ Description: "Rust intrinsic assumption failed"
 Status: SUCCESS
 Description: "attempt to compute `unchecked_mul` which would overflow"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Rust intrinsic assumption failed"
 Status: SUCCESS
@@ -81,7 +81,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

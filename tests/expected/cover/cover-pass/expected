@@ -359,7 +359,7 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: UNDETERMINED
 Description: "dereference failure: pointer invalid"
 Status: UNDETERMINED
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNDETERMINED
 Description: "attempt to divide by zero"
 Status: UNDETERMINED
@@ -577,7 +577,7 @@ Description: "attempt to add with overflow"
 Status: UNDETERMINED
 Description: "attempt to compute `unchecked_sub` which would overflow"
 Status: UNDETERMINED
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNDETERMINED
 Description: "Cannot compute offset of a ZST"
 Status: UNDETERMINED

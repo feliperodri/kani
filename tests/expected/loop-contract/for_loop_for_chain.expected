@@ -94,7 +94,7 @@ Description: "attempt to divide with overflow"
 Status: SUCCESS
 Description: "attempt to divide by zero"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNREACHABLE
 Description: "attempt to divide by zero"
 Status: SUCCESS

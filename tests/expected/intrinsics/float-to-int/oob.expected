@@ -1,5 +1,5 @@
 Checking harness oob::check_usize_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -33,7 +33,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u8_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "attempt to shift left with overflow"
 Status: SUCCESS
@@ -67,7 +67,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u16_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -101,7 +101,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u128_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: SUCCESS
@@ -132,7 +132,7 @@ Status: SUCCESS
 Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL
 Checking harness oob::check_u32_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -166,7 +166,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u64_upper...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -200,7 +200,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_usize_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -232,7 +232,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u16_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -264,7 +264,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u64_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -296,7 +296,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u8_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -328,7 +328,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u32_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE
@@ -360,7 +360,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: float_to_int_unchecked: attempt to convert a value out of range of the target integer
 VERIFICATION:- FAILED
 Checking harness oob::check_u128_lower...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: FAILURE

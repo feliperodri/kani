@@ -15,7 +15,7 @@ resolution_errors.rs\
 | #[kani::stub(<X as A>::bar, B::bar)]\
 | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 |\
-note: `B::bar` does not have a body\
+note: `resolution_errors::B::bar` does not have a body\
 resolution_errors.rs\
 |\
 |     fn bar(&self) -> u32;\

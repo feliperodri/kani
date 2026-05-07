@@ -108,13 +108,13 @@ Description: "attempt to divide by zero"
 Status: SUCCESS
 Description: "attempt to divide by zero"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCscT0dpVKUSAZ_19simple_replace_pass3divs0_0s_0B5_ when checking contract _RNCNCNvCscT0dpVKUSAZ_19simple_replace_pass3divs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsfFR23vr89Ae_19simple_replace_pass3divs0_0s_0B5_ when checking contract _RNCNCNvCsfFR23vr89Ae_19simple_replace_pass3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCscT0dpVKUSAZ_19simple_replace_pass3divs0_0s_0B5_ when checking contract _RNCNCNvCscT0dpVKUSAZ_19simple_replace_pass3divs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsfFR23vr89Ae_19simple_replace_pass3divs0_0s_0B5_ when checking contract _RNCNCNvCsfFR23vr89Ae_19simple_replace_pass3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "dereference failure: pointer NULL"
 Status: SUCCESS

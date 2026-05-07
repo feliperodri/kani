@@ -29,7 +29,7 @@ Description: "Alignment is power of two"
 Status: SUCCESS
 Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -41,7 +41,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNREACHABLE
 Description: "attempt to shift left with overflow"
 Status: SUCCESS
@@ -432,15 +432,15 @@ Description: "max allocation size exceeded"
 Status: SUCCESS
 Description: "max allocation may fail"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs4riXy3sxSCS_17expr_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs4riXy3sxSCS_17expr_replace_pass6modifys0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs3Ao1y7sJK4A_17expr_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs3Ao1y7sJK4A_17expr_replace_pass6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs4riXy3sxSCS_17expr_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs4riXy3sxSCS_17expr_replace_pass6modifys0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs3Ao1y7sJK4A_17expr_replace_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCs3Ao1y7sJK4A_17expr_replace_pass6modifys0_0s_0B5_"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: UNREACHABLE
@@ -496,7 +496,7 @@ Description: "__rust_alloc_zeroed must be called with a size greater than 0"
 Status: SUCCESS
 Description: "Alignment is power of two"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

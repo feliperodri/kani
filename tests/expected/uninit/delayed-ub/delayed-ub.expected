@@ -65,7 +65,7 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: SUCCESS
 Description: "dereference failure: pointer invalid"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -209,7 +209,7 @@ Description: "attempt to subtract with overflow"
 Status: SUCCESS
 Description: "index out of bounds: the length is less than or equal to the given index"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Kani does not support reasoning about memory initialization of intrinsic `Unimplemented { name: "caller_location", issue_link: "https://github.com/model-checking/kani/issues/374" }`."
 Status: SUCCESS

@@ -25,7 +25,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Check that *var_4 is assignable"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNREACHABLE
 Description: "attempt to add with overflow"
 Status: SUCCESS
@@ -45,13 +45,13 @@ Description: "|_| unsafe{*im.x.as_ptr()} < 101"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCsaF8lhjiMWt6_7refcell6modifys1_0s_0B5_ when checking contract _RNCNCNvCsaF8lhjiMWt6_7refcell6modifys1_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs6HxIB29Z0gR_7refcell6modifys1_0s_0B5_ when checking contract _RNCNCNvCs6HxIB29Z0gR_7refcell6modifys1_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCsaF8lhjiMWt6_7refcell6modifys1_0s_0B5_ when checking contract _RNCNCNvCsaF8lhjiMWt6_7refcell6modifys1_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs6HxIB29Z0gR_7refcell6modifys1_0s_0B5_ when checking contract _RNCNCNvCs6HxIB29Z0gR_7refcell6modifys1_0s_0B5_"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS

@@ -1,5 +1,5 @@
 Checking harness stubbing::check_indirect_all_identity...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -62,7 +62,7 @@ Status: SUCCESS
 Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL
 Checking harness stubbing::check_all_identity_2...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -125,7 +125,7 @@ Status: SUCCESS
 Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL
 Checking harness stubbing::check_all_identity...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -162,7 +162,7 @@ Status: SUCCESS
 Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL
 Checking harness stubbing::check_decrement_is_increment...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "attempt to add with overflow"
 Status: SUCCESS
@@ -201,7 +201,7 @@ Status: SUCCESS
 Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL
 Checking harness stubbing::check_decrement...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -240,7 +240,7 @@ Status: SUCCESS
 Description: "dereference failure: dead object"
 VERIFICATION:- SUCCESSFUL
 Checking harness stubbing::check_identity...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

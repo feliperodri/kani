@@ -13,7 +13,7 @@ Description: "max allocation size exceeded"
 Status: SUCCESS
 Description: "max allocation may fail"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "__rust_alloc must be called with a size greater than 0"
 Status: SUCCESS
@@ -101,7 +101,7 @@ Description: "This requires at least one element"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Rust intrinsic assumption failed"
 Status: SUCCESS
@@ -567,7 +567,7 @@ Description: "__rust_alloc_zeroed must be called with a size greater than 0"
 Status: SUCCESS
 Description: "Alignment is power of two"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -595,7 +595,7 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: SUCCESS
 Description: "dereference failure: pointer invalid"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -954,7 +954,7 @@ Description: "This is a placeholder message; Kani doesn't support message format
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "attempt to compute `unchecked_mul` which would overflow"
 Status: UNREACHABLE
@@ -1169,7 +1169,7 @@ Description: "__rust_alloc_zeroed must be called with a size greater than 0"
 Status: SUCCESS
 Description: "Alignment is power of two"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "__rust_alloc must be called with a size greater than 0"
 Status: SUCCESS
@@ -1195,7 +1195,7 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: SUCCESS
 Description: "dereference failure: pointer invalid"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: UNREACHABLE

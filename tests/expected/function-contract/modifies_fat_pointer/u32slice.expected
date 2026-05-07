@@ -43,13 +43,13 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Kani does not support reasoning about pointer to unallocated memory"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCsa6JF9EE2uAl_8u32slice4zeros0_0s_0B5_ when checking contract _RNCNCNvCsa6JF9EE2uAl_8u32slice4zeros0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsdfziCgKSflN_8u32slice4zeros0_0s_0B5_ when checking contract _RNCNCNvCsdfziCgKSflN_8u32slice4zeros0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCsa6JF9EE2uAl_8u32slice4zeros0_0s_0B5_ when checking contract _RNCNCNvCsa6JF9EE2uAl_8u32slice4zeros0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsdfziCgKSflN_8u32slice4zeros0_0s_0B5_ when checking contract _RNCNCNvCsdfziCgKSflN_8u32slice4zeros0_0s_0B5_"
 Status: UNREACHABLE
 Description: "index out of bounds: the length is less than or equal to the given index"
 Status: UNREACHABLE
@@ -108,7 +108,7 @@ Description: "dereference failure: pointer invalid"
 Status: SUCCESS
 Description: "Expected non-negative distance between pointers"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that *((unsigned char **)&temp_0) is assignable"
 Status: SUCCESS

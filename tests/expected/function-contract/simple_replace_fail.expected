@@ -1,13 +1,13 @@
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs67TfMimsZ7V_19simple_replace_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCs67TfMimsZ7V_19simple_replace_fail3divs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsemv3xcT4cig_19simple_replace_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCsemv3xcT4cig_19simple_replace_fail3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs67TfMimsZ7V_19simple_replace_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCs67TfMimsZ7V_19simple_replace_fail3divs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsemv3xcT4cig_19simple_replace_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCsemv3xcT4cig_19simple_replace_fail3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

@@ -578,7 +578,7 @@ Check 3: __CPROVER_contracts_write_set_record_deallocated.unwind.1
 
 Check 4: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
 	 - Status: SUCCESS
-	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
 
 Check 5: cargo_autoharness_contracts::should_pass::unchecked_mul::{closure#2}::{closure#0}.single_top_level_call.1

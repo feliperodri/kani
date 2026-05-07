@@ -25,13 +25,13 @@ Description: "attempt to subtract with overflow"
 Status: SUCCESS
 Description: "Check that *var_10 is assignable"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCscj9MT5fv26p_8modifies6modifys0_0s0_0B5_ when checking contract _RNCNCNvCscj9MT5fv26p_8modifies6modifys0_0s0_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs4t0gIZNlMRu_8modifies6modifys0_0s0_0B5_ when checking contract _RNCNCNvCs4t0gIZNlMRu_8modifies6modifys0_0s0_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCscj9MT5fv26p_8modifies6modifys0_0s0_0B5_ when checking contract _RNCNCNvCscj9MT5fv26p_8modifies6modifys0_0s0_0B5_"
+Description: "No recursive call to function _RNCNCNvCs4t0gIZNlMRu_8modifies6modifys0_0s0_0B5_ when checking contract _RNCNCNvCs4t0gIZNlMRu_8modifies6modifys0_0s0_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

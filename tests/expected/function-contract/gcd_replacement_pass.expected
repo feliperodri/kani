@@ -402,13 +402,13 @@ Description: "attempt to calculate the remainder with a divisor of zero"
 Status: SUCCESS
 Description: "attempt to calculate the remainder with a divisor of zero"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs55EIdq543EX_20gcd_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs55EIdq543EX_20gcd_replacement_pass3gcds0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsk54Kb1Sl78k_20gcd_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCsk54Kb1Sl78k_20gcd_replacement_pass3gcds0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs55EIdq543EX_20gcd_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs55EIdq543EX_20gcd_replacement_pass3gcds0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsk54Kb1Sl78k_20gcd_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCsk54Kb1Sl78k_20gcd_replacement_pass3gcds0_0s_0B5_"
 Status: SUCCESS
 Description: "|result : &T| *result != 0 && x % *result == 0 && y % *result == 0"
 Status: SUCCESS

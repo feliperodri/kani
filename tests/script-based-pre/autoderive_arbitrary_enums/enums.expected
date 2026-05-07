@@ -59,7 +59,7 @@ Check 2: std::fmt::Arguments::<'_>::from_str.assertion.1
 
 Check 3: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
 	 - Status: SUCCESS
-	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
 
 Check 4: std::result::Result::<char, std::char::CharTryFromError>::is_ok.unreachable.1
@@ -418,7 +418,7 @@ Check 5: std::fmt::Arguments::<'_>::from_str.assertion.1
 
 Check 6: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
 	 - Status: SUCCESS
-	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
 
 Check 7: kani::any::<autoderive_arbitrary_enums::should_derive::Foo>.pointer_dereference.1
@@ -1442,7 +1442,7 @@ Running propositional reduction
 RESULTS:
 Check 1: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
 	 - Status: SUCCESS
-	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
 
 Check 2: std::char::convert::char_try_from_u32.assertion.1
@@ -1853,7 +1853,7 @@ Check 7: autoderive_arbitrary_enums::should_derive::foo.assertion.3
 
 Check 8: core::panicking::panic_nounwind_fmt::runtime.unsupported_construct.1
 	 - Status: SUCCESS
-	 - Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+	 - Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 	 - Location: ../../../../../../.rustup/toolchains/nightly-2026-04-13-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/panicking.rs:110:17 in function core::panicking::panic_nounwind_fmt::runtime
 
 Check 9: std::result::Result::<char, std::char::CharTryFromError>::is_ok.unreachable.1

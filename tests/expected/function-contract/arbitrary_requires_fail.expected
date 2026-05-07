@@ -31,13 +31,13 @@ Description: "no offset bits overflow on CAR upper bound computation"
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs1NNhCbuL0lh_23arbitrary_requires_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCs1NNhCbuL0lh_23arbitrary_requires_fail3divs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCseO1o4avJE78_23arbitrary_requires_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCseO1o4avJE78_23arbitrary_requires_fail3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs1NNhCbuL0lh_23arbitrary_requires_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCs1NNhCbuL0lh_23arbitrary_requires_fail3divs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCseO1o4avJE78_23arbitrary_requires_fail3divs0_0s_0B5_ when checking contract _RNCNCNvCseO1o4avJE78_23arbitrary_requires_fail3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: SUCCESS
@@ -79,7 +79,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: FAILURE
 Description: "attempt to divide by zero"
 Status: SUCCESS
@@ -101,7 +101,7 @@ Description: "Check that *((unsigned char **)&temp_0) is assignable"
 Status: SUCCESS
 Description: "|result : &u32| *result <= dividend"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "dereference failure: dead object"
 Status: SUCCESS

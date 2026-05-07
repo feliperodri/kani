@@ -1,5 +1,5 @@
 Checking harness write_bytes::check_valid_write...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "`dst` must be properly aligned"
 Status: SUCCESS
@@ -8,7 +8,7 @@ Status: SUCCESS
 Description: "memset destination region writeable"
 VERIFICATION:- SUCCESSFUL
 Checking harness write_bytes::check_invalid_write...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: FAILURE
 Description: "Undefined Behavior: Invalid value of type `char`"
 Status: SUCCESS

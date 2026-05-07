@@ -7,13 +7,13 @@ Description: "no offset bits overflow on CAR upper bound computation"
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs1tMeZhG5qzs_11simple_fail6modifys0_00B5_ when checking contract _RNCNCNvCs1tMeZhG5qzs_11simple_fail6modifys0_00B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsbLFlXFSUZvw_11simple_fail6modifys0_00B5_ when checking contract _RNCNCNvCsbLFlXFSUZvw_11simple_fail6modifys0_00B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs1tMeZhG5qzs_11simple_fail6modifys0_00B5_ when checking contract _RNCNCNvCs1tMeZhG5qzs_11simple_fail6modifys0_00B5_"
+Description: "No recursive call to function _RNCNCNvCsbLFlXFSUZvw_11simple_fail6modifys0_00B5_ when checking contract _RNCNCNvCsbLFlXFSUZvw_11simple_fail6modifys0_00B5_"
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS

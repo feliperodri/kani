@@ -1,5 +1,5 @@
 Checking harness non_finite::check_neg_inf...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: FAILURE
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: SUCCESS
@@ -7,7 +7,7 @@ Description: "float_to_int_unchecked: attempt to convert a value out of range of
 Failed Checks: float_to_int_unchecked: attempt to convert a non-finite value to an integer
 VERIFICATION:- FAILED
 Checking harness non_finite::check_inf...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: FAILURE
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: SUCCESS
@@ -15,7 +15,7 @@ Description: "float_to_int_unchecked: attempt to convert a value out of range of
 Failed Checks: float_to_int_unchecked: attempt to convert a non-finite value to an integer
 VERIFICATION:- FAILED
 Checking harness non_finite::check_nan...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: FAILURE
 Description: "float_to_int_unchecked: attempt to convert a non-finite value to an integer"
 Status: SUCCESS

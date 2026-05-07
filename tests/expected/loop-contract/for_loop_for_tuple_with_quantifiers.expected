@@ -83,7 +83,7 @@ Description: "caller_location is not currently supported by Kani. Please post yo
 Status: UNDETERMINED
 Description: "attempt to multiply with overflow"
 Status: UNDETERMINED
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNDETERMINED
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: UNDETERMINED

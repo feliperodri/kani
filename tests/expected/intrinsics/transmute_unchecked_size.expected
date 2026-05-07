@@ -5,7 +5,7 @@ Description: "unreachable code"
 Status: FAILURE
 Description: "Cannot transmute between types of different sizes. Transmuting from `8` to `16` bytes"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Unreachable expected"
 Status: SUCCESS

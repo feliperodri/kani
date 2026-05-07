@@ -9,13 +9,13 @@ Description: "unwinding assertion loop 0"
 Status: SUCCESS
 Description: "attempt to add with overflow"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCsgGGPkdOsSY1_10clone_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCsgGGPkdOsSY1_10clone_pass6modifys0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCseU0IdVcb5vc_10clone_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCseU0IdVcb5vc_10clone_pass6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCsgGGPkdOsSY1_10clone_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCsgGGPkdOsSY1_10clone_pass6modifys0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCseU0IdVcb5vc_10clone_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCseU0IdVcb5vc_10clone_pass6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

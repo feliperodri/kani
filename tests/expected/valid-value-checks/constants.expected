@@ -1,5 +1,5 @@
 Checking harness constants::cast_to_invalid_offset...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -47,7 +47,7 @@ Description: "dereference failure: invalid integer address"
 Failed Checks: Undefined Behavior: Invalid value of type `[char; 2]`
 VERIFICATION:- FAILED
 Checking harness constants::cast_to_invalid_char...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -90,7 +90,7 @@ Description: "dereference failure: pointer outside object bounds"
 Failed Checks: Undefined Behavior: Invalid value of type `bool`
 VERIFICATION:- FAILED
 Checking harness constants::cast_to_valid_offset...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -137,7 +137,7 @@ Status: SUCCESS
 Description: "dereference failure: invalid integer address"
 VERIFICATION:- SUCCESSFUL
 Checking harness constants::cast_to_valid_char...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: SUCCESS
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: SUCCESS

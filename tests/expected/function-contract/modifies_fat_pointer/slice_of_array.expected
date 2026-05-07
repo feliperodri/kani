@@ -11,13 +11,13 @@ Description: "unwinding assertion loop 0"
 Status: SUCCESS
 Description: "attempt to compute `unchecked_sub` which would overflow"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCsafXZMnmzS99_14slice_of_array4zeros0_0s_0B5_ when checking contract _RNCNCNvCsafXZMnmzS99_14slice_of_array4zeros0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCslCj3UElSw4q_14slice_of_array4zeros0_0s_0B5_ when checking contract _RNCNCNvCslCj3UElSw4q_14slice_of_array4zeros0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCsafXZMnmzS99_14slice_of_array4zeros0_0s_0B5_ when checking contract _RNCNCNvCsafXZMnmzS99_14slice_of_array4zeros0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCslCj3UElSw4q_14slice_of_array4zeros0_0s_0B5_ when checking contract _RNCNCNvCslCj3UElSw4q_14slice_of_array4zeros0_0s_0B5_"
 Status: SUCCESS
 Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
 Status: SUCCESS
@@ -116,7 +116,7 @@ Description: "Check that self->ptr is assignable"
 Status: SUCCESS
 Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS

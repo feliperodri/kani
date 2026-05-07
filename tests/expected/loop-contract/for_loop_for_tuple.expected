@@ -67,7 +67,7 @@ Description: "attempt to multiply with overflow"
 Status: UNDETERMINED
 Description: "unreachable code"
 Status: UNDETERMINED
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: UNDETERMINED
 Description: "Check that self->initialized is assignable"
 Status: UNDETERMINED

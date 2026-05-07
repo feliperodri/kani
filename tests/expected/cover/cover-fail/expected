@@ -1,5 +1,5 @@
 Checking harness main::cover_overconstrained...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: UNSATISFIABLE
 Description: "cover condition: x != 0"
 VERIFICATION:- SUCCESSFUL

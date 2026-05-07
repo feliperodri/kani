@@ -33,13 +33,13 @@ Description: "Check step was unwound for loop contract_proof_function_with_loop:
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsgDYczyr7Vn6_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCsgDYczyr7Vn6_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCs8nXxr2Eby9A_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsgDYczyr7Vn6_33contract_proof_function_with_loop8has_loops0_0s_0B5_ when checking contract _RNCNCNvCsgDYczyr7Vn6_33contract_proof_function_with_loop8has_loops0_0s_0B5_"
 Status: SUCCESS
 Description: "|ret| *ret == 2"
 Status: SUCCESS

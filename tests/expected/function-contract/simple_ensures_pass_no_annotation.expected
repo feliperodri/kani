@@ -47,7 +47,7 @@ Description: "attempt to add with overflow"
 Status: SUCCESS
 Description: "attempt to compute `unchecked_sub` which would overflow"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: SUCCESS
@@ -55,13 +55,13 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Check that *((unsigned char **)&temp_0) is assignable"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs6jxMYj1wg5S_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_ when checking contract _RNCNCNvCs6jxMYj1wg5S_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs26x5d1Y0Rr3_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_ when checking contract _RNCNCNvCs26x5d1Y0Rr3_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs6jxMYj1wg5S_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_ when checking contract _RNCNCNvCs6jxMYj1wg5S_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs26x5d1Y0Rr3_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_ when checking contract _RNCNCNvCs26x5d1Y0Rr3_33simple_ensures_pass_no_annotation3maxs0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -89,7 +89,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Check that *((unsigned char **)&temp_0) is assignable"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that *ptr is assignable"
 Status: SUCCESS

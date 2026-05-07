@@ -1,5 +1,5 @@
 warning: trait `DoIt` is never used
 warning: function `bar` is never used
-error: `&str` doesn't implement `trait_mismatch::DoIt`. The function `trait_mismatch::foo` cannot be stubbed by `trait_mismatch::bar` due to generic bounds not being met. Callee: trait_mismatch::DoIt::do_it
-error: `&str` doesn't implement `std::cmp::PartialEq`. The function `trait_mismatch::foo` cannot be stubbed by `trait_mismatch::bar` due to generic bounds not being met. Callee: std::cmp::PartialEq::eq
+error: type `&str` doesn't implement trait `trait_mismatch::DoIt`, so `trait_mismatch::foo` cannot be stubbed by `trait_mismatch::bar`. All trait bounds of the stub must be satisfied by the original's call sites.
+error: type `&str` doesn't implement trait `std::cmp::PartialEq`, so `trait_mismatch::foo` cannot be stubbed by `trait_mismatch::bar`. All trait bounds of the stub must be satisfied by the original's call sites.
 error: aborting due to 2 previous errors; 2 warnings emitted

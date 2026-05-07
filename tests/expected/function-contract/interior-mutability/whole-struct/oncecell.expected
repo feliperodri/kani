@@ -45,13 +45,13 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCscJjf2WWQ84c_8oncecell6modifys0_0s_0B5_ when checking contract _RNCNCNvCscJjf2WWQ84c_8oncecell6modifys0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsgzt2mwnHpNi_8oncecell6modifys0_0s_0B5_ when checking contract _RNCNCNvCsgzt2mwnHpNi_8oncecell6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCscJjf2WWQ84c_8oncecell6modifys0_0s_0B5_ when checking contract _RNCNCNvCscJjf2WWQ84c_8oncecell6modifys0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsgzt2mwnHpNi_8oncecell6modifys0_0s_0B5_ when checking contract _RNCNCNvCsgzt2mwnHpNi_8oncecell6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -59,7 +59,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS

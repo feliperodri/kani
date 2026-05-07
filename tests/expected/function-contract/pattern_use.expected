@@ -23,7 +23,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Check that *((unsigned char **)&temp_0) is assignable"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "__rust_alloc_zeroed must be called with a size greater than 0"
 Status: SUCCESS
@@ -41,7 +41,7 @@ Description: "no offset bits overflow on CAR upper bound computation"
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: SUCCESS
@@ -71,13 +71,13 @@ Description: "attempt to divide by zero"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCse3B922mLdut_11pattern_use3divs0_0s_0B5_ when checking contract _RNCNCNvCse3B922mLdut_11pattern_use3divs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCscVFzSZGSMEj_11pattern_use3divs0_0s_0B5_ when checking contract _RNCNCNvCscVFzSZGSMEj_11pattern_use3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCse3B922mLdut_11pattern_use3divs0_0s_0B5_ when checking contract _RNCNCNvCse3B922mLdut_11pattern_use3divs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCscVFzSZGSMEj_11pattern_use3divs0_0s_0B5_ when checking contract _RNCNCNvCscVFzSZGSMEj_11pattern_use3divs0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

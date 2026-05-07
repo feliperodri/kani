@@ -27,13 +27,13 @@ Description: "unwinding assertion loop 0"
 Status: SUCCESS
 Description: "dynamic allocation is allowed"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNCNvCsjnn48Dix2Jy_23gcd_rec_comparison_pass3gcd0s_0s_0B7_ when checking contract _RNCNCNCNvCsjnn48Dix2Jy_23gcd_rec_comparison_pass3gcd0s_0s_0B7_"
+Description: "Only a single top-level call to function _RNCNCNCNvCshJSKaaM6jgD_23gcd_rec_comparison_pass3gcd0s_0s_0B7_ when checking contract _RNCNCNCNvCshJSKaaM6jgD_23gcd_rec_comparison_pass3gcd0s_0s_0B7_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNCNvCsjnn48Dix2Jy_23gcd_rec_comparison_pass3gcd0s_0s_0B7_ when checking contract _RNCNCNCNvCsjnn48Dix2Jy_23gcd_rec_comparison_pass3gcd0s_0s_0B7_"
+Description: "No recursive call to function _RNCNCNCNvCshJSKaaM6jgD_23gcd_rec_comparison_pass3gcd0s_0s_0B7_ when checking contract _RNCNCNCNvCshJSKaaM6jgD_23gcd_rec_comparison_pass3gcd0s_0s_0B7_"
 Status: SUCCESS
 Description: "max allocation size exceeded"
 Status: SUCCESS
@@ -93,7 +93,7 @@ Description: "attempt to divide by zero"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Check that *ptr is assignable"
 Status: SUCCESS
@@ -147,7 +147,7 @@ Description: "cannot compute `size_of_val` for extern types"
 Status: SUCCESS
 Description: "failed to compute `size_of_val`"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
 Status: SUCCESS

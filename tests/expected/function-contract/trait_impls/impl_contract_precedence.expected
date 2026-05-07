@@ -1,13 +1,13 @@
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvXCsliFo4rWHH6f_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_ when checking contract _RNCNCNvXCsliFo4rWHH6f_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_"
+Description: "Only a single top-level call to function _RNCNCNvXCse679L7GLsHA_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_ when checking contract _RNCNCNvXCse679L7GLsHA_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvXCsliFo4rWHH6f_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_ when checking contract _RNCNCNvXCsliFo4rWHH6f_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_"
+Description: "No recursive call to function _RNCNCNvXCse679L7GLsHA_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_ when checking contract _RNCNCNvXCse679L7GLsHA_24impl_contract_precedenceNtB6_8MyStructNtB6_7MyTrait9get_values0_0s_0B6_"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: SUCCESS

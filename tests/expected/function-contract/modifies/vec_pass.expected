@@ -11,7 +11,7 @@ Description: "Alignment is power of two"
 Status: SUCCESS
 Description: "rust_dealloc must be called on an object whose allocated size matches its layout"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "`src` must be properly aligned"
 Status: SUCCESS
@@ -203,7 +203,7 @@ Description: "caller_location is not currently supported by Kani. Please post yo
 Status: SUCCESS
 Description: "This is a placeholder message; Kani doesn't support message formatted at runtime"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "Kani does not support reasoning about pointer to unallocated memory"
 Status: SUCCESS
@@ -938,13 +938,13 @@ Description: "Check that *((unsigned long int *)&temp_0) is assignable"
 Status: SUCCESS
 Description: "index out of bounds: the length is less than or equal to the given index"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCshDlXB5hsBLH_8vec_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCshDlXB5hsBLH_8vec_pass6modifys0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsjnr2qYsr5v7_8vec_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCsjnr2qYsr5v7_8vec_pass6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCshDlXB5hsBLH_8vec_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCshDlXB5hsBLH_8vec_pass6modifys0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsjnr2qYsr5v7_8vec_pass6modifys0_0s_0B5_ when checking contract _RNCNCNvCsjnr2qYsr5v7_8vec_pass6modifys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that *var_4 is assignable"
 Status: SUCCESS
@@ -1126,7 +1126,7 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: SUCCESS
 Description: "dereference failure: pointer invalid"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -1204,7 +1204,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "Check that *((unsigned long int *)&temp_1) is assignable"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

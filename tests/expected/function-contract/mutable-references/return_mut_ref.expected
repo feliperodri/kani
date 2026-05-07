@@ -5,13 +5,13 @@ Description: "Check that ptr is freeable"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs8CtU8JfBaRl_14return_mut_ref3foos0_00B5_ when checking contract _RNCNCNvCs8CtU8JfBaRl_14return_mut_ref3foos0_00B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsjRSOr0MPHFk_14return_mut_ref3foos0_00B5_ when checking contract _RNCNCNvCsjRSOr0MPHFk_14return_mut_ref3foos0_00B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs8CtU8JfBaRl_14return_mut_ref3foos0_00B5_ when checking contract _RNCNCNvCs8CtU8JfBaRl_14return_mut_ref3foos0_00B5_"
+Description: "No recursive call to function _RNCNCNvCsjRSOr0MPHFk_14return_mut_ref3foos0_00B5_ when checking contract _RNCNCNvCsjRSOr0MPHFk_14return_mut_ref3foos0_00B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

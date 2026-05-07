@@ -336,13 +336,13 @@ Failed Checks: attempt to calculate the remainder with a divisor of zero
 Failed Checks: This is a placeholder message; Kani doesn't support message formatted at runtime
 VERIFICATION:- FAILED
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs6Decd0NCDIz_20gcd_replacement_fail3gcds0_0s_0B5_ when checking contract _RNCNCNvCs6Decd0NCDIz_20gcd_replacement_fail3gcds0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs543NcZGGp0o_20gcd_replacement_fail3gcds0_0s_0B5_ when checking contract _RNCNCNvCs543NcZGGp0o_20gcd_replacement_fail3gcds0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs6Decd0NCDIz_20gcd_replacement_fail3gcds0_0s_0B5_ when checking contract _RNCNCNvCs6Decd0NCDIz_20gcd_replacement_fail3gcds0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs543NcZGGp0o_20gcd_replacement_fail3gcds0_0s_0B5_ when checking contract _RNCNCNvCs543NcZGGp0o_20gcd_replacement_fail3gcds0_0s_0B5_"
 Status: SUCCESS
 Description: "unwinding assertion loop 0"
 Status: SUCCESS

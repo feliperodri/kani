@@ -1,5 +1,5 @@
 Checking harness issue_3571::rust_ub_should_fail...
-SAT checker: instance is UNSATISFIABLE
+SAT checker inconsistent: instance is UNSATISFIABLE
 Status: FAILURE
 Description: "misaligned pointer dereference: address must be a multiple of its type's alignment"
 Status: UNREACHABLE

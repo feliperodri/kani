@@ -53,13 +53,13 @@ Description: "misaligned pointer to reference cast: address must be a multiple o
 Status: SUCCESS
 Description: "dereference failure: pointer invalid"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCshtJrREe6gHc_21nondeterministic_size4zeros0_0s_0B5_ when checking contract _RNCNCNvCshtJrREe6gHc_21nondeterministic_size4zeros0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsdyMP2hZnDAf_21nondeterministic_size4zeros0_0s_0B5_ when checking contract _RNCNCNvCsdyMP2hZnDAf_21nondeterministic_size4zeros0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCshtJrREe6gHc_21nondeterministic_size4zeros0_0s_0B5_ when checking contract _RNCNCNvCshtJrREe6gHc_21nondeterministic_size4zeros0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsdyMP2hZnDAf_21nondeterministic_size4zeros0_0s_0B5_ when checking contract _RNCNCNvCsdyMP2hZnDAf_21nondeterministic_size4zeros0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that *self is assignable"
 Status: SUCCESS
@@ -135,7 +135,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "attempt to compute `unchecked_add` which would overflow"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS

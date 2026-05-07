@@ -1,5 +1,5 @@
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "misaligned pointer to reference cast: address must be a multiple of its type's alignment"
 Status: SUCCESS
@@ -63,7 +63,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "caller_location is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/374"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -552,13 +552,13 @@ Description: "unwinding assertion loop 0"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: FAILURE
-Description: "No recursive call to function _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_"
 Status: UNREACHABLE
 Description: "attempt to calculate the remainder with a divisor of zero"
 Status: SUCCESS
@@ -729,5 +729,5 @@ Status: SUCCESS
 Description: "dereference failure: invalid integer address"
 Status: SUCCESS
 Description: "division by zero"
-Failed Checks: No recursive call to function _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs3wRelo622km_24gcd_rec_replacement_pass3gcds0_0s_0B5_
+Failed Checks: No recursive call to function _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_ when checking contract _RNCNCNvCs5LbDfLB7Xn8_24gcd_rec_replacement_pass3gcds0_0s_0B5_
 VERIFICATION:- FAILED

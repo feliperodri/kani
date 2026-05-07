@@ -13,13 +13,13 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCs27MDiUbc5DZ_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_ when checking contract _RNCNCNvCs27MDiUbc5DZ_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCs4tYXwCSnGKN_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_ when checking contract _RNCNCNvCs4tYXwCSnGKN_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCs27MDiUbc5DZ_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_ when checking contract _RNCNCNvCs27MDiUbc5DZ_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCs4tYXwCSnGKN_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_ when checking contract _RNCNCNvCs4tYXwCSnGKN_28mut_ref_ensures_and_modifies9divide_bys0_0s_0B5_"
 Status: SUCCESS
 Description: "ptr NULL or writable up to size"
 Status: SUCCESS

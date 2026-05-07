@@ -29,7 +29,7 @@ Description: "Alignment is power of two"
 Status: SUCCESS
 Description: "Check that ptr is freeable"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc26___rust_alloc_error_handler` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -63,13 +63,13 @@ Description: "Alignment is power of two"
 Status: SUCCESS
 Description: "rust_dealloc must be called on an object whose allocated size matches its layout"
 Status: SUCCESS
-Description: "Only a single top-level call to function _RNCNCNvCsdu7H0WPO88h_22arbitrary_ensures_fail3maxs0_0s_0B5_ when checking contract _RNCNCNvCsdu7H0WPO88h_22arbitrary_ensures_fail3maxs0_0s_0B5_"
+Description: "Only a single top-level call to function _RNCNCNvCsKvCIitFAes_22arbitrary_ensures_fail3maxs0_0s_0B5_ when checking contract _RNCNCNvCsKvCIitFAes_22arbitrary_ensures_fail3maxs0_0s_0B5_"
 Status: SUCCESS
 Description: "Check that requires do not allocate or deallocate memory"
 Status: SUCCESS
 Description: "Check that ensures do not allocate or deallocate memory"
 Status: SUCCESS
-Description: "No recursive call to function _RNCNCNvCsdu7H0WPO88h_22arbitrary_ensures_fail3maxs0_0s_0B5_ when checking contract _RNCNCNvCsdu7H0WPO88h_22arbitrary_ensures_fail3maxs0_0s_0B5_"
+Description: "No recursive call to function _RNCNCNvCsKvCIitFAes_22arbitrary_ensures_fail3maxs0_0s_0B5_ when checking contract _RNCNCNvCsKvCIitFAes_22arbitrary_ensures_fail3maxs0_0s_0B5_"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
@@ -89,7 +89,7 @@ Description: "unreachable code"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
-Description: "call to foreign "Rust" function `_RNvCsczBbXdqWPzO_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
+Description: "call to foreign "Rust" function `_RNvCscXdVywKbHIJ_7___rustc17rust_begin_unwind` is not currently supported by Kani. Please post your example at https://github.com/model-checking/kani/issues/new/choose"
 Status: SUCCESS
 Description: "unreachable code"
 Status: SUCCESS
