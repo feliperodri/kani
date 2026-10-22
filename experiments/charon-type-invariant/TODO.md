@@ -61,5 +61,15 @@ blocks.
     (`Error when registering the name for id: none::none`), and whether upstream Charon's
     output has the same problem.
 
+11. **Uses of `const` items** produce LLBC that Charon and Aeneas reject: the backend refers to
+    the global without declaring it. At `-Zmir-opt-level=0` more constants stay unevaluated, so
+    this comes up more often. Tracked in
+    [#5046](https://github.com/model-checking/kani/issues/5046).
+
+Progress: items 1–3 are addressed in [#5045](https://github.com/model-checking/kani/pull/5045)
+(LLBC runs compile at `-Zmir-opt-level=0`, generic calls and drops are typed with the generic
+body; trait methods on generic types still need trait references). All of this work is in the
+[Charon front end milestone](https://github.com/model-checking/kani/milestone/34).
+
 Environment notes (not Kani bugs): prebuilt Charon and Lean's bundled `clang` need glibc ≥ 2.29,
 and this host has 2.26. Charon was built from source, and Lake runs in a Debian container.
