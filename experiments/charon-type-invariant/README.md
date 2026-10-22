@@ -37,9 +37,8 @@ PATH=$C:$PATH $C/charon rustc --preset=aeneas --dest-file slots.llbc -- \
   --crate-type=lib --edition=2021 experiments/charon-type-invariant/slots.rs
 aeneas -backend lean slots.llbc -dest proof/        # writes proof/Slots.lean
 
-# Lean: this host has glibc 2.26, so Lake runs in a Debian container (`lean-docker`).
-(cd <aeneas>/backends/lean && lean-docker lake exe cache get && lean-docker lake build Aeneas)
-(cd experiments/charon-type-invariant/proof && lean-docker lake build)
+# Lean (this host has glibc 2.26, so Lake ran in a Debian container).
+(cd experiments/charon-type-invariant/proof && lake exe cache get && lake build)
 
 # Kani, standard front end
 kani experiments/charon-type-invariant/slots.rs

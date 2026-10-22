@@ -156,7 +156,11 @@ and that matters more than anything above:
   they are. For those, the useful split is probably the one in
   [this comment](https://github.com/model-checking/verify-rust-std/issues/734#issuecomment-6331645128):
   check the layout-dependent core with Kani for every layout, and argue separately that the
-  generic wrapper passes the right one.
+  generic wrapper passes the right one. `VecDeque` is the same: a `head` index and a `len` over a
+  `RawVec<T, A>`, with element reads, writes and the copies on growth done through raw pointers.
+  Its index arithmetic (`wrap_add`, `wrap_sub`, the logical-to-physical mapping and
+  `len <= capacity`) would fit this route, but it does not depend on `T`; the parts that do
+  (element size, zero-sized `T`, the copies in `handle_capacity_increase`) are the unsafe ones.
 - **Trait bounds.** With `T: Clone` or `T: Drop`, a proof for every `T` holds only relative to
   what is assumed about the trait methods. Each concrete impl then has to be checked against those
   assumptions; this example has none.
@@ -185,11 +189,9 @@ PATH=$C:$PATH $C/charon rustc --preset=aeneas --dest-file slots.llbc -- \
 # 2. Aeneas: download aeneas-linux-x86_64.tar.gz from the release above.
 aeneas -backend lean slots.llbc -dest proof/
 
-# 3. Lean: the Aeneas Lean library from the same release (backends/lean in the tarball, plus
-#    lean-build-aeneas-*.tar.gz unpacked into backends/lean/.lake/build), and Mathlib's cache.
-(cd <aeneas>/backends/lean && lake exe cache get)
-# Point proof/lakefile.lean's `require aeneas from` at <aeneas>/backends/lean, then:
-(cd proof && lake build)
+# 3. Lean: proof/lakefile.lean requires the Aeneas Lean library from git at the same commit.
+#    The first build fetches Aeneas and Mathlib; `cache get` downloads Mathlib's prebuilt files.
+(cd proof && lake exe cache get && lake build)
 
 # 4. Kani.
 kani slots.rs
