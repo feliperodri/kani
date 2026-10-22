@@ -71,5 +71,15 @@ Progress: items 1–3 are addressed in [#5045](https://github.com/model-checking
 body; trait methods on generic types still need trait references). All of this work is in the
 [Charon front end milestone](https://github.com/model-checking/kani/milestone/34).
 
+Filed as issues in the milestone: trait bounds and trait method calls on generic types
+([#5047](https://github.com/model-checking/kani/issues/5047)), promoted MIR for models without
+drop flags ([#5048](https://github.com/model-checking/kani/issues/5048)), output naming (item 5,
+[#5049](https://github.com/model-checking/kani/issues/5049)), translating without a harness
+(item 6, [#5050](https://github.com/model-checking/kani/issues/5050)), the Aeneas version pin
+(item 8, [#5051](https://github.com/model-checking/kani/issues/5051)), and connecting the Rust
+and Lean invariants (item 9, [#5052](https://github.com/model-checking/kani/issues/5052)). Item 10
+is not a Kani bug: upstream Charon's output for a function named `none` fails in Aeneas the same
+way.
+
 Environment notes (not Kani bugs): prebuilt Charon and Lean's bundled `clang` need glibc ≥ 2.29,
 and this host has 2.26. Charon was built from source, and Lake runs in a Debian container.
