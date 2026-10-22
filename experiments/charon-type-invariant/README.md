@@ -1,5 +1,7 @@
 # Experiment: prove a type invariant for all `T` with Charon, check instances with Kani
 
+Start with [WALKTHROUGH.md](WALKTHROUGH.md) for the step-by-step version.
+
 Theory: prove a property of generic Rust code once, for every `T`, through the Charon front end
 (Charon → LLBC → Aeneas → Lean), and check the same property on monomorphized instances with
 Kani's standard (CBMC) front end.

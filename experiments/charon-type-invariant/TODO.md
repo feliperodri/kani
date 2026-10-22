@@ -6,9 +6,28 @@ blocks.
 1. **Translate pre-optimization MIR.** The backend reads optimized MIR (`fndef.body()`), where
    rustc turns moves into copies (`Option::Some { _0: copy x }` for `x: T`) and has no drops left.
    Aeneas tracks ownership, and fails on `push` with an internal error. Upstream Charon reads MIR
-   before optimizations (`_8 = move x`, explicit `conditional_drop`s). Needs a way to get
-   borrow-checked MIR from inside Kani's driver (as Charon does by overriding the MIR queries), or
-   a `rustc_public` API for it. This is the bulk of the work.
+   before optimizations (`_8 = move x`, explicit `conditional_drop`s). This is the bulk of the work.
+
+   Plan, all of it gated on `-Zlean` so the CBMC path is unchanged (one backend runs per
+   invocation):
+   - Do what Charon does (`charon-driver/driver.rs`, `translate/get_mir.rs`): set
+     `mir_opt_level = 0` and `mir_preserve_ub = true` for LLBC runs, and read
+     `tcx.mir_promoted` / `tcx.mir_drops_elaborated_and_const_checked` for local items, falling
+     back to optimized MIR for other crates (only optimized MIR is in their metadata).
+   - rustc steals those bodies before a codegen backend runs. Either translate in an earlier
+     callback, or install a query override (Kani already has `Callbacks::config`) that keeps a
+     copy of each local body. Charon's driver has the override sketched as a TODO.
+   - Handle what pre-optimization MIR contains: `Operand::RuntimeChecks` (with
+     `-Zmir-opt-level=0` alone, `push` hits the `todo!()` in `translate_operand`), explicit
+     drops, and generic calls (items 2 and 3).
+
+   Soundness: the CBMC path does not change. For the LLBC path, pre-optimization MIR is the
+   borrow-checked program; optimized MIR may have had code removed under the assumption that the
+   program has no undefined behaviour (hence Charon's `mir_preserve_ub`), so the change makes that
+   path more faithful. The two paths then read different MIR of the same source. That is fine for
+   "prove for all T, check instances with Kani", and would also be the assumption if Kani ever
+   trusted the Lean theorems as contracts (item 9): rustc's optimizations are correct and the
+   program has no undefined behaviour, which Kani checks on the instances it runs.
 2. **Calls to generic functions from generic bodies.** `Option<T>::is_none()` or
    `core::mem::size_of::<T>()` inside a generic function crash in `translate_fn_ptr`
    (`rustc_public_bridge` panics: "needs further instantiation"). Call operands are typed with
