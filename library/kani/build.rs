@@ -8,4 +8,7 @@ fn main() {
     // verification-only hook bodies can gate on `cfg(not(kani))` without tripping the
     // `unexpected_cfgs` lint during the library's own build.
     println!("cargo::rustc-check-cfg=cfg(kani)");
+    // `verus_keep_ghost` is set only by Verus, which checks the specifications in
+    // `kani_aliasing_monitor!`; this crate expands that macro.
+    println!("cargo::rustc-check-cfg=cfg(verus_keep_ghost)");
 }
