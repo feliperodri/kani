@@ -17,11 +17,11 @@
 //! - Direct calls pass the tags of up to four pointer arguments, and of a returned pointer,
 //!   through a small buffer in the library, keyed by an identifier of the callee.
 //!
-//! Pointers whose provenance this pass does not follow get the *wildcard* tag, which the library
-//! neither checks nor updates. This includes pointers read from memory (other than through a
-//! `Box`), pointers returned by indirect calls, places with several dereferences, and integer to
-//! pointer casts. Missing these accesses means missing some undefined behavior, never reporting
-//! undefined behavior that is not there.
+//! Pointers whose provenance this pass does not follow get the *unknown* tag: pointers read from
+//! memory (other than through a `Box`), pointers returned by indirect calls, places with several
+//! dereferences, integer to pointer casts, and pointer locals whose own address is taken. An
+//! access through an unknown tag to the tracked byte fails as an unsupported construct, so that
+//! a harness never verifies because of what the checks could not see.
 //!
 //! Not modelled yet: protectors (function-entry retags), two-phase borrows beyond what the
 //! reserved state allows, `UnsafeCell` (references to types that are not `Freeze` keep their
@@ -52,7 +52,7 @@ use tracing::trace;
 
 /// Tag values shared with `kani_core::kani_aliasing`.
 const ROOT_TAG: u8 = 0;
-const WILDCARD_TAG: u8 = u8::MAX;
+const UNKNOWN_TAG: u8 = u8::MAX;
 const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
 const MAX_ARG_TAGS: usize = 4;
@@ -121,6 +121,8 @@ enum Action {
     SetTag { tag_local: Local, value: TagValue },
     /// Create a reference through a pointer tagged `parent`.
     NewBorrow { tag_local: Local, parent: TagValue, is_shared: bool },
+    /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
+    DropRetag { parent: TagValue, callee: u64 },
     /// Record the argument tags of a direct call.
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
@@ -183,6 +185,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             .map(|(local, _)| local)
             .collect();
         for local in pointer_locals {
+            // A pointer local whose address is taken can be written through that address, which
+            // its tag local would not see: its tag is unknown.
+            if self.address_taken.contains(&local) {
+                continue;
+            }
             let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
             self.tags.insert(local, tag_local);
         }
@@ -272,7 +279,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             if local == 0 || local > body.arg_count() {
                 self.insert(
                     body,
-                    Action::SetTag { tag_local, value: TagValue::Const(WILDCARD_TAG) },
+                    Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) },
                     &mut source,
                     InsertPosition::Before,
                 );
@@ -285,6 +292,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     fn place_tag(&self, body: &MutableBody, place: &Place) -> Option<TagValue> {
         let derefs = place.projection.iter().filter(|e| matches!(e, ProjectionElem::Deref)).count();
         match (derefs, place.projection.first()) {
+            // No pointer is involved: only a local whose address is taken can be aliased.
             (0, _) => {
                 self.address_taken.contains(&place.local).then_some(TagValue::Const(ROOT_TAG))
             }
@@ -293,10 +301,15 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 if ty.kind().is_box() {
                     Some(TagValue::Const(ROOT_TAG))
                 } else {
-                    self.tags.get(&place.local).map(|tag| TagValue::Local(*tag))
+                    Some(
+                        self.tags
+                            .get(&place.local)
+                            .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag)),
+                    )
                 }
             }
-            _ => None,
+            // The place goes through a pointer read from memory.
+            _ => Some(TagValue::Const(UNKNOWN_TAG)),
         }
     }
 
@@ -306,8 +319,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             Operand::Copy(place) | Operand::Move(place) if place.projection.is_empty() => self
                 .tags
                 .get(&place.local)
-                .map_or(TagValue::Const(WILDCARD_TAG), |tag| TagValue::Local(*tag)),
-            _ => TagValue::Const(WILDCARD_TAG),
+                .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag)),
+            // A constant pointer points to a static or a promoted constant, whose only
+            // tag is its root.
+            Operand::Constant(_) => TagValue::Const(ROOT_TAG),
+            _ => TagValue::Const(UNKNOWN_TAG),
         }
     }
 
@@ -430,28 +446,27 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 match rvalue {
                     Rvalue::Ref(_, borrow_kind, place) => {
                         let parent =
-                            self.place_tag(body, place).unwrap_or(TagValue::Const(WILDCARD_TAG));
+                            self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
                         let ty = place.ty(body.locals()).unwrap();
-                        let tracked =
-                            !matches!(borrow_kind, BorrowKind::Fake(_)) && self.is_freeze(ty);
-                        if tracked {
-                            // Creating a reference reads the referenced memory. The read of an
-                            // unsized place is not checked (`Access` skips it).
+                        let is_shared = matches!(borrow_kind, BorrowKind::Shared);
+                        if matches!(borrow_kind, BorrowKind::Fake(_)) {
+                            // Only used by the borrow checker: no reference is created.
+                            new_tag = Some(parent);
+                        } else if is_shared && !self.is_freeze(ty) {
+                            // The bytes of an `UnsafeCell` behind a shared reference may be
+                            // written, the others not; telling them apart is not modelled yet.
+                            new_tag = Some(TagValue::Const(UNKNOWN_TAG));
+                        } else {
+                            // Creating a reference reads the referenced memory.
                             self.read(body, place, &mut actions);
                             if let Some(tag_local) = dest {
-                                actions.push(Action::NewBorrow {
-                                    tag_local,
-                                    parent,
-                                    is_shared: matches!(borrow_kind, BorrowKind::Shared),
-                                });
+                                actions.push(Action::NewBorrow { tag_local, parent, is_shared });
                             }
-                        } else {
-                            new_tag = Some(parent);
                         }
                     }
                     Rvalue::AddressOf(_, place) => {
                         new_tag = Some(
-                            self.place_tag(body, place).unwrap_or(TagValue::Const(WILDCARD_TAG)),
+                            self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG)),
                         );
                     }
                     Rvalue::Use(operand, _) => {
@@ -475,7 +490,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             // The pointer inside a `Box`, which owns its allocation.
                             CastKind::BoxDerefTransmute => TagValue::Const(ROOT_TAG),
                             _ if keeps_provenance => self.operand_tag(operand),
-                            _ => TagValue::Const(WILDCARD_TAG),
+                            _ => TagValue::Const(UNKNOWN_TAG),
                         });
                     }
                     Rvalue::Reborrow(_, _, place) => {
@@ -513,7 +528,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 if let Some(tag_local) = dest
                     && !actions.iter().any(|a| matches!(a, Action::NewBorrow { .. }))
                 {
-                    let value = new_tag.unwrap_or(TagValue::Const(WILDCARD_TAG));
+                    let value = new_tag.unwrap_or(TagValue::Const(UNKNOWN_TAG));
                     actions.push(Action::SetTag { tag_local, value });
                 }
             }
@@ -570,14 +585,22 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             }
                             (Some(callee), false) => Action::TakeRet { tag_local, callee },
                             (None, false) => {
-                                Action::SetTag { tag_local, value: TagValue::Const(WILDCARD_TAG) }
+                                Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) }
                             }
                         });
                     }
                     self.write(body, destination, &mut after);
                 }
             }
-            TerminatorKind::Drop { place, .. } => self.write(body, place, &mut before),
+            TerminatorKind::Drop { place, .. } => {
+                // Dropping passes `&mut place` to the drop glue: a reborrow, which reads the
+                // place, then a call. The glue's own accesses are checked through the new tag.
+                self.read(body, place, &mut before);
+                let ty = place.ty(body.locals()).unwrap();
+                let drop_glue = Instance::resolve_drop_in_place(ty);
+                let parent = self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
+                before.push(Action::DropRetag { parent, callee: instance_id(drop_glue) });
+            }
             TerminatorKind::SwitchInt { discr: operand, .. }
             | TerminatorKind::Assert { cond: operand, .. } => {
                 self.read_operand(body, operand, &mut before)
@@ -585,7 +608,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             TerminatorKind::Return => {
                 let tag = self.tags.get(&0).map(|tag| TagValue::Local(*tag));
                 if tag.is_some() || self.frame_count.is_some() {
-                    let tag = tag.unwrap_or(TagValue::Const(WILDCARD_TAG));
+                    let tag = tag.unwrap_or(TagValue::Const(UNKNOWN_TAG));
                     before.push(Action::Return { tag });
                 }
             }
@@ -679,11 +702,23 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     vec![self.tag_operand(body, parent, span), bool_operand(is_shared, span)];
                 body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
             }
+            Action::DropRetag { parent, callee } => {
+                let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let new_borrow = self.model(KaniModel::AliasingNewBorrow, vec![]);
+                let args = vec![self.tag_operand(body, parent, span), bool_operand(false, span)];
+                body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
+                self.insert(
+                    body,
+                    Action::PushCall { callee, tags: vec![TagValue::Local(tag_local)] },
+                    source,
+                    position,
+                );
+            }
             Action::PushCall { callee, tags } => {
                 let push = self.model(KaniModel::AliasingPushCall, vec![]);
                 let mut args = vec![body.new_uint_operand(callee as u128, UintTy::U64, span)];
                 for index in 0..MAX_ARG_TAGS {
-                    let tag = tags.get(index).copied().unwrap_or(TagValue::Const(WILDCARD_TAG));
+                    let tag = tags.get(index).copied().unwrap_or(TagValue::Const(UNKNOWN_TAG));
                     args.push(self.tag_operand(body, tag, span));
                 }
                 let ret = unit_place(body, span);
@@ -695,7 +730,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 // as the count keeps them all.
                 let frame_count = match self.frame_count {
                     Some(local) => Operand::Copy(Place::from(local)),
-                    None => body.new_uint_operand(WILDCARD_TAG as u128, UintTy::U8, span),
+                    None => body.new_uint_operand(UNKNOWN_TAG as u128, UintTy::U8, span),
                 };
                 let args = vec![
                     body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
