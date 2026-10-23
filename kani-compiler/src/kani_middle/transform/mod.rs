@@ -19,6 +19,7 @@
 use crate::kani_middle::codegen_units::CodegenUnit;
 use crate::kani_middle::reachability::CallGraph;
 use crate::kani_middle::transform::body::CheckType;
+use crate::kani_middle::transform::check_aliasing::AliasingPass;
 use crate::kani_middle::transform::check_uninit::{DelayedUbPass, UninitPass};
 use crate::kani_middle::transform::check_values::ValidValuePass;
 use crate::kani_middle::transform::clone::{ClonableGlobalPass, ClonableTransformPass};
@@ -67,6 +68,7 @@ fn build_missing_body(tcx: TyCtxt, instance: Instance) -> Body {
 
 mod automatic;
 pub(crate) mod body;
+mod check_aliasing;
 mod check_uninit;
 mod check_values;
 mod contracts;
@@ -130,6 +132,16 @@ impl BodyTransformation {
                 safety_check_type: CheckType::new_safety_check_assert_no_assume(queries),
                 unsupported_check_type: unsupported_check_type.clone(),
                 mem_init_fn_cache: queries.kani_functions().clone(),
+            },
+        );
+        // After `UninitPass`, so that the aliasing instrumentation is not checked for
+        // initialization. Like `UninitPass`, it tracks one non-deterministically chosen byte, so
+        // its assertions must not be assumed.
+        transformer.add_pass(
+            queries,
+            AliasingPass {
+                check_type: CheckType::new_safety_check_assert_no_assume(queries),
+                kani_functions: queries.kani_functions().clone(),
             },
         );
         transformer.add_pass(queries, IntrinsicGeneratorPass::new(unsupported_check_type, queries));

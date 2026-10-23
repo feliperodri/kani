@@ -67,6 +67,9 @@
 )]
 #[strum(serialize_all = "kebab-case")]
 pub enum UnstableFeature {
+    /// Automatically check accesses against a model of Rust's aliasing rules (the rules that
+    /// Stacked Borrows and Tree Borrows share).
+    AliasingChecks,
     /// Enable Kani's unstable async library.
     AsyncLib,
     /// Enable the autoharness subcommand.
