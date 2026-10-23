@@ -103,9 +103,10 @@ impl TransformPass for AliasingPass {
 
     fn transform(&mut self, tcx: TyCtxt, body: Body, instance: Instance) -> (bool, Body) {
         trace!(function=?instance.name(), "transform");
-        // The library functions of the model, and every other Kani function, are not
-        // instrumented; instrumenting the model would recurse.
-        if KaniFunction::try_from(instance).is_ok() {
+        // Kani functions are not instrumented, nor is any function of the aliasing model's
+        // module (its helpers and the monitor have no marker): instrumenting the model would
+        // recurse.
+        if KaniFunction::try_from(instance).is_ok() || is_aliasing_model(instance) {
             return (false, body);
         }
         let mut body = MutableBody::from(body);
@@ -1353,6 +1354,13 @@ fn path_key(place: &Place) -> Option<PathKey> {
         })
         .collect::<Option<Vec<_>>>()?;
     Some((place.local, path))
+}
+
+/// Whether `instance` belongs to the module that `kani_core::kani_aliasing!` generates in the Kani
+/// library (`kani::aliasing`), or in `core` when verifying the standard library.
+fn is_aliasing_model(instance: Instance) -> bool {
+    let name = instance.name();
+    name.starts_with("kani::aliasing::") || name.contains("::kani::aliasing::")
 }
 
 /// Whether values of `ty` carry a tag: references and raw pointers.
