@@ -723,7 +723,7 @@ fn try_resolve_instance(locals: &[LocalDecl], func: &Operand) -> Result<Instance
 /// single-field wrappers until the raw pointer is reached, so that the shadow-memory models see the
 /// same address with the pointer type they expect. Operands that are already raw pointers, and any
 /// shape we cannot project all the way down to a pointer, are passed through unchanged.
-fn raw_ptr_arg(arg: &Operand, locals: &[LocalDecl]) -> Operand {
+pub(crate) fn raw_ptr_arg(arg: &Operand, locals: &[LocalDecl]) -> Operand {
     let Ok(arg_ty) = arg.ty(locals) else { return arg.clone() };
     if nonnull_pointee(arg_ty).is_none() {
         return arg.clone();

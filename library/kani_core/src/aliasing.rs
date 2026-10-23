@@ -376,6 +376,30 @@ macro_rules! kani_aliasing {
             aliasing_new_borrow_bytes(parent, obj, offset, size, 0, is_shared, is_protected)
         }
 
+        /// Deallocate `size` bytes at `ptr`. Deallocating memory that a reference argument of a
+        /// running function points to is undefined behavior.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingDeallocModel"]
+        fn aliasing_dealloc(ptr: *const u8, size: usize) -> u8 {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            unsafe {
+                let covers = ALIASING_STATE.tracked_object_id == obj
+                    && ALIASING_STATE.tracked_offset >= offset
+                    && ALIASING_STATE.tracked_offset - offset < size;
+                if covers
+                    && ALIASING_STATE.protected
+                        & ALIASING_STATE.initialized
+                        & ALIASING_STATE.valid
+                        & !ALIASING_STATE.cell
+                        != 0
+                {
+                    return ACCESS_PROTECTOR;
+                }
+            }
+            ACCESS_OK
+        }
+
         /// Record the tags of the pointer arguments of a direct call to `callee`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingPushCallModel"]

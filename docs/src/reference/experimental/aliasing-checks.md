@@ -51,6 +51,7 @@ The rules are:
 7. The bytes of an `UnsafeCell` behind a shared reference are not frozen: a shared reference to
    them acts like the pointer it was created from, and writes through it are allowed. A mutable
    reference to them is not disabled by foreign writes until it is written.
+8. Deallocating memory that a protected reference argument points to is undefined behavior.
 
 Rules 4 and 5 differ from each model's own rules only where the two models disagree. Stacked
 Borrows also disables a mutable reference on a foreign read. Tree Borrows lets a mutable
@@ -63,7 +64,7 @@ tracks that byte and the check fails.
 
 ## What a successful verification means
 
-If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 7
+If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 8
 above. Kani never reports success because of an access it did not check. When it cannot tell
 which tag a pointer has, it gives the pointer an *unknown* tag. An access through an unknown tag
 to the tracked byte then fails with "Kani's aliasing checks do not know which reference this
@@ -87,11 +88,13 @@ SIMD gather, scatter and masked load/store intrinsics are reported as unsupporte
 
 ### Rules that are not checked
 
-Rules 1 to 7 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
+Rules 1 to 8 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
 not part of it yet, so a successful verification says nothing about them:
 
-- **Deallocation** while a reference to the memory is live. Kani's pointer checks still report
-  accesses to deallocated memory.
+- **Deallocation as an access.** Both models also treat deallocation as a write through the
+  deallocating pointer, so deallocating through a pointer derived from a shared reference is
+  undefined behavior. Kani does not check that yet. It still reports any access to deallocated
+  memory through its pointer checks.
 
 ## Validation
 

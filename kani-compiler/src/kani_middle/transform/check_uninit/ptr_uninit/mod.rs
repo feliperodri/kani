@@ -25,6 +25,7 @@ use tracing::trace;
 use uninit_visitor::CheckUninitVisitor;
 
 mod uninit_visitor;
+pub(crate) use uninit_visitor::raw_ptr_arg;
 
 /// Top-level pass that instruments the code with checks for uninitialized memory access through raw
 /// pointers.
