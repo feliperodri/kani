@@ -150,6 +150,8 @@ pub struct Arguments {
 #[derive(Debug, Clone, Copy, AsRefStr, EnumString, VariantNames, PartialEq, Eq)]
 #[strum(serialize_all = "snake_case")]
 pub enum ExtraChecks {
+    /// Check accesses against the aliasing rules that Stacked Borrows and Tree Borrows share.
+    Aliasing,
     /// Check that produced values are valid except for uninitialized values.
     /// See https://github.com/model-checking/kani/issues/920.
     Validity,

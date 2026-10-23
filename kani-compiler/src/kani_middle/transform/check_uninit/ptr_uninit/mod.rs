@@ -78,7 +78,7 @@ impl TransformPass for UninitPass {
 }
 
 /// Checks if the instance is a harness -- an entry point of Kani analysis.
-fn is_harness(instance: Instance, tcx: TyCtxt) -> bool {
+pub(crate) fn is_harness(instance: Instance, tcx: TyCtxt) -> bool {
     let harness_identifiers = [
         vec![
             rustc_span::symbol::Symbol::intern("kanitool"),

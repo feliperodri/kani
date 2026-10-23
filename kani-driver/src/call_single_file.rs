@@ -154,6 +154,10 @@ impl KaniSession {
             flags.push("--coverage-checks".into());
         }
 
+        if self.args.common_args.unstable_features.contains(UnstableFeature::AliasingChecks) {
+            flags.push("--ub-check=aliasing".into());
+        }
+
         if self.args.common_args.unstable_features.contains(UnstableFeature::ValidValueChecks) {
             flags.push("--ub-check=validity".into())
         }
