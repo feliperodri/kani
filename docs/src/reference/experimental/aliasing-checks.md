@@ -109,15 +109,14 @@ all of them except the known gaps above, which the tests mark as such.
 
 ## Status and next steps
 
-The checks are built around tags, ancestry and an abstract permission state rather than a borrow
-stack, so that Tree Borrows' permission machine can refine them instead of replacing them. They
-currently cover:
+The checks are built around tags, ancestry and permission bits rather than a borrow stack. Tags
+follow pointers through locals, fields of local aggregates, casts, pointer arithmetic, and the
+arguments and results of direct calls. The permissions follow Tree Borrows' reserved, active,
+frozen, disabled and conflicted states, its interior-mutable variants, and its protectors.
 
-- tags for references, propagated through copies, casts, pointer arithmetic and direct calls;
-- parent/child ancestry, with local and foreign accesses distinguished;
-- valid/invalid tags, read and write permissions, and freezing on foreign reads;
-- per-byte state, since one byte is tracked (disjoint fields of a struct do not interfere).
-
-Planned next, roughly in order: tags for pointers stored in memory, protectors for function
-arguments, `UnsafeCell`, Tree Borrows' reserved and active states with their exact transitions,
-deallocation, and exposed provenance.
+The main gap is pointers stored in memory: references in heap data structures, closure
+environments reached through a reference, and the buffer pointers of collections all have
+unknown tags, which makes many harnesses that use the standard library inconclusive. Tracking
+them needs shadow tags per memory location, kept in sync with every store and memory copy.
+Also planned: deallocation as an access, the implicit access at the end of a protector, and weak
+protectors for `Box` arguments.
