@@ -18,6 +18,7 @@
 #![feature(no_core)]
 #![no_core]
 
+mod aliasing;
 mod arbitrary;
 mod bounded_arbitrary;
 mod float;
@@ -62,6 +63,10 @@ macro_rules! kani_lib {
 
             mod mem_init {
                 kani_core::kani_mem_init!(core);
+            }
+
+            mod aliasing {
+                kani_core::kani_aliasing!(core);
             }
         }
     };
@@ -124,6 +129,12 @@ macro_rules! kani_lib {
             //! Note that for each harness, tracked object and tracked offset are chosen non-deterministically,
             //! so calls to `is_xxx_initialized` should be only used in assertion contexts.
             kani_core::kani_mem_init!(std);
+        }
+
+        mod aliasing {
+            //! Runtime model of the aliasing checks (`-Z aliasing-checks`). See the documentation
+            //! of `kani_core::kani_aliasing`.
+            kani_core::kani_aliasing!(std);
         }
     };
 }

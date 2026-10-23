@@ -448,6 +448,27 @@ impl MutableBody {
         }
     }
 
+    /// Turn block 0 into an empty block that jumps to the old entry block, now at a new index.
+    ///
+    /// Code inserted in block 0 afterwards runs once per call, even if the old entry block is the
+    /// target of a jump (for instance, the header of a loop at the start of the function).
+    pub fn split_entry_block(&mut self) {
+        let new_idx = self.blocks.len();
+        let span = self.blocks[0].terminator.source_info.span;
+        let entry = BasicBlock {
+            statements: vec![],
+            terminator: Terminator {
+                kind: TerminatorKind::Goto { target: new_idx },
+                source_info: synthetic_source_info(span),
+            },
+        };
+        let old_entry = mem::replace(&mut self.blocks[0], entry);
+        self.blocks.push(old_entry);
+        for block in self.blocks.iter_mut().skip(1) {
+            retarget(&mut block.terminator.kind, 0, new_idx);
+        }
+    }
+
     /// Clear all the existing logic of this body and turn it into a simple `return`.
     ///
     /// This function can be used when a new implementation of the body is needed.
@@ -668,6 +689,47 @@ pub trait MutMirVisitor {
             Rvalue::Ref(..) | Rvalue::Reborrow(..) => {}
             Rvalue::ThreadLocalRef(_) => {}
         }
+    }
+}
+
+/// Replace every successor `from` of `kind` by `to`.
+fn retarget(kind: &mut TerminatorKind, from: BasicBlockIdx, to: BasicBlockIdx) {
+    let update = |bb: &mut BasicBlockIdx| {
+        if *bb == from {
+            *bb = to;
+        }
+    };
+    let update_unwind = |unwind: &mut UnwindAction| {
+        if let UnwindAction::Cleanup(bb) = unwind {
+            update(bb);
+        }
+    };
+    match kind {
+        TerminatorKind::Goto { target } => update(target),
+        TerminatorKind::SwitchInt { targets, .. } => {
+            let branches = targets
+                .branches()
+                .map(|(value, bb)| (value, if bb == from { to } else { bb }))
+                .collect();
+            let otherwise = if targets.otherwise() == from { to } else { targets.otherwise() };
+            *targets = SwitchTargets::new(branches, otherwise);
+        }
+        TerminatorKind::Drop { target, unwind, .. }
+        | TerminatorKind::Assert { target, unwind, .. } => {
+            update(target);
+            update_unwind(unwind);
+        }
+        TerminatorKind::Call { target, unwind, .. }
+        | TerminatorKind::InlineAsm { destination: target, unwind, .. } => {
+            if let Some(target) = target {
+                update(target);
+            }
+            update_unwind(unwind);
+        }
+        TerminatorKind::Abort
+        | TerminatorKind::Resume
+        | TerminatorKind::Return
+        | TerminatorKind::Unreachable => {}
     }
 }
 
