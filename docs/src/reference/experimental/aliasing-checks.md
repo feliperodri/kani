@@ -3,8 +3,8 @@
 `-Z aliasing-checks` checks memory accesses against a model of Rust's aliasing rules. The model
 is the part that [Stacked Borrows](https://plv.mpi-sws.org/rustbelt/stacked-borrows/paper.pdf)
 and [Tree Borrows](https://research.ralfj.de/papers/2025-pldi-tree-borrows.pdf) agree on, so an
-access it rejects is undefined behavior under either model. It covers fewer programs than either
-model does: some aliasing violations are not reported yet (see [Limitations](#limitations)).
+access it rejects is undefined behavior under either model. Some rules of those models are not
+checked yet; see [What a successful verification means](#what-a-successful-verification-means).
 
 ```rust
 #[kani::proof]
@@ -53,30 +53,37 @@ As with `-Z uninit-checks`, Kani tracks the state of one byte of memory per harn
 chosen nondeterministically, so if any byte is accessed against the rules, some execution
 tracks that byte and the check fails.
 
-## Limitations
+## What a successful verification means
 
-The following are not checked yet. Accesses that depend on them pass even when they are undefined
-behavior; none of them makes Kani report undefined behavior that is not there.
+If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 5
+above. Kani never reports success because of an access it did not check. When it cannot tell
+which tag a pointer has, it gives the pointer an *unknown* tag. An access through an unknown tag
+to the tracked byte then fails with "Kani's aliasing checks do not know which reference this
+pointer was derived from". That failure is inconclusive, not a proof of undefined behavior.
+Today the tag is unknown for:
 
-- **Pointers stored in memory.** A pointer read back from memory, for example a reference field
-  of a struct or the buffer pointer of a `Vec`, gets a *wildcard* tag. Accesses through a
-  wildcard pointer are neither checked nor change the state. This includes the pointer that
-  `Vec::as_mut_ptr` returns.
-- **Calls.** Tags of pointer arguments and returned pointers go through direct calls, for up to
-  four arguments. Indirect calls (function pointers, `dyn`) pass wildcard tags.
-- **Protectors.** Function-entry retags and protectors are not modelled, so writing through an
-  alias of a `&mut` argument while the function runs is only reported if the argument is used
-  afterwards.
-- **`UnsafeCell`.** References to types that are not `Freeze` keep their parent's tag.
-  Creating a reference to an unsized type (a slice, `str`, `dyn Trait`) does not check the read
-  it performs.
-- **Places with several dereferences** (`**p`), pointers obtained from integers, and memory
-  accessed by intrinsics such as `copy_nonoverlapping` are not checked.
-- **Deallocation** does not invalidate tags.
-- Kani tracks at most 63 references to the tracked byte at once. The tags of references created
-  by a function are dropped when it returns, unless it returns one. Beyond 63, a new reference
-  shares the tag of the pointer it was created from, so undefined behavior through that
-  reference alone is missed.
+- pointers read back from memory (a reference stored in a struct field, the buffer pointer of a
+  `Vec`), except the pointer inside a `Box`;
+- places that go through a pointer stored in memory, such as `**p`;
+- pointers returned by, or passed as arguments to, indirect calls (function pointers, `dyn`),
+  and pointer arguments past the fourth;
+- pointers obtained from integers;
+- pointer locals whose own address is taken;
+- shared references to types that contain an `UnsafeCell`;
+- references created after 63 references to the tracked byte are live. The tags of references
+  a function creates are dropped when it returns, unless it returns one.
+
+SIMD gather, scatter and masked load/store intrinsics are reported as unsupported.
+
+### Rules that are not checked
+
+Rules 1 to 5 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
+not part of it yet, so a successful verification says nothing about them:
+
+- **Protectors.** Neither model allows a reference passed to a function to be invalidated while
+  the function runs. Kani only reports such a write if the reference is used afterwards.
+- **Deallocation** while a reference to the memory is live. Kani's pointer checks still report
+  accesses to deallocated memory.
 
 ## Validation
 

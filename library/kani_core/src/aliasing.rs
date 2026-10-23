@@ -41,9 +41,9 @@ macro_rules! kani_aliasing {
         /// `Box` use it.
         const ROOT_TAG: u8 = 0;
         /// The tag of a pointer whose provenance the instrumentation does not know (for instance
-        /// a pointer read from memory, or returned by an indirect call). Accesses through it are
-        /// neither checked nor change the state.
-        const WILDCARD_TAG: u8 = u8::MAX;
+        /// a pointer read from memory, or returned by an indirect call). An access through it to
+        /// the tracked byte is reported as unsupported: the checks cannot decide it.
+        const UNKNOWN_TAG: u8 = u8::MAX;
 
         /// Results of `aliasing_access`, checked by the compiler-inserted assertions.
         const ACCESS_OK: u8 = 0;
@@ -83,9 +83,9 @@ macro_rules! kani_aliasing {
             active: 0,
             frozen: 0,
             call_callee: 0,
-            call_tags: [WILDCARD_TAG; MAX_ARG_TAGS],
+            call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
             ret_callee: 0,
-            ret_tag: WILDCARD_TAG,
+            ret_tag: UNKNOWN_TAG,
         };
 
         /// Choose the tracked byte and give it a root tag that is valid and active.
@@ -118,12 +118,17 @@ macro_rules! kani_aliasing {
             is_write: bool,
         ) -> u8 {
             unsafe {
-                if tag >= ALIASING_STATE.count
-                    || ALIASING_STATE.tracked_object_id != obj
+                if ALIASING_STATE.tracked_object_id != obj
                     || ALIASING_STATE.tracked_offset < offset
                     || ALIASING_STATE.tracked_offset - offset >= size
                 {
                     return ACCESS_OK;
+                }
+                if tag >= ALIASING_STATE.count {
+                    super::unsupported(
+                        "Kani's aliasing checks do not know which reference this pointer was \
+                         derived from, so they cannot check this access",
+                    );
                 }
                 let bit = 1u64 << tag;
                 let local = ALIASING_STATE.ancestors[tag as usize];
@@ -197,11 +202,10 @@ macro_rules! kani_aliasing {
                     return parent;
                 }
                 let parent_mask = ALIASING_STATE.ancestors[parent as usize];
-                // Out of tags: the new reference shares its parent's tag. That only merges the
-                // reference into its parent, so accesses that are undefined behavior through the
-                // reference but not through the parent are missed; nothing else changes.
+                // Out of tags: accesses through the new reference to the tracked byte are
+                // reported as unsupported.
                 if ALIASING_STATE.count == MAX_TAGS {
-                    return parent;
+                    return UNKNOWN_TAG;
                 }
                 let tag = ALIASING_STATE.count;
                 let bit = 1u64 << tag;
@@ -237,7 +241,7 @@ macro_rules! kani_aliasing {
                 if ALIASING_STATE.call_callee == callee && index < MAX_ARG_TAGS {
                     ALIASING_STATE.call_tags[index]
                 } else {
-                    WILDCARD_TAG
+                    UNKNOWN_TAG
                 }
             }
         }
@@ -289,7 +293,7 @@ macro_rules! kani_aliasing {
                 let tag = if ALIASING_STATE.ret_callee == callee {
                     ALIASING_STATE.ret_tag
                 } else {
-                    WILDCARD_TAG
+                    UNKNOWN_TAG
                 };
                 ALIASING_STATE.ret_callee = 0;
                 tag
