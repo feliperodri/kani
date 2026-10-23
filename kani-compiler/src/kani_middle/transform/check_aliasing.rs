@@ -37,6 +37,7 @@ use crate::kani_middle::transform::check_uninit::is_harness;
 use crate::kani_middle::transform::{TransformPass, TransformationType};
 use crate::kani_queries::QueryDb;
 use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
+use rustc_public::abi::FieldsShape;
 use rustc_public::mir::mono::{Instance, InstanceKind};
 use rustc_public::mir::{
     AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability,
@@ -149,9 +150,13 @@ enum Action {
         tag_local: Local,
         place: Place,
         parent: TagValue,
+        cell_mask: u64,
         is_shared: bool,
         is_protected: bool,
     },
+    /// The read that creating a shared reference to `place` performs, except at the bytes in
+    /// `cell_mask`.
+    ReadOutsideCells { place: Place, tag: TagValue, cell_mask: u64 },
     /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
     DropRetag { place: Place, parent: TagValue, callee: u64 },
     /// Record the argument tags of a direct call.
@@ -316,25 +321,15 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 continue;
             }
             let is_shared = pointee.mutability == Mutability::Not;
-            let actions = if is_shared && !self.is_freeze(pointee.ty) {
-                vec![Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) }]
-            } else {
-                let referent = Place { local, projection: vec![ProjectionElem::Deref] };
-                vec![
-                    Action::Access {
-                        place: referent.clone(),
-                        tag: TagValue::Local(tag_local),
-                        is_write: false,
-                    },
-                    Action::NewBorrow {
-                        tag_local,
-                        place: referent,
-                        parent: TagValue::Local(tag_local),
-                        is_shared,
-                        is_protected: true,
-                    },
-                ]
-            };
+            let referent = Place { local, projection: vec![ProjectionElem::Deref] };
+            let actions = self.reborrow(
+                body,
+                &referent,
+                TagValue::Local(tag_local),
+                Some(tag_local),
+                is_shared,
+                true,
+            );
             for action in actions {
                 self.insert(body, action, &mut source, InsertPosition::Before);
             }
@@ -438,6 +433,81 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// The bytes of a value of type `ty` that are inside an `UnsafeCell`, as a mask over its first
+    /// 64 bytes, or `None` if the layout is not one the checks can describe (an enum or a union
+    /// containing an `UnsafeCell`, or one past byte 64).
+    fn cell_mask(&self, ty: Ty) -> Option<u64> {
+        let mut mask = 0;
+        self.cell_bytes(ty, 0, &mut mask).then_some(mask)
+    }
+
+    fn cell_bytes(&self, ty: Ty, base: usize, mask: &mut u64) -> bool {
+        if self.is_freeze(ty) {
+            return true;
+        }
+        let Ok(layout) = ty.layout() else { return false };
+        let layout = layout.shape();
+        let internal = rustc_internal::internal(self.tcx, ty);
+        if let rustc_middle::ty::TyKind::Adt(def, _) = internal.kind()
+            && def.is_unsafe_cell()
+        {
+            let end = base + layout.size.bytes();
+            if end > 64 {
+                return false;
+            }
+            for byte in base..end {
+                *mask |= 1 << byte;
+            }
+            return true;
+        }
+        match (&layout.fields, self.struct_field_tys(ty)) {
+            (FieldsShape::Arbitrary { offsets }, Some(field_tys))
+                if offsets.len() == field_tys.len() =>
+            {
+                offsets.iter().zip(field_tys).all(|(offset, field_ty)| {
+                    self.cell_bytes(field_ty, base + offset.bytes(), mask)
+                })
+            }
+            (FieldsShape::Array { stride, count }, _) => {
+                let RigidTy::Array(elem, _) = ty.kind().rigid().unwrap().clone() else {
+                    return false;
+                };
+                (0..*count as usize)
+                    .all(|index| self.cell_bytes(elem, base + index * stride.bytes(), mask))
+            }
+            _ => false,
+        }
+    }
+
+    /// The field types of a struct, tuple or closure type.
+    fn struct_field_tys(&self, ty: Ty) -> Option<Vec<Ty>> {
+        let internal = rustc_internal::internal(self.tcx, ty);
+        let typing_env = TypingEnv::fully_monomorphized();
+        let normalize = |field_ty: Unnormalized<'tcx, rustc_middle::ty::Ty<'tcx>>| {
+            rustc_internal::stable(self.tcx.normalize_erasing_regions(typing_env, field_ty))
+        };
+        match internal.kind() {
+            rustc_middle::ty::TyKind::Tuple(tys) => {
+                Some(tys.iter().map(|field_ty| normalize(Unnormalized::new(field_ty))).collect())
+            }
+            rustc_middle::ty::TyKind::Adt(def, args) if def.is_struct() => Some(
+                def.non_enum_variant()
+                    .fields
+                    .iter()
+                    .map(|field| normalize(field.ty(self.tcx, args)))
+                    .collect(),
+            ),
+            rustc_middle::ty::TyKind::Closure(_, args) => Some(
+                args.as_closure()
+                    .upvar_tys()
+                    .iter()
+                    .map(|field_ty| normalize(Unnormalized::new(field_ty)))
+                    .collect(),
+            ),
+            _ => None,
+        }
+    }
+
     /// The tag that the pointer at `suffix` inside the value of `rvalue` has.
     fn rvalue_subtag(&self, rvalue: &Rvalue, suffix: &[PathElem]) -> TagValue {
         let unknown = TagValue::Const(UNKNOWN_TAG);
@@ -522,6 +592,56 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         if let Operand::Copy(place) | Operand::Move(place) = operand {
             self.read(body, place, actions);
         }
+    }
+
+    /// The instrumentation of a reborrow of `place`, reached through a pointer tagged `parent`,
+    /// whose tag goes to `dest`.
+    fn reborrow(
+        &self,
+        body: &MutableBody,
+        place: &Place,
+        parent: TagValue,
+        dest: Option<Local>,
+        is_shared: bool,
+        is_protected: bool,
+    ) -> Vec<Action> {
+        let ty = place.ty(body.locals()).unwrap();
+        let mut actions = vec![];
+        let cell_mask = if self.is_freeze(ty) {
+            0
+        } else if let Some(mask) = self.is_sized(ty).then(|| self.cell_mask(ty)).flatten() {
+            mask
+        } else if is_shared {
+            // A shared reference may write the cell's bytes and not the others; without their
+            // layout, the checks cannot tell which.
+            if let Some(tag_local) = dest {
+                actions.push(Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) });
+            }
+            return actions;
+        } else {
+            // Treating the cell's bytes like the others only rejects more programs.
+            0
+        };
+        // Creating a reference reads the referenced memory, except a shared reference's cells.
+        if is_shared && cell_mask != 0 {
+            actions.push(Action::ReadOutsideCells { place: place.clone(), tag: parent, cell_mask });
+        } else {
+            self.read(body, place, &mut actions);
+            if let Some(Action::Access { tag, .. }) = actions.last_mut() {
+                *tag = parent;
+            }
+        }
+        if let Some(tag_local) = dest {
+            actions.push(Action::NewBorrow {
+                tag_local,
+                place: place.clone(),
+                parent,
+                cell_mask,
+                is_shared,
+                is_protected,
+            });
+        }
+        actions
     }
 
     /// An access to `count` (or one) values at the pointer `ptr` evaluates to.
@@ -621,27 +741,13 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     Rvalue::Ref(_, borrow_kind, place) => {
                         let parent =
                             self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
-                        let ty = place.ty(body.locals()).unwrap();
                         let is_shared = matches!(borrow_kind, BorrowKind::Shared);
                         if matches!(borrow_kind, BorrowKind::Fake(_)) {
                             // Only used by the borrow checker: no reference is created.
                             new_tag = Some(parent);
-                        } else if is_shared && !self.is_freeze(ty) {
-                            // The bytes of an `UnsafeCell` behind a shared reference may be
-                            // written, the others not; telling them apart is not modelled yet.
-                            new_tag = Some(TagValue::Const(UNKNOWN_TAG));
                         } else {
-                            // Creating a reference reads the referenced memory.
-                            self.read(body, place, &mut actions);
-                            if let Some(tag_local) = dest {
-                                actions.push(Action::NewBorrow {
-                                    tag_local,
-                                    place: place.clone(),
-                                    parent,
-                                    is_shared,
-                                    is_protected: false,
-                                });
-                            }
+                            actions
+                                .extend(self.reborrow(body, place, parent, dest, is_shared, false));
                         }
                     }
                     Rvalue::AddressOf(_, place) => {
@@ -922,7 +1028,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     );
                 }
             }
-            Action::NewBorrow { tag_local, place, parent, is_shared, is_protected } => {
+            Action::NewBorrow { tag_local, place, parent, cell_mask, is_shared, is_protected } => {
                 let ty = place.ty(body.locals()).unwrap();
                 let model = if self.is_sized(ty) {
                     KaniModel::AliasingNewBorrow
@@ -935,13 +1041,31 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     position,
                 );
                 let new_borrow = self.model(model, vec![ty]);
-                let args = vec![
-                    self.tag_operand(body, parent, span),
-                    Operand::Move(Place::from(ptr)),
-                    bool_operand(is_shared, span),
-                    bool_operand(is_protected, span),
-                ];
+                let mut args =
+                    vec![self.tag_operand(body, parent, span), Operand::Move(Place::from(ptr))];
+                if model == KaniModel::AliasingNewBorrow {
+                    args.push(body.new_uint_operand(cell_mask as u128, UintTy::U64, span));
+                }
+                args.push(bool_operand(is_shared, span));
+                args.push(bool_operand(is_protected, span));
                 body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
+            }
+            Action::ReadOutsideCells { place, tag, cell_mask } => {
+                let ty = place.ty(body.locals()).unwrap();
+                let ptr = body.insert_assignment(
+                    Rvalue::AddressOf(RawPtrKind::Const, place),
+                    source,
+                    position,
+                );
+                let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let read = self.model(KaniModel::AliasingReadOutsideCells, vec![ty]);
+                let args = vec![
+                    self.tag_operand(body, tag, span),
+                    Operand::Move(Place::from(ptr)),
+                    body.new_uint_operand(cell_mask as u128, UintTy::U64, span),
+                ];
+                body.insert_call(&read, source, position, args, Place::from(code));
+                self.insert_access_checks(body, code, false, source, position);
             }
             Action::DropRetag { place, parent, callee } => {
                 let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
@@ -951,6 +1075,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         tag_local,
                         place,
                         parent,
+                        cell_mask: 0,
                         is_shared: false,
                         is_protected: false,
                     },
