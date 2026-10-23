@@ -75,6 +75,8 @@ pub enum KaniModel {
     AliasingDealloc,
     #[strum(serialize = "AliasingEndArgsModel")]
     AliasingEndArgs,
+    #[strum(serialize = "AliasingEndRetModel")]
+    AliasingEndRet,
     #[strum(serialize = "AliasingExposeModel")]
     AliasingExpose,
     #[strum(serialize = "AliasingFrameEnterModel")]
@@ -91,10 +93,10 @@ pub enum KaniModel {
     AliasingPushCall,
     #[strum(serialize = "AliasingReadOutsideCellsModel")]
     AliasingReadOutsideCells,
+    #[strum(serialize = "AliasingRetTagModel")]
+    AliasingRetTag,
     #[strum(serialize = "AliasingReturnModel")]
     AliasingReturn,
-    #[strum(serialize = "AliasingTakeRetModel")]
-    AliasingTakeRet,
     #[strum(serialize = "AliasingWildcardAccessModel")]
     AliasingWildcardAccess,
     #[strum(serialize = "AlignOfDynObjectModel")]
