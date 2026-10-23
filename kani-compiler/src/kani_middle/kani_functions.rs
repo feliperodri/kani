@@ -63,6 +63,12 @@ pub enum KaniIntrinsic {
 pub enum KaniModel {
     #[strum(serialize = "AliasingAccessModel")]
     AliasingAccess,
+    #[strum(serialize = "AliasingAccessBytesModel")]
+    AliasingAccessBytes,
+    #[strum(serialize = "AliasingAccessCountModel")]
+    AliasingAccessCount,
+    #[strum(serialize = "AliasingAccessUnsizedModel")]
+    AliasingAccessUnsized,
     #[strum(serialize = "AliasingArgTagModel")]
     AliasingArgTag,
     #[strum(serialize = "AliasingEndArgsModel")]
