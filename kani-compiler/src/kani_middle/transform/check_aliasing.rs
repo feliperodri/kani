@@ -39,8 +39,9 @@ use crate::kani_queries::QueryDb;
 use rustc_middle::ty::{TyCtxt, TypingEnv};
 use rustc_public::mir::mono::{Instance, InstanceKind};
 use rustc_public::mir::{
-    AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability, Operand,
-    Place, PointerCoercion, ProjectionElem, RawPtrKind, Rvalue, StatementKind, TerminatorKind,
+    AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability,
+    NonDivergingIntrinsic, Operand, Place, PointerCoercion, ProjectionElem, RawPtrKind, Rvalue,
+    StatementKind, TerminatorKind,
 };
 use rustc_public::rustc_internal;
 use rustc_public::ty::{FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy};
@@ -66,6 +67,7 @@ const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a poi
 #[derive(Debug, Clone)]
 pub struct AliasingPass {
     pub check_type: CheckType,
+    pub unsupported_check_type: CheckType,
     pub kani_functions: HashMap<KaniFunction, FnDef>,
 }
 
@@ -110,6 +112,11 @@ enum TagValue {
 enum Action {
     /// Check and record an access to `place` through `tag`.
     Access { place: Place, tag: TagValue, is_write: bool },
+    /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
+    /// intrinsics do.
+    AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
+    /// A construct the checks do not support: fail if reached.
+    Unsupported { msg: String },
     /// Set a tag local.
     SetTag { tag_local: Local, value: TagValue },
     /// Create a reference through a pointer tagged `parent`.
@@ -327,6 +334,93 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// An access to `count` (or one) values at the pointer `ptr` evaluates to.
+    fn access_count(
+        &self,
+        body: &MutableBody,
+        ptr: &Operand,
+        count: Option<&Operand>,
+        is_write: bool,
+        actions: &mut Vec<Action>,
+    ) {
+        let ptr_ty = ptr.ty(body.locals()).unwrap();
+        let Some(elem) = ptr_ty.kind().builtin_deref(true).map(|pointee| pointee.ty) else {
+            return;
+        };
+        if !self.is_sized(elem) {
+            actions.push(Action::Unsupported {
+                msg: "Kani's aliasing checks do not support memory intrinsics on unsized types"
+                    .to_string(),
+            });
+            return;
+        }
+        let count = count.cloned().unwrap_or_else(|| {
+            Operand::Constant(ConstOperand {
+                span: body.blocks()[0].terminator.source_info.span,
+                user_ty: None,
+                const_: MirConst::try_from_uint(1, UintTy::Usize).unwrap(),
+            })
+        });
+        if ptr_ty.kind().is_ref() && matches!(ptr, Operand::Constant(_)) {
+            // A constant reference points to a constant allocation, which no tag can write.
+            return;
+        }
+        let tag = self.operand_tag(ptr);
+        actions.push(Action::AccessCount { ptr: ptr.clone(), tag, count, elem, is_write });
+    }
+
+    /// The memory accesses of a call to the intrinsic `name`.
+    fn intrinsic_accesses(
+        &self,
+        body: &MutableBody,
+        name: &str,
+        args: &[Operand],
+        actions: &mut Vec<Action>,
+    ) {
+        match name {
+            "copy" | "copy_nonoverlapping" => {
+                self.access_count(body, &args[0], Some(&args[2]), false, actions);
+                self.access_count(body, &args[1], Some(&args[2]), true, actions);
+            }
+            "volatile_copy_memory" | "volatile_copy_nonoverlapping_memory" => {
+                self.access_count(body, &args[1], Some(&args[2]), false, actions);
+                self.access_count(body, &args[0], Some(&args[2]), true, actions);
+            }
+            "write_bytes" | "volatile_set_memory" => {
+                self.access_count(body, &args[0], Some(&args[2]), true, actions);
+            }
+            "compare_bytes" => {
+                self.access_count(body, &args[0], Some(&args[2]), false, actions);
+                self.access_count(body, &args[1], Some(&args[2]), false, actions);
+            }
+            "raw_eq" => {
+                self.access_count(body, &args[0], None, false, actions);
+                self.access_count(body, &args[1], None, false, actions);
+            }
+            // A swap reads and writes both sides; the write is the stronger check.
+            "typed_swap_nonoverlapping" => {
+                self.access_count(body, &args[0], None, true, actions);
+                self.access_count(body, &args[1], None, true, actions);
+            }
+            "volatile_load" | "unaligned_volatile_load" => {
+                self.access_count(body, &args[0], None, false, actions);
+            }
+            "volatile_store" | "unaligned_volatile_store" | "nontemporal_store" => {
+                self.access_count(body, &args[0], None, true, actions);
+            }
+            "simd_gather" | "simd_scatter" | "simd_masked_load" | "simd_masked_store" => {
+                actions.push(Action::Unsupported {
+                    msg: format!("Kani's aliasing checks do not support the `{name}` intrinsic"),
+                });
+            }
+            _ if name.starts_with("atomic_") && !name.contains("fence") => {
+                let is_write = !name.starts_with("atomic_load");
+                self.access_count(body, &args[0], None, is_write, actions);
+            }
+            _ => {}
+        }
+    }
+
     fn statement_actions(&self, body: &MutableBody, kind: &StatementKind) -> Vec<Action> {
         let mut actions = vec![];
         match kind {
@@ -424,13 +518,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
             }
             StatementKind::SetDiscriminant { place, .. } => self.write(body, place, &mut actions),
+            StatementKind::Intrinsic(NonDivergingIntrinsic::CopyNonOverlapping(copy)) => {
+                self.access_count(body, &copy.src, Some(&copy.count), false, &mut actions);
+                self.access_count(body, &copy.dst, Some(&copy.count), true, &mut actions);
+            }
             StatementKind::FakeRead(..)
             | StatementKind::StorageLive(_)
             | StatementKind::StorageDead(_)
             | StatementKind::PlaceMention(_)
             | StatementKind::AscribeUserType { .. }
             | StatementKind::Coverage(_)
-            | StatementKind::Intrinsic(_)
+            | StatementKind::Intrinsic(NonDivergingIntrinsic::Assume(_))
             | StatementKind::ConstEvalCounter
             | StatementKind::Nop => {}
         }
@@ -449,6 +547,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             TerminatorKind::Call { func, args, destination, target, .. } => {
                 for arg in args {
                     self.read_operand(body, arg, &mut before);
+                }
+                if let Some(name) = intrinsic_name(body, func) {
+                    self.intrinsic_accesses(body, &name, args, &mut before);
                 }
                 let callee = direct_callee(body, func).map(instance_id);
                 let has_pointer_args =
@@ -508,40 +609,60 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         match action {
             Action::Access { place, tag, is_write } => {
                 let ty = place.ty(body.locals()).unwrap();
-                if !self.is_sized(ty) {
-                    return;
-                }
+                let model = if self.is_sized(ty) {
+                    KaniModel::AliasingAccess
+                } else {
+                    KaniModel::AliasingAccessUnsized
+                };
                 let ptr = body.insert_assignment(
                     Rvalue::AddressOf(RawPtrKind::Const, place),
                     source,
                     position,
                 );
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
-                let access = self.model(KaniModel::AliasingAccess, vec![ty]);
+                let access = self.model(model, vec![ty]);
                 let args = vec![
                     self.tag_operand(body, tag, span),
                     Operand::Move(Place::from(ptr)),
                     bool_operand(is_write, span),
                 ];
                 body.insert_call(&access, source, position, args, Place::from(code));
-                self.insert_ne_check(
-                    body,
-                    code,
-                    ACCESS_INVALIDATED,
-                    MSG_INVALIDATED,
-                    source,
-                    position,
-                );
-                if is_write {
-                    self.insert_ne_check(
-                        body,
-                        code,
-                        ACCESS_WRITE_FROZEN,
-                        MSG_WRITE_FROZEN,
+                self.insert_access_checks(body, code, is_write, source, position);
+            }
+            Action::AccessCount { ptr, tag, count, elem, is_write } => {
+                let ptr_ty = ptr.ty(body.locals()).unwrap();
+                let ptr = if ptr_ty == Ty::new_ptr(elem, Mutability::Not) {
+                    ptr
+                } else if ptr_ty.kind().is_raw_ptr() {
+                    let cast = body.insert_ptr_cast(ptr, elem, Mutability::Not, source, position);
+                    Operand::Move(Place::from(cast))
+                } else {
+                    // A reference: take the address of its referent.
+                    let (Operand::Copy(place) | Operand::Move(place)) = ptr else {
+                        unreachable!("constant reference passed to a memory intrinsic")
+                    };
+                    let mut referent = place;
+                    referent.projection.push(ProjectionElem::Deref);
+                    let raw = body.insert_assignment(
+                        Rvalue::AddressOf(RawPtrKind::Const, referent),
                         source,
                         position,
                     );
-                }
+                    Operand::Move(Place::from(raw))
+                };
+                let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let access = self.model(KaniModel::AliasingAccessCount, vec![elem]);
+                let args = vec![
+                    self.tag_operand(body, tag, span),
+                    ptr,
+                    count,
+                    bool_operand(is_write, span),
+                ];
+                body.insert_call(&access, source, position, args, Place::from(code));
+                self.insert_access_checks(body, code, is_write, source, position);
+            }
+            Action::Unsupported { msg } => {
+                body.insert_check(&self.pass.unsupported_check_type, source, position, None, &msg);
             }
             Action::SetTag { tag_local, value } => {
                 let operand = self.tag_operand(body, value, span);
@@ -589,6 +710,28 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let args = vec![body.new_uint_operand(callee as u128, UintTy::U64, span)];
                 body.insert_call(&take_ret, source, position, args, Place::from(tag_local));
             }
+        }
+    }
+
+    /// Assert that the result of an access breaks no rule.
+    fn insert_access_checks(
+        &self,
+        body: &mut MutableBody,
+        code: Local,
+        is_write: bool,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) {
+        self.insert_ne_check(body, code, ACCESS_INVALIDATED, MSG_INVALIDATED, source, position);
+        if is_write {
+            self.insert_ne_check(
+                body,
+                code,
+                ACCESS_WRITE_FROZEN,
+                MSG_WRITE_FROZEN,
+                source,
+                position,
+            );
         }
     }
 
@@ -669,6 +812,12 @@ fn provenance_intrinsic(body: &MutableBody, func: &Operand) -> bool {
         intrinsic.fn_name().as_str(),
         "aggregate_raw_ptr" | "arith_offset" | "offset" | "ptr_mask"
     )
+}
+
+/// The name of the intrinsic a call calls, if it calls one.
+fn intrinsic_name(body: &MutableBody, func: &Operand) -> Option<String> {
+    let (def, _) = fn_def(body, func)?;
+    Some(def.as_intrinsic()?.fn_name().to_string())
 }
 
 /// The function a call operand names, if it is a function item. Earlier passes call through

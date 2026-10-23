@@ -31,7 +31,9 @@
 #[macro_export]
 #[allow(clippy::crate_in_macro_def)]
 macro_rules! kani_aliasing {
-    ($core:path) => {
+    ($core:tt) => {
+        use $core::marker::MetaSized;
+
         /// Maximum number of tags (references to the tracked byte) alive at once, including the
         /// root. See `aliasing_new_borrow` for what happens beyond.
         const MAX_TAGS: u8 = 64;
@@ -103,15 +105,19 @@ macro_rules! kani_aliasing {
             }
         }
 
-        /// Access `size_of::<T>()` bytes at `ptr` through `tag`, and update the state of the
-        /// tracked byte if the access covers it. Return `ACCESS_OK` or the rule it breaks.
+        /// Access `size` bytes at offset `offset` of object `obj` through `tag`, and update the
+        /// state of the tracked byte if the access covers it. Return `ACCESS_OK` or the rule it
+        /// breaks.
         #[kanitool::disable_checks(pointer)]
-        #[kanitool::fn_marker = "AliasingAccessModel"]
-        fn aliasing_access<T>(tag: u8, ptr: *const T, is_write: bool) -> u8 {
+        #[kanitool::fn_marker = "AliasingAccessBytesModel"]
+        fn aliasing_access_bytes(
+            tag: u8,
+            obj: usize,
+            offset: usize,
+            size: usize,
+            is_write: bool,
+        ) -> u8 {
             unsafe {
-                let obj = super::mem::pointer_object(ptr);
-                let offset = super::mem::pointer_offset(ptr);
-                let size = size_of::<T>();
                 if tag >= ALIASING_STATE.count
                     || ALIASING_STATE.tracked_object_id != obj
                     || ALIASING_STATE.tracked_offset < offset
@@ -138,6 +144,40 @@ macro_rules! kani_aliasing {
                 }
                 ACCESS_OK
             }
+        }
+
+        /// Access the `size_of::<T>()` bytes at `ptr` through `tag`.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingAccessModel"]
+        fn aliasing_access<T>(tag: u8, ptr: *const T, is_write: bool) -> u8 {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            aliasing_access_bytes(tag, obj, offset, size_of::<T>(), is_write)
+        }
+
+        /// Access the `size_of_val(ptr)` bytes at `ptr` through `tag`, for an unsized `T`.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingAccessUnsizedModel"]
+        fn aliasing_access_unsized<T: MetaSized>(tag: u8, ptr: *const T, is_write: bool) -> u8 {
+            let size = match super::mem::checked_size_of_raw(ptr) {
+                Some(size) => size,
+                None => 0,
+            };
+            let thin = ptr as *const u8;
+            let obj = super::mem::pointer_object(thin);
+            let offset = super::mem::pointer_offset(thin);
+            aliasing_access_bytes(tag, obj, offset, size, is_write)
+        }
+
+        /// Access `count` values of type `T` at `ptr` through `tag`, as memory intrinsics such as
+        /// `copy_nonoverlapping` do.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingAccessCountModel"]
+        fn aliasing_access_count<T>(tag: u8, ptr: *const T, count: usize, is_write: bool) -> u8 {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            let size = count.saturating_mul(size_of::<T>());
+            aliasing_access_bytes(tag, obj, offset, size, is_write)
         }
 
         /// Create a reference from a pointer tagged `parent`, and return the tag of the new
