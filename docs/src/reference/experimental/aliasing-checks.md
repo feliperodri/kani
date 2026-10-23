@@ -48,6 +48,9 @@ The rules are:
    is undefined behavior, and so is writing through it after a foreign read if it had not been
    written before. As in Tree Borrows, this only applies to memory in the range of the reference
    or accessed through it.
+7. The bytes of an `UnsafeCell` behind a shared reference are not frozen: a shared reference to
+   them acts like the pointer it was created from, and writes through it are allowed. A mutable
+   reference to them is not disabled by foreign writes until it is written.
 
 Rules 4 and 5 differ from each model's own rules only where the two models disagree. Stacked
 Borrows also disables a mutable reference on a foreign read. Tree Borrows lets a mutable
@@ -60,7 +63,7 @@ tracks that byte and the check fails.
 
 ## What a successful verification means
 
-If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 6
+If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 7
 above. Kani never reports success because of an access it did not check. When it cannot tell
 which tag a pointer has, it gives the pointer an *unknown* tag. An access through an unknown tag
 to the tracked byte then fails with "Kani's aliasing checks do not know which reference this
@@ -74,7 +77,9 @@ Today the tag is unknown for:
   and pointer arguments past the fourth;
 - pointers obtained from integers;
 - pointer locals whose own address is taken;
-- shared references to types that contain an `UnsafeCell`;
+- shared references to types whose `UnsafeCell` bytes the checks cannot locate: an enum or a
+  union that contains an `UnsafeCell`, an `UnsafeCell` past the first 64 bytes, or an unsized
+  type that contains one;
 - references created after 63 references to the tracked byte are live. The tags of references
   a function creates are dropped when it returns, unless it returns one.
 
@@ -82,7 +87,7 @@ SIMD gather, scatter and masked load/store intrinsics are reported as unsupporte
 
 ### Rules that are not checked
 
-Rules 1 to 6 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
+Rules 1 to 7 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
 not part of it yet, so a successful verification says nothing about them:
 
 - **Deallocation** while a reference to the memory is live. Kani's pointer checks still report

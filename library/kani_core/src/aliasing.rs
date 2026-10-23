@@ -71,6 +71,15 @@ macro_rules! kani_aliasing {
             /// of the reference, or was accessed through the tag or one of its descendants.
             /// Protectors only apply to initialized permissions, as in Tree Borrows.
             initialized: u64,
+            /// Shared references whose referent is inside an `UnsafeCell` at the tracked byte. As
+            /// in Tree Borrows, such a reference is not retagged there: accesses through it are
+            /// accesses through `alias`, its nearest ancestor that is not one of these.
+            cell: u64,
+            alias: [u8; MAX_TAGS as usize],
+            /// Mutable references whose referent is inside an `UnsafeCell` at the tracked byte:
+            /// until written, foreign writes do not disable them (Tree Borrows' "reserved, interior
+            /// mutable").
+            interior: u64,
             /// Protected tags that were never written and saw a foreign read: writing through
             /// them is undefined behavior (Tree Borrows' "reserved, conflicted").
             conflicted: u64,
@@ -94,6 +103,9 @@ macro_rules! kani_aliasing {
             frozen: 0,
             protected: 0,
             initialized: 0,
+            cell: 0,
+            alias: [0; MAX_TAGS as usize],
+            interior: 0,
             conflicted: 0,
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
@@ -115,6 +127,8 @@ macro_rules! kani_aliasing {
                 ALIASING_STATE.frozen = 0;
                 ALIASING_STATE.protected = 0;
                 ALIASING_STATE.initialized = 1;
+                ALIASING_STATE.cell = 0;
+                ALIASING_STATE.interior = 0;
                 ALIASING_STATE.conflicted = 0;
                 ALIASING_STATE.call_callee = 0;
                 ALIASING_STATE.ret_callee = 0;
@@ -146,6 +160,11 @@ macro_rules! kani_aliasing {
                          derived from, so they cannot check this access",
                     );
                 }
+                let tag = if ALIASING_STATE.cell & (1u64 << tag) != 0 {
+                    ALIASING_STATE.alias[tag as usize]
+                } else {
+                    tag
+                };
                 let bit = 1u64 << tag;
                 let local = ALIASING_STATE.ancestors[tag as usize];
                 if ALIASING_STATE.valid & bit == 0 {
@@ -154,17 +173,21 @@ macro_rules! kani_aliasing {
                 let foreign = ALIASING_STATE.valid & !local;
                 let protected = ALIASING_STATE.protected & ALIASING_STATE.initialized;
                 if is_write {
-                    if ALIASING_STATE.frozen & local != 0 {
+                    // Shared references to an `UnsafeCell`'s bytes are transparent: they are
+                    // never frozen, nor activated by writes through their descendants.
+                    let opaque_local = local & !ALIASING_STATE.cell;
+                    if ALIASING_STATE.frozen & opaque_local != 0 {
                         return ACCESS_WRITE_FROZEN;
                     }
                     // A write disables every foreign tag, which must not be protected, and
                     // activates the accessing tag and its ancestors, which must not be
                     // conflicted.
-                    if protected & (foreign | (ALIASING_STATE.conflicted & local)) != 0 {
+                    let disabled = foreign & !(ALIASING_STATE.interior & !ALIASING_STATE.active);
+                    if protected & (disabled | (ALIASING_STATE.conflicted & local)) != 0 {
                         return ACCESS_PROTECTOR;
                     }
-                    ALIASING_STATE.valid &= local;
-                    ALIASING_STATE.active |= local;
+                    ALIASING_STATE.valid &= !disabled;
+                    ALIASING_STATE.active |= opaque_local;
                 } else {
                     // A read freezes every foreign tag that has been written through, and
                     // conflicts every protected foreign tag that has not.
@@ -184,6 +207,26 @@ macro_rules! kani_aliasing {
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
             aliasing_access_bytes(tag, obj, offset, size_of::<T>(), is_write)
+        }
+
+        /// Read the `size_of::<T>()` bytes at `ptr` through `tag`, except the bytes in
+        /// `cell_mask` (bit `i` is byte `i`): the read that creating a shared reference to a type
+        /// with an `UnsafeCell` performs, which does not touch the cell's bytes.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingReadOutsideCellsModel"]
+        fn aliasing_read_outside_cells<T>(tag: u8, ptr: *const T, cell_mask: u64) -> u8 {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            let in_cell = unsafe {
+                ALIASING_STATE.tracked_object_id == obj
+                    && ALIASING_STATE.tracked_offset >= offset
+                    && ALIASING_STATE.tracked_offset - offset < 64
+                    && (cell_mask >> (ALIASING_STATE.tracked_offset - offset)) & 1 != 0
+            };
+            if in_cell {
+                return ACCESS_OK;
+            }
+            aliasing_access_bytes(tag, obj, offset, size_of::<T>(), false)
         }
 
         /// Access the `size_of_val(ptr)` bytes at `ptr` through `tag`, for an unsized `T`.
@@ -224,6 +267,7 @@ macro_rules! kani_aliasing {
             obj: usize,
             offset: usize,
             size: usize,
+            cell_mask: u64,
             is_shared: bool,
             is_protected: bool,
         ) -> u8 {
@@ -251,17 +295,43 @@ macro_rules! kani_aliasing {
                 let covers = ALIASING_STATE.tracked_object_id == obj
                     && ALIASING_STATE.tracked_offset >= offset
                     && ALIASING_STATE.tracked_offset - offset < size;
+                // Whether the tracked byte is inside an `UnsafeCell` of the referent: bit `i` of
+                // `cell_mask` is byte `i` of the referent.
+                let in_cell = covers && {
+                    let index = ALIASING_STATE.tracked_offset - offset;
+                    index < 64 && (cell_mask >> index) & 1 != 0
+                };
                 if covers {
                     ALIASING_STATE.initialized |= bit;
                 } else {
                     ALIASING_STATE.initialized &= !bit;
                 }
-                if is_protected {
+                let parent_bit = 1u64 << parent;
+                ALIASING_STATE.alias[tag as usize] = if is_shared && in_cell {
+                    if ALIASING_STATE.cell & parent_bit != 0 {
+                        ALIASING_STATE.alias[parent as usize]
+                    } else {
+                        parent
+                    }
+                } else {
+                    tag
+                };
+                if is_shared && in_cell {
+                    ALIASING_STATE.cell |= bit;
+                } else {
+                    ALIASING_STATE.cell &= !bit;
+                }
+                if !is_shared && in_cell {
+                    ALIASING_STATE.interior |= bit;
+                } else {
+                    ALIASING_STATE.interior &= !bit;
+                }
+                if is_protected && !(is_shared && in_cell) {
                     ALIASING_STATE.protected |= bit;
                 } else {
                     ALIASING_STATE.protected &= !bit;
                 }
-                if is_shared {
+                if is_shared && !in_cell {
                     ALIASING_STATE.frozen |= bit;
                 } else {
                     ALIASING_STATE.frozen &= !bit;
@@ -276,12 +346,14 @@ macro_rules! kani_aliasing {
         fn aliasing_new_borrow<T>(
             parent: u8,
             ptr: *const T,
+            cell_mask: u64,
             is_shared: bool,
             is_protected: bool,
         ) -> u8 {
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
-            aliasing_new_borrow_bytes(parent, obj, offset, size_of::<T>(), is_shared, is_protected)
+            let size = size_of::<T>();
+            aliasing_new_borrow_bytes(parent, obj, offset, size, cell_mask, is_shared, is_protected)
         }
 
         /// `aliasing_new_borrow_bytes` for a reference to the `size_of_val(ptr)` bytes at `ptr`,
@@ -301,7 +373,7 @@ macro_rules! kani_aliasing {
             let thin = ptr as *const u8;
             let obj = super::mem::pointer_object(thin);
             let offset = super::mem::pointer_offset(thin);
-            aliasing_new_borrow_bytes(parent, obj, offset, size, is_shared, is_protected)
+            aliasing_new_borrow_bytes(parent, obj, offset, size, 0, is_shared, is_protected)
         }
 
         /// Record the tags of the pointer arguments of a direct call to `callee`.
