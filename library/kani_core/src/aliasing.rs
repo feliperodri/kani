@@ -55,8 +55,10 @@ macro_rules! kani_aliasing {
         const ACCESS_PROTECTOR: u8 = 3;
         const ACCESS_NOT_EXPOSED: u8 = 4;
 
-        /// Number of pointer arguments whose tags are passed to direct callees.
-        const MAX_ARG_TAGS: usize = 4;
+        /// Number of pointers in the arguments, and in the returned value, of a direct call
+        /// whose tags are passed between caller and callee.
+        const MAX_ARG_TAGS: usize = 8;
+        const MAX_RET_TAGS: usize = 4;
 
         struct AliasingState {
             tracked_object_id: usize,
@@ -97,7 +99,7 @@ macro_rules! kani_aliasing {
             call_tags: [u8; MAX_ARG_TAGS],
             /// Tag of the pointer returned by the last instrumented function, and its identifier.
             ret_callee: u64,
-            ret_tag: u8,
+            ret_tags: [u8; MAX_RET_TAGS],
         }
 
         /// Global aliasing state. Set up by `aliasing_initialize` at the start of the harness.
@@ -120,7 +122,7 @@ macro_rules! kani_aliasing {
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
             ret_callee: 0,
-            ret_tag: UNKNOWN_TAG,
+            ret_tags: [UNKNOWN_TAG; MAX_RET_TAGS],
         };
 
         /// Choose the tracked byte and give it a root tag that is valid and active.
@@ -856,18 +858,30 @@ macro_rules! kani_aliasing {
             ACCESS_OK
         }
 
-        /// Record the tags of the pointer arguments of a direct call to `callee`.
+        /// Record the tags of the pointers in the arguments of a direct call to `callee`, in
+        /// the order the compiler lists them.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingPushCallModel"]
-        fn aliasing_push_call(callee: u64, tag0: u8, tag1: u8, tag2: u8, tag3: u8) {
+        #[allow(clippy::too_many_arguments)]
+        fn aliasing_push_call(
+            callee: u64,
+            tag0: u8,
+            tag1: u8,
+            tag2: u8,
+            tag3: u8,
+            tag4: u8,
+            tag5: u8,
+            tag6: u8,
+            tag7: u8,
+        ) {
             unsafe {
                 ALIASING_STATE.call_callee = callee;
-                ALIASING_STATE.call_tags = [tag0, tag1, tag2, tag3];
+                ALIASING_STATE.call_tags = [tag0, tag1, tag2, tag3, tag4, tag5, tag6, tag7];
             }
         }
 
-        /// The tag of the `index`-th pointer argument of `callee`, if the pending call is a
-        /// direct call to `callee`; the wildcard tag otherwise.
+        /// The tag of the `index`-th pointer in the arguments of `callee`, if the pending call is
+        /// a direct call to `callee`; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingArgTagModel"]
         fn aliasing_arg_tag(callee: u64, index: usize) -> u8 {
@@ -896,47 +910,67 @@ macro_rules! kani_aliasing {
             unsafe { ALIASING_STATE.count }
         }
 
-        /// Record the tag of the pointer `callee` returns, and drop the tags `callee` created that
-        /// nothing can reach anymore.
+        /// Record the tags of the pointers in the value `callee` returns, and drop the tags
+        /// `callee` created that nothing can reach anymore.
         ///
-        /// Tags only flow through locals, the arguments of direct calls, and returned pointers;
-        /// a pointer read from memory gets the wildcard tag. So once a function returns, the tags
-        /// it created (`frame_count..count`) are unreachable, except the one it returns, which
-        /// may need the tags created before it as ancestors. Tags created before the call are
+        /// Tags only flow through locals, the arguments of direct calls, and returned values; a
+        /// pointer read from memory gets the unknown tag. So once a function returns, the tags
+        /// it created (`frame_count..count`) are unreachable, except the ones it returns, which
+        /// may need the tags created before them as ancestors. Tags created before the call are
         /// kept, as the caller may still hold them.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingReturnModel"]
-        fn aliasing_return(callee: u64, frame_count: u8, tag: u8) {
+        fn aliasing_return(callee: u64, frame_count: u8, tag0: u8, tag1: u8, tag2: u8, tag3: u8) {
             unsafe {
                 ALIASING_STATE.ret_callee = callee;
-                ALIASING_STATE.ret_tag = tag;
+                ALIASING_STATE.ret_tags = [tag0, tag1, tag2, tag3];
                 // The function's reference arguments stop being protected.
                 if frame_count < MAX_TAGS {
                     let kept = (1u64 << frame_count) - 1;
                     ALIASING_STATE.protected &= kept;
                     ALIASING_STATE.conflicted &= kept;
                 }
-                if frame_count <= tag && tag < ALIASING_STATE.count {
-                    ALIASING_STATE.count = tag + 1;
-                } else if frame_count < ALIASING_STATE.count {
-                    ALIASING_STATE.count = frame_count;
+                // No closure or loop here: a closure would be instrumented like user code, and
+                // its own return would call this function again.
+                let mut count = frame_count;
+                if frame_count <= tag0 && tag0 < ALIASING_STATE.count && count <= tag0 {
+                    count = tag0 + 1;
+                }
+                if frame_count <= tag1 && tag1 < ALIASING_STATE.count && count <= tag1 {
+                    count = tag1 + 1;
+                }
+                if frame_count <= tag2 && tag2 < ALIASING_STATE.count && count <= tag2 {
+                    count = tag2 + 1;
+                }
+                if frame_count <= tag3 && tag3 < ALIASING_STATE.count && count <= tag3 {
+                    count = tag3 + 1;
+                }
+                if count < ALIASING_STATE.count {
+                    ALIASING_STATE.count = count;
                 }
             }
         }
 
-        /// The tag of the pointer the call to `callee` that just returned produced, if `callee`
-        /// recorded it; the wildcard tag otherwise.
+        /// The tag of the `index`-th pointer in the value the call to `callee` that just
+        /// returned produced, if `callee` recorded it; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
-        #[kanitool::fn_marker = "AliasingTakeRetModel"]
-        fn aliasing_take_ret(callee: u64) -> u8 {
+        #[kanitool::fn_marker = "AliasingRetTagModel"]
+        fn aliasing_ret_tag(callee: u64, index: usize) -> u8 {
             unsafe {
-                let tag = if ALIASING_STATE.ret_callee == callee {
-                    ALIASING_STATE.ret_tag
+                if ALIASING_STATE.ret_callee == callee && index < MAX_RET_TAGS {
+                    ALIASING_STATE.ret_tags[index]
                 } else {
                     UNKNOWN_TAG
-                };
+                }
+            }
+        }
+
+        /// Called once a caller has read the tags of a returned value.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingEndRetModel"]
+        fn aliasing_end_ret() {
+            unsafe {
                 ALIASING_STATE.ret_callee = 0;
-                tag
             }
         }
     };

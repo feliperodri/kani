@@ -62,7 +62,8 @@ const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
 const ACCESS_PROTECTOR: u8 = 3;
 const ACCESS_NOT_EXPOSED: u8 = 4;
-const MAX_ARG_TAGS: usize = 4;
+const MAX_ARG_TAGS: usize = 8;
+const MAX_RET_TAGS: usize = 4;
 
 const MSG_INVALIDATED: &str = "Undefined Behavior: memory accessed through a reference or pointer \
     whose borrow was invalidated by a conflicting access (aliasing checks)";
@@ -172,9 +173,10 @@ enum Action {
     /// Record the argument tags of a direct call.
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
-    Return { tag: TagValue },
+    Return { tags: Vec<TagValue> },
     /// Retrieve the tag of the pointer returned by a direct call.
-    TakeRet { tag_local: Local, callee: u64 },
+    /// `targets` lists, for each tag local, which pointer of the returned value it receives.
+    TakeRets { callee: u64, targets: Vec<(usize, Local)> },
 }
 
 struct Instrumenter<'a, 'tcx> {
@@ -281,7 +283,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
 
         // Function entry: the harness sets up the state; every function records the number of
         // tags in use, picks up the tags of its pointer arguments and gives every other pointer
-        // local the wildcard tag.
+        // local the unknown tag.
         let mut source = SourceInstruction::Terminator { bb: 0 };
         if is_harness {
             let init = self.model(KaniModel::AliasingInitialize, vec![]);
@@ -298,23 +300,31 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 Place::from(frame_count),
             );
         }
+        // The pointers inside the arguments, in the order the caller lists them.
         let mut has_pointer_args = false;
+        let mut slot = 0;
         for local in 1..=body.arg_count() {
-            let Some(&tag_local) = self.tags.get(&(local, vec![])) else { continue };
-            has_pointer_args = true;
-            let index = local - 1;
-            let arg_tag = self.model(KaniModel::AliasingArgTag, vec![]);
-            let args = vec![
-                body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
-                body.new_uint_operand(index as u128, UintTy::Usize, span),
-            ];
-            body.insert_call(
-                &arg_tag,
-                &mut source,
-                InsertPosition::Before,
-                args,
-                Place::from(tag_local),
-            );
+            for path in self.flat_paths(body.locals()[local].ty) {
+                let index = slot;
+                slot += 1;
+                if index >= MAX_ARG_TAGS {
+                    continue;
+                }
+                has_pointer_args = true;
+                let Some(&tag_local) = self.tags.get(&(local, path)) else { continue };
+                let arg_tag = self.model(KaniModel::AliasingArgTag, vec![]);
+                let args = vec![
+                    body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
+                    body.new_uint_operand(index as u128, UintTy::Usize, span),
+                ];
+                body.insert_call(
+                    &arg_tag,
+                    &mut source,
+                    InsertPosition::Before,
+                    args,
+                    Place::from(tag_local),
+                );
+            }
         }
         if has_pointer_args {
             let end_args = self.model(KaniModel::AliasingEndArgs, vec![]);
@@ -347,8 +357,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         let mut keys: Vec<(PathKey, Local)> =
             self.tags.iter().map(|(key, tag)| (key.clone(), *tag)).collect();
         keys.sort();
-        for ((local, path), tag_local) in keys {
-            if local == 0 || local > body.arg_count() || !path.is_empty() {
+        for ((local, _), tag_local) in keys {
+            if local == 0 || local > body.arg_count() {
                 self.insert(
                     body,
                     Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) },
@@ -515,6 +525,30 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     .collect(),
             ),
             _ => None,
+        }
+    }
+
+    /// The paths to the pointers inside a value of type `ty`, in the order in which calls pass
+    /// their tags. The caller and the callee compute it from the same type.
+    fn flat_paths(&self, ty: Ty) -> Vec<Vec<PathElem>> {
+        let mut paths = vec![];
+        self.pointer_paths(ty, vec![], MAX_PATH_DEPTH, &mut paths);
+        paths
+    }
+
+    /// The tag of the pointer at `path` inside the value of `operand`.
+    fn operand_subtag(&self, operand: &Operand, path: &[PathElem]) -> TagValue {
+        if path.is_empty() {
+            return self.operand_tag(operand);
+        }
+        match operand {
+            Operand::Copy(place) | Operand::Move(place) => {
+                self.key_tag(path_key(place).map(|(local, mut prefix)| {
+                    prefix.extend_from_slice(path);
+                    (local, prefix)
+                }))
+            }
+            Operand::Constant(_) | Operand::RuntimeChecks(_) => TagValue::Const(UNKNOWN_TAG),
         }
     }
 
@@ -889,48 +923,76 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     });
                 }
                 let callee = direct_callee(body, func).map(instance_id);
-                let has_pointer_args =
-                    args.iter().any(|arg| is_pointer(arg.ty(body.locals()).unwrap()));
+                let tags: Vec<_> = args
+                    .iter()
+                    .flat_map(|arg| {
+                        self.flat_paths(arg.ty(body.locals()).unwrap())
+                            .into_iter()
+                            .map(move |path| self.operand_subtag(arg, &path))
+                    })
+                    .take(MAX_ARG_TAGS)
+                    .collect();
                 if let Some(callee) = callee
-                    && has_pointer_args
+                    && !tags.is_empty()
                 {
-                    let tags =
-                        args.iter().take(MAX_ARG_TAGS).map(|arg| self.operand_tag(arg)).collect();
                     before.push(Action::PushCall { callee, tags });
                 }
                 if target.is_some() {
-                    if let Some(tag_local) = self.dest_tag(destination) {
-                        let is_allocator = direct_callee(body, func).is_some_and(|instance| {
-                            instance.is_foreign_item()
-                                && matches!(
-                                    instance.name().as_str(),
-                                    "alloc::alloc::__rust_alloc"
-                                        | "alloc::alloc::__rust_alloc_zeroed"
-                                        | "alloc::alloc::__rust_realloc"
-                                )
-                        });
-                        after.push(match (callee, provenance_intrinsic(body, func)) {
-                            // A new allocation: the pointer has the allocation's root tag.
-                            _ if is_allocator => {
-                                Action::SetTag { tag_local, value: TagValue::Const(ROOT_TAG) }
-                            }
-                            // Pointer arithmetic keeps the provenance of its pointer operand.
-                            (_, true) => {
-                                Action::SetTag { tag_local, value: self.operand_tag(&args[0]) }
-                            }
-                            (Some(callee), false) => Action::TakeRet { tag_local, callee },
-                            (None, false) => {
-                                Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) }
-                            }
-                        });
-                    }
-                    let assignments: Vec<_> = self
-                        .inner_tags(destination)
-                        .into_iter()
-                        .map(|(_, tag_local)| (tag_local, TagValue::Const(UNKNOWN_TAG)))
-                        .collect();
-                    if !assignments.is_empty() {
-                        after.push(Action::SetTags { assignments });
+                    let is_allocator = direct_callee(body, func).is_some_and(|instance| {
+                        instance.is_foreign_item()
+                            && matches!(
+                                instance.name().as_str(),
+                                "alloc::alloc::__rust_alloc"
+                                    | "alloc::alloc::__rust_alloc_zeroed"
+                                    | "alloc::alloc::__rust_realloc"
+                            )
+                    });
+                    let dest_ty = destination.ty(body.locals()).unwrap();
+                    let targets: Vec<(usize, Local)> = path_key(destination)
+                        .map(|(local, prefix)| {
+                            self.flat_paths(dest_ty)
+                                .into_iter()
+                                .enumerate()
+                                .filter_map(|(index, path)| {
+                                    let mut full = prefix.clone();
+                                    full.extend(path);
+                                    self.tags.get(&(local, full)).map(|tag| (index, *tag))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    if let Some(tag_local) = self.dest_tag(destination)
+                        && (is_allocator || provenance_intrinsic(body, func))
+                    {
+                        // A new allocation has the allocation's root tag; pointer arithmetic
+                        // keeps the provenance of its pointer operand.
+                        let value = if is_allocator {
+                            TagValue::Const(ROOT_TAG)
+                        } else {
+                            self.operand_tag(&args[0])
+                        };
+                        after.push(Action::SetTag { tag_local, value });
+                    } else if let Some(callee) = callee {
+                        let (taken, unknown): (Vec<_>, Vec<_>) =
+                            targets.into_iter().partition(|(index, _)| *index < MAX_RET_TAGS);
+                        if !taken.is_empty() {
+                            after.push(Action::TakeRets { callee, targets: taken });
+                        }
+                        let assignments: Vec<_> = unknown
+                            .into_iter()
+                            .map(|(_, tag)| (tag, TagValue::Const(UNKNOWN_TAG)))
+                            .collect();
+                        if !assignments.is_empty() {
+                            after.push(Action::SetTags { assignments });
+                        }
+                    } else {
+                        let assignments: Vec<_> = targets
+                            .into_iter()
+                            .map(|(_, tag)| (tag, TagValue::Const(UNKNOWN_TAG)))
+                            .collect();
+                        if !assignments.is_empty() {
+                            after.push(Action::SetTags { assignments });
+                        }
                     }
                     self.write(body, destination, &mut after);
                 }
@@ -953,10 +1015,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 self.read_operand(body, operand, &mut before)
             }
             TerminatorKind::Return => {
-                let tag = self.tags.get(&(0, vec![])).map(|tag| TagValue::Local(*tag));
-                if tag.is_some() || self.frame_count.is_some() {
-                    let tag = tag.unwrap_or(TagValue::Const(UNKNOWN_TAG));
-                    before.push(Action::Return { tag });
+                let tags: Vec<_> = self
+                    .flat_paths(body.locals()[0].ty)
+                    .into_iter()
+                    .take(MAX_RET_TAGS)
+                    .map(|path| self.key_tag(Some((0, path))))
+                    .collect();
+                if !tags.is_empty() || self.frame_count.is_some() {
+                    before.push(Action::Return { tags });
                 }
             }
             TerminatorKind::Goto { .. }
@@ -1172,26 +1238,37 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let ret = unit_place(body, span);
                 body.insert_call(&push, source, position, args, ret);
             }
-            Action::Return { tag } => {
+            Action::Return { tags } => {
                 let ret_model = self.model(KaniModel::AliasingReturn, vec![]);
-                // Without a frame count, the function created no tags: passing the wildcard tag
+                // Without a frame count, the function created no tags: passing the unknown tag
                 // as the count keeps them all.
                 let frame_count = match self.frame_count {
                     Some(local) => Operand::Copy(Place::from(local)),
                     None => body.new_uint_operand(UNKNOWN_TAG as u128, UintTy::U8, span),
                 };
-                let args = vec![
+                let mut args = vec![
                     body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
                     frame_count,
-                    self.tag_operand(body, tag, span),
                 ];
+                for index in 0..MAX_RET_TAGS {
+                    let tag = tags.get(index).copied().unwrap_or(TagValue::Const(UNKNOWN_TAG));
+                    args.push(self.tag_operand(body, tag, span));
+                }
                 let ret = unit_place(body, span);
                 body.insert_call(&ret_model, source, position, args, ret);
             }
-            Action::TakeRet { tag_local, callee } => {
-                let take_ret = self.model(KaniModel::AliasingTakeRet, vec![]);
-                let args = vec![body.new_uint_operand(callee as u128, UintTy::U64, span)];
-                body.insert_call(&take_ret, source, position, args, Place::from(tag_local));
+            Action::TakeRets { callee, targets } => {
+                for (index, tag_local) in targets {
+                    let ret_tag = self.model(KaniModel::AliasingRetTag, vec![]);
+                    let args = vec![
+                        body.new_uint_operand(callee as u128, UintTy::U64, span),
+                        body.new_uint_operand(index as u128, UintTy::Usize, span),
+                    ];
+                    body.insert_call(&ret_tag, source, position, args, Place::from(tag_local));
+                }
+                let end_ret = self.model(KaniModel::AliasingEndRet, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(&end_ret, source, position, vec![], ret);
             }
         }
     }
