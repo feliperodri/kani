@@ -57,9 +57,11 @@ use tracing::trace;
 /// Tag values shared with `kani_core::kani_aliasing`.
 const ROOT_TAG: u8 = 0;
 const UNKNOWN_TAG: u8 = u8::MAX;
+const EXPOSED_TAG: u8 = u8::MAX - 1;
 const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
 const ACCESS_PROTECTOR: u8 = 3;
+const ACCESS_NOT_EXPOSED: u8 = 4;
 const MAX_ARG_TAGS: usize = 4;
 
 const MSG_INVALIDATED: &str = "Undefined Behavior: memory accessed through a reference or pointer \
@@ -69,6 +71,8 @@ const MSG_PROTECTOR: &str = "Undefined Behavior: memory written while a function
     conflicting read (aliasing checks)";
 const MSG_DEALLOC_PROTECTED: &str = "Undefined Behavior: memory deallocated while a reference passed \
     to a running function points to it (aliasing checks)";
+const MSG_NOT_EXPOSED: &str = "Undefined Behavior: memory accessed through a pointer created from an \
+    integer, but no exposed pointer allows this access (aliasing checks)";
 const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a pointer with only \
     read permission, derived from a shared reference or from a mutable reference frozen by a \
     later read through another pointer (aliasing checks)";
@@ -140,6 +144,8 @@ enum Action {
     /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
     /// intrinsics do.
     AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
+    /// Record that the pointer tagged `tag` was exposed.
+    Expose { tag: TagValue },
     /// Deallocate `size` bytes at `ptr`.
     Dealloc { ptr: Operand, size: Operand },
     /// A construct the checks do not support: fail if reached.
@@ -776,9 +782,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                                         | PointerCoercion::Unsize
                                 )
                         );
+                        if matches!(cast_kind, CastKind::PointerExposeAddress) {
+                            actions.push(Action::Expose { tag: self.operand_tag(operand) });
+                        }
                         new_tag = Some(match cast_kind {
                             // The pointer inside a `Box`, which owns its allocation.
                             CastKind::BoxDerefTransmute => TagValue::Const(ROOT_TAG),
+                            // Any exposed tag.
+                            CastKind::PointerWithExposedProvenance => TagValue::Const(EXPOSED_TAG),
                             _ if keeps_provenance => self.operand_tag(operand),
                             _ => TagValue::Const(UNKNOWN_TAG),
                         });
@@ -1020,6 +1031,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 body.insert_call(&access, source, position, args, Place::from(code));
                 self.insert_access_checks(body, code, is_write, source, position);
             }
+            Action::Expose { tag } => {
+                let expose = self.model(KaniModel::AliasingExpose, vec![]);
+                let args = vec![self.tag_operand(body, tag, span)];
+                let ret = unit_place(body, span);
+                body.insert_call(&expose, source, position, args, ret);
+            }
             Action::Dealloc { ptr, size } => {
                 let ptr_ty = ptr.ty(body.locals()).unwrap();
                 let u8_ptr = Ty::new_ptr(Ty::unsigned_ty(UintTy::U8), Mutability::Not);
@@ -1189,6 +1206,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         position: InsertPosition,
     ) {
         self.insert_ne_check(body, code, ACCESS_INVALIDATED, MSG_INVALIDATED, source, position);
+        self.insert_ne_check(body, code, ACCESS_NOT_EXPOSED, MSG_NOT_EXPOSED, source, position);
         if is_write {
             self.insert_ne_check(
                 body,
