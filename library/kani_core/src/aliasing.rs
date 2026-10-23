@@ -49,6 +49,7 @@ macro_rules! kani_aliasing {
         const ACCESS_OK: u8 = 0;
         const ACCESS_INVALIDATED: u8 = 1;
         const ACCESS_WRITE_FROZEN: u8 = 2;
+        const ACCESS_PROTECTOR: u8 = 3;
 
         /// Number of pointer arguments whose tags are passed to direct callees.
         const MAX_ARG_TAGS: usize = 4;
@@ -64,6 +65,15 @@ macro_rules! kani_aliasing {
             valid: u64,
             active: u64,
             frozen: u64,
+            /// Tags of reference arguments of functions that are still running.
+            protected: u64,
+            /// Tags whose permission at the tracked byte is initialized: the byte is in the range
+            /// of the reference, or was accessed through the tag or one of its descendants.
+            /// Protectors only apply to initialized permissions, as in Tree Borrows.
+            initialized: u64,
+            /// Protected tags that were never written and saw a foreign read: writing through
+            /// them is undefined behavior (Tree Borrows' "reserved, conflicted").
+            conflicted: u64,
             /// Tags of the pointer arguments of the pending direct call, for the callee to pick
             /// up when its identifier matches.
             call_callee: u64,
@@ -82,6 +92,9 @@ macro_rules! kani_aliasing {
             valid: 0,
             active: 0,
             frozen: 0,
+            protected: 0,
+            initialized: 0,
+            conflicted: 0,
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
             ret_callee: 0,
@@ -100,6 +113,9 @@ macro_rules! kani_aliasing {
                 ALIASING_STATE.valid = 1;
                 ALIASING_STATE.active = 1;
                 ALIASING_STATE.frozen = 0;
+                ALIASING_STATE.protected = 0;
+                ALIASING_STATE.initialized = 1;
+                ALIASING_STATE.conflicted = 0;
                 ALIASING_STATE.call_callee = 0;
                 ALIASING_STATE.ret_callee = 0;
             }
@@ -135,18 +151,28 @@ macro_rules! kani_aliasing {
                 if ALIASING_STATE.valid & bit == 0 {
                     return ACCESS_INVALIDATED;
                 }
+                let foreign = ALIASING_STATE.valid & !local;
+                let protected = ALIASING_STATE.protected & ALIASING_STATE.initialized;
                 if is_write {
                     if ALIASING_STATE.frozen & local != 0 {
                         return ACCESS_WRITE_FROZEN;
                     }
-                    // A write disables every foreign tag and activates the accessing tag and its
-                    // ancestors.
+                    // A write disables every foreign tag, which must not be protected, and
+                    // activates the accessing tag and its ancestors, which must not be
+                    // conflicted.
+                    if protected & (foreign | (ALIASING_STATE.conflicted & local)) != 0 {
+                        return ACCESS_PROTECTOR;
+                    }
                     ALIASING_STATE.valid &= local;
                     ALIASING_STATE.active |= local;
                 } else {
-                    // A read freezes every foreign tag that has been written through.
-                    ALIASING_STATE.frozen |= ALIASING_STATE.active & !local;
+                    // A read freezes every foreign tag that has been written through, and
+                    // conflicts every protected foreign tag that has not.
+                    ALIASING_STATE.frozen |= ALIASING_STATE.active & foreign;
+                    ALIASING_STATE.conflicted |=
+                        protected & foreign & !ALIASING_STATE.active & !ALIASING_STATE.frozen;
                 }
+                ALIASING_STATE.initialized |= local;
                 ACCESS_OK
             }
         }
@@ -185,23 +211,30 @@ macro_rules! kani_aliasing {
             aliasing_access_bytes(tag, obj, offset, size, is_write)
         }
 
-        /// Create a reference from a pointer tagged `parent`, and return the tag of the new
-        /// reference, a child of `parent`.
+        /// Create a reference to `size` bytes at offset `offset` of object `obj` from a pointer
+        /// tagged `parent`, and return the tag of the new reference, a child of `parent`. A
+        /// protected reference is the retag of a reference argument when a function starts; it
+        /// stays protected until the function returns.
         ///
         /// The read access that creating a reference performs is checked separately, before.
         #[kanitool::disable_checks(pointer)]
-        #[kanitool::fn_marker = "AliasingNewBorrowModel"]
-        fn aliasing_new_borrow(parent: u8, is_shared: bool) -> u8 {
+        #[kanitool::fn_marker = "AliasingNewBorrowBytesModel"]
+        fn aliasing_new_borrow_bytes(
+            parent: u8,
+            obj: usize,
+            offset: usize,
+            size: usize,
+            is_shared: bool,
+            is_protected: bool,
+        ) -> u8 {
             unsafe {
                 // The tag is created whether or not the reference covers the tracked byte: as in
                 // Tree Borrows, a reference has a permission at every location of the
-                // allocation, initialized lazily outside its range (the read that creating a
-                // reference performs is checked separately, and only inside the range). Not
-                // depending on the tracked byte keeps the number of tags concrete.
+                // allocation, initialized lazily outside its range. Not depending on the
+                // tracked byte keeps the number of tags concrete.
                 if parent >= ALIASING_STATE.count {
                     return parent;
                 }
-                let parent_mask = ALIASING_STATE.ancestors[parent as usize];
                 // Out of tags: accesses through the new reference to the tracked byte are
                 // reported as unsupported.
                 if ALIASING_STATE.count == MAX_TAGS {
@@ -210,9 +243,24 @@ macro_rules! kani_aliasing {
                 let tag = ALIASING_STATE.count;
                 let bit = 1u64 << tag;
                 ALIASING_STATE.count += 1;
-                ALIASING_STATE.ancestors[tag as usize] = parent_mask | bit;
+                ALIASING_STATE.ancestors[tag as usize] =
+                    ALIASING_STATE.ancestors[parent as usize] | bit;
                 ALIASING_STATE.valid |= bit;
                 ALIASING_STATE.active &= !bit;
+                ALIASING_STATE.conflicted &= !bit;
+                let covers = ALIASING_STATE.tracked_object_id == obj
+                    && ALIASING_STATE.tracked_offset >= offset
+                    && ALIASING_STATE.tracked_offset - offset < size;
+                if covers {
+                    ALIASING_STATE.initialized |= bit;
+                } else {
+                    ALIASING_STATE.initialized &= !bit;
+                }
+                if is_protected {
+                    ALIASING_STATE.protected |= bit;
+                } else {
+                    ALIASING_STATE.protected &= !bit;
+                }
                 if is_shared {
                     ALIASING_STATE.frozen |= bit;
                 } else {
@@ -220,6 +268,40 @@ macro_rules! kani_aliasing {
                 }
                 tag
             }
+        }
+
+        /// `aliasing_new_borrow_bytes` for a reference to the `size_of::<T>()` bytes at `ptr`.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingNewBorrowModel"]
+        fn aliasing_new_borrow<T>(
+            parent: u8,
+            ptr: *const T,
+            is_shared: bool,
+            is_protected: bool,
+        ) -> u8 {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            aliasing_new_borrow_bytes(parent, obj, offset, size_of::<T>(), is_shared, is_protected)
+        }
+
+        /// `aliasing_new_borrow_bytes` for a reference to the `size_of_val(ptr)` bytes at `ptr`,
+        /// for an unsized `T`.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingNewBorrowUnsizedModel"]
+        fn aliasing_new_borrow_unsized<T: MetaSized>(
+            parent: u8,
+            ptr: *const T,
+            is_shared: bool,
+            is_protected: bool,
+        ) -> u8 {
+            let size = match super::mem::checked_size_of_raw(ptr) {
+                Some(size) => size,
+                None => 0,
+            };
+            let thin = ptr as *const u8;
+            let obj = super::mem::pointer_object(thin);
+            let offset = super::mem::pointer_offset(thin);
+            aliasing_new_borrow_bytes(parent, obj, offset, size, is_shared, is_protected)
         }
 
         /// Record the tags of the pointer arguments of a direct call to `callee`.
@@ -276,6 +358,12 @@ macro_rules! kani_aliasing {
             unsafe {
                 ALIASING_STATE.ret_callee = callee;
                 ALIASING_STATE.ret_tag = tag;
+                // The function's reference arguments stop being protected.
+                if frame_count < MAX_TAGS {
+                    let kept = (1u64 << frame_count) - 1;
+                    ALIASING_STATE.protected &= kept;
+                    ALIASING_STATE.conflicted &= kept;
+                }
                 if frame_count <= tag && tag < ALIASING_STATE.count {
                     ALIASING_STATE.count = tag + 1;
                 } else if frame_count < ALIASING_STATE.count {

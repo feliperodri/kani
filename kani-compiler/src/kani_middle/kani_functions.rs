@@ -79,6 +79,10 @@ pub enum KaniModel {
     AliasingInitialize,
     #[strum(serialize = "AliasingNewBorrowModel")]
     AliasingNewBorrow,
+    #[strum(serialize = "AliasingNewBorrowBytesModel")]
+    AliasingNewBorrowBytes,
+    #[strum(serialize = "AliasingNewBorrowUnsizedModel")]
+    AliasingNewBorrowUnsized,
     #[strum(serialize = "AliasingPushCallModel")]
     AliasingPushCall,
     #[strum(serialize = "AliasingReturnModel")]

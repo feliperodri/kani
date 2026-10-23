@@ -58,10 +58,14 @@ const ROOT_TAG: u8 = 0;
 const UNKNOWN_TAG: u8 = u8::MAX;
 const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
+const ACCESS_PROTECTOR: u8 = 3;
 const MAX_ARG_TAGS: usize = 4;
 
 const MSG_INVALIDATED: &str = "Undefined Behavior: memory accessed through a reference or pointer \
     whose borrow was invalidated by a conflicting access (aliasing checks)";
+const MSG_PROTECTOR: &str = "Undefined Behavior: memory written while a function runs in a way that \
+    invalidates a reference passed to that function, or written through such a reference after a \
+    conflicting read (aliasing checks)";
 const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a pointer with only \
     read permission, derived from a shared reference or from a mutable reference frozen by a \
     later read through another pointer (aliasing checks)";
@@ -139,10 +143,17 @@ enum Action {
     SetTag { tag_local: Local, value: TagValue },
     /// Set several tag locals at once: all values are read before any is written.
     SetTags { assignments: Vec<(Local, TagValue)> },
-    /// Create a reference through a pointer tagged `parent`.
-    NewBorrow { tag_local: Local, parent: TagValue, is_shared: bool },
+    /// Create a reference through a pointer tagged `parent`; protected for a function's
+    /// reference arguments.
+    NewBorrow {
+        tag_local: Local,
+        place: Place,
+        parent: TagValue,
+        is_shared: bool,
+        is_protected: bool,
+    },
     /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
-    DropRetag { parent: TagValue, callee: u64 },
+    DropRetag { place: Place, parent: TagValue, callee: u64 },
     /// Record the argument tags of a direct call.
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
@@ -213,13 +224,16 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
             self.tags.insert(key, tag_local);
         }
-        let may_create_tags = body.blocks().iter().any(|block| {
-            matches!(block.terminator.kind, TerminatorKind::Call { .. })
-                || block
-                    .statements
-                    .iter()
-                    .any(|stmt| matches!(stmt.kind, StatementKind::Assign(_, Rvalue::Ref(..))))
-        });
+        let has_reference_args =
+            (1..=body.arg_count()).any(|local| body.locals()[local].ty.kind().is_ref());
+        let may_create_tags = has_reference_args
+            || body.blocks().iter().any(|block| {
+                matches!(block.terminator.kind, TerminatorKind::Call { .. })
+                    || block
+                        .statements
+                        .iter()
+                        .any(|stmt| matches!(stmt.kind, StatementKind::Assign(_, Rvalue::Ref(..))))
+            });
         if may_create_tags {
             self.frame_count =
                 Some(body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not));
@@ -291,6 +305,39 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             let end_args = self.model(KaniModel::AliasingEndArgs, vec![]);
             let ret = unit_place(body, span);
             body.insert_call(&end_args, &mut source, InsertPosition::Before, vec![], ret);
+        }
+        // Reference arguments are retagged when the function starts: a read through the
+        // caller's tag, then a child that stays protected until the function returns.
+        for local in 1..=body.arg_count() {
+            let ty = body.locals()[local].ty;
+            let Some(&tag_local) = self.tags.get(&(local, vec![])) else { continue };
+            let Some(pointee) = ty.kind().builtin_deref(true) else { continue };
+            if !ty.kind().is_ref() {
+                continue;
+            }
+            let is_shared = pointee.mutability == Mutability::Not;
+            let actions = if is_shared && !self.is_freeze(pointee.ty) {
+                vec![Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) }]
+            } else {
+                let referent = Place { local, projection: vec![ProjectionElem::Deref] };
+                vec![
+                    Action::Access {
+                        place: referent.clone(),
+                        tag: TagValue::Local(tag_local),
+                        is_write: false,
+                    },
+                    Action::NewBorrow {
+                        tag_local,
+                        place: referent,
+                        parent: TagValue::Local(tag_local),
+                        is_shared,
+                        is_protected: true,
+                    },
+                ]
+            };
+            for action in actions {
+                self.insert(body, action, &mut source, InsertPosition::Before);
+            }
         }
         let mut keys: Vec<(PathKey, Local)> =
             self.tags.iter().map(|(key, tag)| (key.clone(), *tag)).collect();
@@ -587,7 +634,13 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             // Creating a reference reads the referenced memory.
                             self.read(body, place, &mut actions);
                             if let Some(tag_local) = dest {
-                                actions.push(Action::NewBorrow { tag_local, parent, is_shared });
+                                actions.push(Action::NewBorrow {
+                                    tag_local,
+                                    place: place.clone(),
+                                    parent,
+                                    is_shared,
+                                    is_protected: false,
+                                });
                             }
                         }
                     }
@@ -743,7 +796,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let ty = place.ty(body.locals()).unwrap();
                 let drop_glue = Instance::resolve_drop_in_place(ty);
                 let parent = self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
-                before.push(Action::DropRetag { parent, callee: instance_id(drop_glue) });
+                before.push(Action::DropRetag {
+                    place: place.clone(),
+                    parent,
+                    callee: instance_id(drop_glue),
+                });
             }
             TerminatorKind::SwitchInt { discr: operand, .. }
             | TerminatorKind::Assert { cond: operand, .. } => {
@@ -865,17 +922,41 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     );
                 }
             }
-            Action::NewBorrow { tag_local, parent, is_shared } => {
-                let new_borrow = self.model(KaniModel::AliasingNewBorrow, vec![]);
-                let args =
-                    vec![self.tag_operand(body, parent, span), bool_operand(is_shared, span)];
+            Action::NewBorrow { tag_local, place, parent, is_shared, is_protected } => {
+                let ty = place.ty(body.locals()).unwrap();
+                let model = if self.is_sized(ty) {
+                    KaniModel::AliasingNewBorrow
+                } else {
+                    KaniModel::AliasingNewBorrowUnsized
+                };
+                let ptr = body.insert_assignment(
+                    Rvalue::AddressOf(RawPtrKind::Const, place),
+                    source,
+                    position,
+                );
+                let new_borrow = self.model(model, vec![ty]);
+                let args = vec![
+                    self.tag_operand(body, parent, span),
+                    Operand::Move(Place::from(ptr)),
+                    bool_operand(is_shared, span),
+                    bool_operand(is_protected, span),
+                ];
                 body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
             }
-            Action::DropRetag { parent, callee } => {
+            Action::DropRetag { place, parent, callee } => {
                 let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
-                let new_borrow = self.model(KaniModel::AliasingNewBorrow, vec![]);
-                let args = vec![self.tag_operand(body, parent, span), bool_operand(false, span)];
-                body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
+                self.insert(
+                    body,
+                    Action::NewBorrow {
+                        tag_local,
+                        place,
+                        parent,
+                        is_shared: false,
+                        is_protected: false,
+                    },
+                    source,
+                    position,
+                );
                 self.insert(
                     body,
                     Action::PushCall { callee, tags: vec![TagValue::Local(tag_local)] },
@@ -936,6 +1017,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 source,
                 position,
             );
+            self.insert_ne_check(body, code, ACCESS_PROTECTOR, MSG_PROTECTOR, source, position);
         }
     }
 
