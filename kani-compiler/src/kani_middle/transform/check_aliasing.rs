@@ -36,7 +36,7 @@ use crate::kani_middle::transform::body::{
 use crate::kani_middle::transform::check_uninit::is_harness;
 use crate::kani_middle::transform::{TransformPass, TransformationType};
 use crate::kani_queries::QueryDb;
-use rustc_middle::ty::{TyCtxt, TypingEnv};
+use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
 use rustc_public::mir::mono::{Instance, InstanceKind};
 use rustc_public::mir::{
     AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability,
@@ -44,7 +44,10 @@ use rustc_public::mir::{
     StatementKind, TerminatorKind,
 };
 use rustc_public::rustc_internal;
-use rustc_public::ty::{FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy};
+use rustc_public::ty::{
+    AdtKind, FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy,
+};
+use rustc_public_bridge::IndexedVal;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
@@ -100,6 +103,21 @@ impl TransformPass for AliasingPass {
     }
 }
 
+/// One step of a path to a pointer inside a local of aggregate type.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+enum PathElem {
+    Field(usize),
+    Downcast(usize),
+}
+
+/// A pointer-typed place that has its own tag local: a local, or a field of a local, reached
+/// without dereferencing.
+type PathKey = (Local, Vec<PathElem>);
+
+/// Bounds on the pointers tracked inside one aggregate local.
+const MAX_PATH_DEPTH: usize = 4;
+const MAX_PATHS_PER_LOCAL: usize = 16;
+
 /// Where the tag of a pointer comes from.
 #[derive(Debug, Clone, Copy)]
 enum TagValue {
@@ -119,6 +137,8 @@ enum Action {
     Unsupported { msg: String },
     /// Set a tag local.
     SetTag { tag_local: Local, value: TagValue },
+    /// Set several tag locals at once: all values are read before any is written.
+    SetTags { assignments: Vec<(Local, TagValue)> },
     /// Create a reference through a pointer tagged `parent`.
     NewBorrow { tag_local: Local, parent: TagValue, is_shared: bool },
     /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
@@ -134,8 +154,9 @@ enum Action {
 struct Instrumenter<'a, 'tcx> {
     tcx: TyCtxt<'tcx>,
     pass: &'a AliasingPass,
-    /// The ghost tag local of every local of reference or raw pointer type.
-    tags: HashMap<Local, Local>,
+    /// The ghost tag local of every pointer-typed local, and of every pointer-typed field of an
+    /// aggregate local, whose address is not taken.
+    tags: HashMap<PathKey, Local>,
     /// Locals whose address is taken, so that direct accesses to them go through the root tag.
     address_taken: HashSet<Local>,
     /// Identifier of the instrumented function, for passing tags across calls.
@@ -177,21 +198,20 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
 
     fn run(mut self, body: &mut MutableBody, is_harness: bool) {
         let span = body.blocks()[0].terminator.source_info.span;
-        let pointer_locals: Vec<Local> = body
-            .locals()
-            .iter()
-            .enumerate()
-            .filter(|(_, decl)| is_pointer(decl.ty))
-            .map(|(local, _)| local)
-            .collect();
-        for local in pointer_locals {
-            // A pointer local whose address is taken can be written through that address, which
-            // its tag local would not see: its tag is unknown.
+        // A local whose address is taken can be written through that address, which its tag
+        // locals would not see: the pointers it holds have unknown tags.
+        let mut paths = vec![];
+        for (local, decl) in body.locals().iter().enumerate() {
             if self.address_taken.contains(&local) {
                 continue;
             }
+            let mut local_paths = vec![];
+            self.pointer_paths(decl.ty, vec![], MAX_PATH_DEPTH, &mut local_paths);
+            paths.extend(local_paths.into_iter().map(|path| (local, path)));
+        }
+        for key in paths {
             let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
-            self.tags.insert(local, tag_local);
+            self.tags.insert(key, tag_local);
         }
         let may_create_tags = body.blocks().iter().any(|block| {
             matches!(block.terminator.kind, TerminatorKind::Call { .. })
@@ -251,7 +271,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
         let mut has_pointer_args = false;
         for local in 1..=body.arg_count() {
-            let Some(&tag_local) = self.tags.get(&local) else { continue };
+            let Some(&tag_local) = self.tags.get(&(local, vec![])) else { continue };
             has_pointer_args = true;
             let index = local - 1;
             let arg_tag = self.model(KaniModel::AliasingArgTag, vec![]);
@@ -272,11 +292,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             let ret = unit_place(body, span);
             body.insert_call(&end_args, &mut source, InsertPosition::Before, vec![], ret);
         }
-        let mut locals: Vec<(Local, Local)> =
-            self.tags.iter().map(|(local, tag)| (*local, *tag)).collect();
-        locals.sort();
-        for (local, tag_local) in locals {
-            if local == 0 || local > body.arg_count() {
+        let mut keys: Vec<(PathKey, Local)> =
+            self.tags.iter().map(|(key, tag)| (key.clone(), *tag)).collect();
+        keys.sort();
+        for ((local, path), tag_local) in keys {
+            if local == 0 || local > body.arg_count() || !path.is_empty() {
                 self.insert(
                     body,
                     Action::SetTag { tag_local, value: TagValue::Const(UNKNOWN_TAG) },
@@ -290,46 +310,153 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     /// The tag to use for an access to `place`, if the access is checked: the tag of the pointer
     /// it goes through, or the root tag for a local whose address is taken.
     fn place_tag(&self, body: &MutableBody, place: &Place) -> Option<TagValue> {
-        let derefs = place.projection.iter().filter(|e| matches!(e, ProjectionElem::Deref)).count();
-        match (derefs, place.projection.first()) {
+        let Some(first_deref) =
+            place.projection.iter().position(|elem| matches!(elem, ProjectionElem::Deref))
+        else {
             // No pointer is involved: only a local whose address is taken can be aliased.
-            (0, _) => {
-                self.address_taken.contains(&place.local).then_some(TagValue::Const(ROOT_TAG))
-            }
-            (1, Some(ProjectionElem::Deref)) => {
-                let ty = body.locals()[place.local].ty;
-                if ty.kind().is_box() {
-                    Some(TagValue::Const(ROOT_TAG))
-                } else {
-                    Some(
-                        self.tags
-                            .get(&place.local)
-                            .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag)),
-                    )
+            return self.address_taken.contains(&place.local).then_some(TagValue::Const(ROOT_TAG));
+        };
+        let derefs = place.projection.iter().filter(|e| matches!(e, ProjectionElem::Deref)).count();
+        if derefs > 1 {
+            // The place goes through a pointer read from memory.
+            return Some(TagValue::Const(UNKNOWN_TAG));
+        }
+        let pointer =
+            Place { local: place.local, projection: place.projection[..first_deref].to_vec() };
+        if pointer.ty(body.locals()).unwrap().kind().is_box() {
+            return Some(TagValue::Const(ROOT_TAG));
+        }
+        Some(self.key_tag(path_key(&pointer)))
+    }
+
+    /// The tag of the pointer at `key`, if it has a tag local.
+    fn key_tag(&self, key: Option<PathKey>) -> TagValue {
+        key.and_then(|key| self.tags.get(&key))
+            .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag))
+    }
+
+    /// The paths to the pointers inside a value of type `ty`, appended to `prefix`.
+    fn pointer_paths(
+        &self,
+        ty: Ty,
+        prefix: Vec<PathElem>,
+        depth: usize,
+        out: &mut Vec<Vec<PathElem>>,
+    ) {
+        if out.len() >= MAX_PATHS_PER_LOCAL {
+            return;
+        }
+        if is_pointer(ty) {
+            out.push(prefix);
+            return;
+        }
+        // A `Box` owns its allocation: dereferencing one always uses the root tag.
+        if depth == 0 || ty.kind().is_box() {
+            return;
+        }
+        let internal = rustc_internal::internal(self.tcx, ty);
+        let typing_env = TypingEnv::fully_monomorphized();
+        let normalize = |field_ty: Unnormalized<'tcx, rustc_middle::ty::Ty<'tcx>>| {
+            rustc_internal::stable(self.tcx.normalize_erasing_regions(typing_env, field_ty))
+        };
+        let mut push = |elems: Vec<PathElem>, field_ty: Ty| {
+            let mut path = prefix.clone();
+            path.extend(elems);
+            self.pointer_paths(field_ty, path, depth - 1, out);
+        };
+        match internal.kind() {
+            rustc_middle::ty::TyKind::Tuple(tys) => {
+                for (index, field_ty) in tys.iter().enumerate() {
+                    push(vec![PathElem::Field(index)], normalize(Unnormalized::new(field_ty)));
                 }
             }
-            // The place goes through a pointer read from memory.
-            _ => Some(TagValue::Const(UNKNOWN_TAG)),
+            rustc_middle::ty::TyKind::Adt(def, args) if !def.is_union() => {
+                for (variant_index, variant) in def.variants().iter_enumerated() {
+                    for (field_index, field) in variant.fields.iter_enumerated() {
+                        let mut elems = vec![];
+                        if def.is_enum() {
+                            elems.push(PathElem::Downcast(variant_index.as_usize()));
+                        }
+                        elems.push(PathElem::Field(field_index.as_usize()));
+                        push(elems, normalize(field.ty(self.tcx, args)));
+                    }
+                }
+            }
+            rustc_middle::ty::TyKind::Closure(_, args) => {
+                for (index, field_ty) in args.as_closure().upvar_tys().iter().enumerate() {
+                    push(vec![PathElem::Field(index)], normalize(Unnormalized::new(field_ty)));
+                }
+            }
+            _ => {}
         }
+    }
+
+    /// The tag that the pointer at `suffix` inside the value of `rvalue` has.
+    fn rvalue_subtag(&self, rvalue: &Rvalue, suffix: &[PathElem]) -> TagValue {
+        let unknown = TagValue::Const(UNKNOWN_TAG);
+        match rvalue {
+            Rvalue::Use(Operand::Copy(place) | Operand::Move(place), _) => {
+                self.key_tag(path_key(place).map(|(local, mut path)| {
+                    path.extend_from_slice(suffix);
+                    (local, path)
+                }))
+            }
+            Rvalue::Aggregate(kind, operands) => {
+                let rest = match (kind, suffix) {
+                    (AggregateKind::Adt(def, variant, ..), [PathElem::Downcast(v), rest @ ..])
+                        if def.kind() == AdtKind::Enum && variant.to_index() == *v =>
+                    {
+                        rest
+                    }
+                    (AggregateKind::Adt(def, ..), rest) if def.kind() == AdtKind::Struct => rest,
+                    (AggregateKind::Tuple | AggregateKind::Closure(..), rest) => rest,
+                    _ => return unknown,
+                };
+                let [PathElem::Field(index), rest @ ..] = rest else { return unknown };
+                match &operands[*index] {
+                    operand if rest.is_empty() => self.operand_tag(operand),
+                    Operand::Copy(place) | Operand::Move(place) => {
+                        self.key_tag(path_key(place).map(|(local, mut path)| {
+                            path.extend_from_slice(rest);
+                            (local, path)
+                        }))
+                    }
+                    Operand::Constant(_) | Operand::RuntimeChecks(_) => unknown,
+                }
+            }
+            _ => unknown,
+        }
+    }
+
+    /// The tag locals of the pointers strictly inside the place `place`.
+    fn inner_tags(&self, place: &Place) -> Vec<(Vec<PathElem>, Local)> {
+        let Some((local, path)) = path_key(place) else { return vec![] };
+        let mut inner: Vec<_> = self
+            .tags
+            .iter()
+            .filter(|((key_local, key_path), _)| {
+                *key_local == local && key_path.len() > path.len() && key_path.starts_with(&path)
+            })
+            .map(|((_, key_path), tag)| (key_path[path.len()..].to_vec(), *tag))
+            .collect();
+        inner.sort();
+        inner
     }
 
     /// The tag of the pointer an operand evaluates to.
     fn operand_tag(&self, operand: &Operand) -> TagValue {
         match operand {
-            Operand::Copy(place) | Operand::Move(place) if place.projection.is_empty() => self
-                .tags
-                .get(&place.local)
-                .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag)),
+            Operand::Copy(place) | Operand::Move(place) => self.key_tag(path_key(place)),
             // A constant pointer points to a static or a promoted constant, whose only
             // tag is its root.
             Operand::Constant(_) => TagValue::Const(ROOT_TAG),
-            _ => TagValue::Const(UNKNOWN_TAG),
+            Operand::RuntimeChecks(_) => TagValue::Const(UNKNOWN_TAG),
         }
     }
 
-    /// The tag local of `place`, if it is a whole local of pointer type.
+    /// The tag local of `place`, if it is a pointer with a tag local.
     fn dest_tag(&self, place: &Place) -> Option<Local> {
-        if place.projection.is_empty() { self.tags.get(&place.local).copied() } else { None }
+        path_key(place).and_then(|key| self.tags.get(&key).copied())
     }
 
     fn read(&self, body: &MutableBody, place: &Place, actions: &mut Vec<Action>) {
@@ -531,6 +658,15 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     let value = new_tag.unwrap_or(TagValue::Const(UNKNOWN_TAG));
                     actions.push(Action::SetTag { tag_local, value });
                 }
+                // The pointers inside an aggregate value.
+                let assignments: Vec<_> = self
+                    .inner_tags(lhs)
+                    .into_iter()
+                    .map(|(suffix, tag_local)| (tag_local, self.rvalue_subtag(rvalue, &suffix)))
+                    .collect();
+                if !assignments.is_empty() {
+                    actions.push(Action::SetTags { assignments });
+                }
             }
             StatementKind::SetDiscriminant { place, .. } => self.write(body, place, &mut actions),
             StatementKind::Intrinsic(NonDivergingIntrinsic::CopyNonOverlapping(copy)) => {
@@ -589,6 +725,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             }
                         });
                     }
+                    let assignments: Vec<_> = self
+                        .inner_tags(destination)
+                        .into_iter()
+                        .map(|(_, tag_local)| (tag_local, TagValue::Const(UNKNOWN_TAG)))
+                        .collect();
+                    if !assignments.is_empty() {
+                        after.push(Action::SetTags { assignments });
+                    }
                     self.write(body, destination, &mut after);
                 }
             }
@@ -606,7 +750,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 self.read_operand(body, operand, &mut before)
             }
             TerminatorKind::Return => {
-                let tag = self.tags.get(&0).map(|tag| TagValue::Local(*tag));
+                let tag = self.tags.get(&(0, vec![])).map(|tag| TagValue::Local(*tag));
                 if tag.is_some() || self.frame_count.is_some() {
                     let tag = tag.unwrap_or(TagValue::Const(UNKNOWN_TAG));
                     before.push(Action::Return { tag });
@@ -695,6 +839,31 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     source,
                     position,
                 );
+            }
+            Action::SetTags { assignments } => {
+                // Read every value into a temporary first: the sources may be among the targets.
+                let temps: Vec<_> = assignments
+                    .iter()
+                    .map(|(_, value)| {
+                        let operand = self.tag_operand(body, *value, span);
+                        body.insert_assignment(
+                            Rvalue::Use(operand, rustc_public::mir::WithRetag::No),
+                            source,
+                            position,
+                        )
+                    })
+                    .collect();
+                for ((tag_local, _), temp) in assignments.iter().zip(temps) {
+                    body.assign_to(
+                        Place::from(*tag_local),
+                        Rvalue::Use(
+                            Operand::Copy(Place::from(temp)),
+                            rustc_public::mir::WithRetag::No,
+                        ),
+                        source,
+                        position,
+                    );
+                }
             }
             Action::NewBorrow { tag_local, parent, is_shared } => {
                 let new_borrow = self.model(KaniModel::AliasingNewBorrow, vec![]);
@@ -812,6 +981,20 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     fn is_freeze(&self, ty: Ty) -> bool {
         rustc_internal::internal(self.tcx, ty).is_freeze(self.tcx, TypingEnv::fully_monomorphized())
     }
+}
+
+/// The path key of `place`, if it is a local or a field of one, reached without dereferencing.
+fn path_key(place: &Place) -> Option<PathKey> {
+    let path = place
+        .projection
+        .iter()
+        .map(|elem| match elem {
+            ProjectionElem::Field(index, _) => Some(PathElem::Field(*index)),
+            ProjectionElem::Downcast(variant) => Some(PathElem::Downcast(variant.to_index())),
+            _ => None,
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some((place.local, path))
 }
 
 /// Whether values of `ty` carry a tag: references and raw pointers.
