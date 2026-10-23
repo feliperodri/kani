@@ -97,8 +97,6 @@ pub enum KaniModel {
     AliasingRetTag,
     #[strum(serialize = "AliasingReturnModel")]
     AliasingReturn,
-    #[strum(serialize = "AliasingWildcardAccessModel")]
-    AliasingWildcardAccess,
     #[strum(serialize = "AlignOfDynObjectModel")]
     AlignOfDynObject,
     #[strum(serialize = "NondetFn0Model")]

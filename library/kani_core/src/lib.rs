@@ -19,6 +19,7 @@
 #![no_core]
 
 mod aliasing;
+mod aliasing_monitor;
 mod arbitrary;
 mod bounded_arbitrary;
 mod float;
