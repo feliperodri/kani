@@ -61,6 +61,24 @@ pub enum KaniIntrinsic {
 /// Kani models are Rust functions that model some runtime behavior used by Kani instrumentation.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, IntoStaticStr, EnumIter, EnumString, Hash)]
 pub enum KaniModel {
+    #[strum(serialize = "AliasingAccessModel")]
+    AliasingAccess,
+    #[strum(serialize = "AliasingArgTagModel")]
+    AliasingArgTag,
+    #[strum(serialize = "AliasingEndArgsModel")]
+    AliasingEndArgs,
+    #[strum(serialize = "AliasingFrameEnterModel")]
+    AliasingFrameEnter,
+    #[strum(serialize = "AliasingInitializeModel")]
+    AliasingInitialize,
+    #[strum(serialize = "AliasingNewBorrowModel")]
+    AliasingNewBorrow,
+    #[strum(serialize = "AliasingPushCallModel")]
+    AliasingPushCall,
+    #[strum(serialize = "AliasingReturnModel")]
+    AliasingReturn,
+    #[strum(serialize = "AliasingTakeRetModel")]
+    AliasingTakeRet,
     #[strum(serialize = "AlignOfDynObjectModel")]
     AlignOfDynObject,
     #[strum(serialize = "NondetFn0Model")]
