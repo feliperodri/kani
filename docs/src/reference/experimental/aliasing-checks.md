@@ -52,6 +52,10 @@ The rules are:
    them acts like the pointer it was created from, and writes through it are allowed. A mutable
    reference to them is not disabled by foreign writes until it is written.
 8. Deallocating memory that a protected reference argument points to is undefined behavior.
+9. A pointer created from an integer (`ptr::with_exposed_provenance`) may act as any pointer
+   whose provenance was exposed (`expose_provenance`). As in Tree Borrows, an access through it
+   is undefined behavior if no exposed tag allows it, and it only changes tags that are foreign
+   to every exposed tag that allows it.
 
 Rules 4 and 5 differ from each model's own rules only where the two models disagree. Stacked
 Borrows also disables a mutable reference on a foreign read. Tree Borrows lets a mutable
@@ -64,7 +68,7 @@ tracks that byte and the check fails.
 
 ## What a successful verification means
 
-If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 8
+If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 9
 above. Kani never reports success because of an access it did not check. When it cannot tell
 which tag a pointer has, it gives the pointer an *unknown* tag. An access through an unknown tag
 to the tracked byte then fails with "Kani's aliasing checks do not know which reference this
@@ -76,7 +80,8 @@ Today the tag is unknown for:
 - places that go through a pointer stored in memory, such as `**p`;
 - pointers returned by, or passed as arguments to, indirect calls (function pointers, `dyn`),
   and pointer arguments past the fourth;
-- pointers obtained from integers;
+- pointers created from integers, once a pointer with an unknown tag was exposed, and pointers
+  transmuted from integers;
 - pointer locals whose own address is taken;
 - shared references to types whose `UnsafeCell` bytes the checks cannot locate: an enum or a
   union that contains an `UnsafeCell`, an `UnsafeCell` past the first 64 bytes, or an unsized
@@ -88,7 +93,7 @@ SIMD gather, scatter and masked load/store intrinsics are reported as unsupporte
 
 ### Rules that are not checked
 
-Rules 1 to 8 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
+Rules 1 to 9 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
 not part of it yet, so a successful verification says nothing about them:
 
 - **Deallocation as an access.** Both models also treat deallocation as a write through the
