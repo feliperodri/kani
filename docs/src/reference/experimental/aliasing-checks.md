@@ -43,6 +43,11 @@ The rules are:
 3. Writing through a tag that has a frozen ancestor, or is frozen, is undefined behavior.
 4. A write disables every foreign tag.
 5. A read freezes every foreign tag that is active.
+6. When a function starts, each of its reference arguments is reborrowed, and the new tag is
+   *protected* until the function returns. While it is protected, a write that would disable it
+   is undefined behavior, and so is writing through it after a foreign read if it had not been
+   written before. As in Tree Borrows, this only applies to memory in the range of the reference
+   or accessed through it.
 
 Rules 4 and 5 differ from each model's own rules only where the two models disagree. Stacked
 Borrows also disables a mutable reference on a foreign read. Tree Borrows lets a mutable
@@ -55,7 +60,7 @@ tracks that byte and the check fails.
 
 ## What a successful verification means
 
-If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 5
+If a harness verifies with `-Z aliasing-checks`, no execution of the harness breaks rules 1 to 6
 above. Kani never reports success because of an access it did not check. When it cannot tell
 which tag a pointer has, it gives the pointer an *unknown* tag. An access through an unknown tag
 to the tracked byte then fails with "Kani's aliasing checks do not know which reference this
@@ -77,11 +82,9 @@ SIMD gather, scatter and masked load/store intrinsics are reported as unsupporte
 
 ### Rules that are not checked
 
-Rules 1 to 5 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
+Rules 1 to 6 are the whole property. The following rules of Stacked Borrows and Tree Borrows are
 not part of it yet, so a successful verification says nothing about them:
 
-- **Protectors.** Neither model allows a reference passed to a function to be invalidated while
-  the function runs. Kani only reports such a write if the reference is used afterwards.
 - **Deallocation** while a reference to the memory is live. Kani's pointer checks still report
   accesses to deallocated memory.
 
