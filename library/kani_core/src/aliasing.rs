@@ -44,12 +44,16 @@ macro_rules! kani_aliasing {
         /// a pointer read from memory, or returned by an indirect call). An access through it to
         /// the tracked byte is reported as unsupported: the checks cannot decide it.
         const UNKNOWN_TAG: u8 = u8::MAX;
+        /// The tag of a pointer created from an integer (`ptr::with_exposed_provenance`): it may
+        /// be any exposed tag.
+        const EXPOSED_TAG: u8 = u8::MAX - 1;
 
         /// Results of `aliasing_access`, checked by the compiler-inserted assertions.
         const ACCESS_OK: u8 = 0;
         const ACCESS_INVALIDATED: u8 = 1;
         const ACCESS_WRITE_FROZEN: u8 = 2;
         const ACCESS_PROTECTOR: u8 = 3;
+        const ACCESS_NOT_EXPOSED: u8 = 4;
 
         /// Number of pointer arguments whose tags are passed to direct callees.
         const MAX_ARG_TAGS: usize = 4;
@@ -80,6 +84,10 @@ macro_rules! kani_aliasing {
             /// until written, foreign writes do not disable them (Tree Borrows' "reserved, interior
             /// mutable").
             interior: u64,
+            /// Tags whose pointer was exposed (cast to an integer with `expose_provenance`), and
+            /// whether a pointer with an unknown tag was.
+            exposed: u64,
+            unknown_exposed: bool,
             /// Protected tags that were never written and saw a foreign read: writing through
             /// them is undefined behavior (Tree Borrows' "reserved, conflicted").
             conflicted: u64,
@@ -106,6 +114,8 @@ macro_rules! kani_aliasing {
             cell: 0,
             alias: [0; MAX_TAGS as usize],
             interior: 0,
+            exposed: 0,
+            unknown_exposed: false,
             conflicted: 0,
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
@@ -129,6 +139,8 @@ macro_rules! kani_aliasing {
                 ALIASING_STATE.initialized = 1;
                 ALIASING_STATE.cell = 0;
                 ALIASING_STATE.interior = 0;
+                ALIASING_STATE.exposed = 0;
+                ALIASING_STATE.unknown_exposed = false;
                 ALIASING_STATE.conflicted = 0;
                 ALIASING_STATE.call_callee = 0;
                 ALIASING_STATE.ret_callee = 0;
@@ -153,6 +165,9 @@ macro_rules! kani_aliasing {
                     || ALIASING_STATE.tracked_offset - offset >= size
                 {
                     return ACCESS_OK;
+                }
+                if tag == EXPOSED_TAG {
+                    return aliasing_wildcard_access(is_write);
                 }
                 if tag >= ALIASING_STATE.count {
                     super::unsupported(
@@ -197,6 +212,447 @@ macro_rules! kani_aliasing {
                 }
                 ALIASING_STATE.initialized |= local;
                 ACCESS_OK
+            }
+        }
+
+        /// An access to the tracked byte through a pointer created from an integer, as in Tree
+        /// Borrows: it is allowed if some exposed tag allows it, and it only changes the tags
+        /// that are foreign to every exposed tag that allows it.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingWildcardAccessModel"]
+        fn aliasing_wildcard_access(is_write: bool) -> u8 {
+            unsafe {
+                if ALIASING_STATE.unknown_exposed {
+                    super::unsupported(
+                        "Kani's aliasing checks cannot check an access through a pointer created \
+                         from an integer once a pointer whose tag they do not know was exposed",
+                    );
+                }
+                let opaque_frozen = ALIASING_STATE.frozen & !ALIASING_STATE.cell;
+                let mut possibly_local = 0u64;
+                let mut allowed = false;
+                // Written out instead of looping, so that a harness's unwinding bound does not
+                // apply here, and without a closure, which would be instrumented like user code.
+                let exposed = ALIASING_STATE.exposed & ALIASING_STATE.valid;
+                if exposed & (1u64 << 0) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[0] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[0];
+                }
+                if exposed & (1u64 << 1) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[1] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[1];
+                }
+                if exposed & (1u64 << 2) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[2] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[2];
+                }
+                if exposed & (1u64 << 3) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[3] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[3];
+                }
+                if exposed & (1u64 << 4) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[4] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[4];
+                }
+                if exposed & (1u64 << 5) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[5] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[5];
+                }
+                if exposed & (1u64 << 6) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[6] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[6];
+                }
+                if exposed & (1u64 << 7) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[7] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[7];
+                }
+                if exposed & (1u64 << 8) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[8] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[8];
+                }
+                if exposed & (1u64 << 9) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[9] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[9];
+                }
+                if exposed & (1u64 << 10) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[10] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[10];
+                }
+                if exposed & (1u64 << 11) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[11] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[11];
+                }
+                if exposed & (1u64 << 12) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[12] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[12];
+                }
+                if exposed & (1u64 << 13) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[13] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[13];
+                }
+                if exposed & (1u64 << 14) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[14] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[14];
+                }
+                if exposed & (1u64 << 15) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[15] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[15];
+                }
+                if exposed & (1u64 << 16) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[16] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[16];
+                }
+                if exposed & (1u64 << 17) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[17] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[17];
+                }
+                if exposed & (1u64 << 18) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[18] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[18];
+                }
+                if exposed & (1u64 << 19) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[19] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[19];
+                }
+                if exposed & (1u64 << 20) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[20] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[20];
+                }
+                if exposed & (1u64 << 21) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[21] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[21];
+                }
+                if exposed & (1u64 << 22) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[22] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[22];
+                }
+                if exposed & (1u64 << 23) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[23] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[23];
+                }
+                if exposed & (1u64 << 24) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[24] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[24];
+                }
+                if exposed & (1u64 << 25) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[25] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[25];
+                }
+                if exposed & (1u64 << 26) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[26] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[26];
+                }
+                if exposed & (1u64 << 27) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[27] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[27];
+                }
+                if exposed & (1u64 << 28) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[28] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[28];
+                }
+                if exposed & (1u64 << 29) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[29] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[29];
+                }
+                if exposed & (1u64 << 30) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[30] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[30];
+                }
+                if exposed & (1u64 << 31) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[31] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[31];
+                }
+                if exposed & (1u64 << 32) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[32] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[32];
+                }
+                if exposed & (1u64 << 33) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[33] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[33];
+                }
+                if exposed & (1u64 << 34) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[34] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[34];
+                }
+                if exposed & (1u64 << 35) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[35] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[35];
+                }
+                if exposed & (1u64 << 36) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[36] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[36];
+                }
+                if exposed & (1u64 << 37) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[37] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[37];
+                }
+                if exposed & (1u64 << 38) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[38] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[38];
+                }
+                if exposed & (1u64 << 39) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[39] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[39];
+                }
+                if exposed & (1u64 << 40) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[40] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[40];
+                }
+                if exposed & (1u64 << 41) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[41] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[41];
+                }
+                if exposed & (1u64 << 42) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[42] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[42];
+                }
+                if exposed & (1u64 << 43) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[43] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[43];
+                }
+                if exposed & (1u64 << 44) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[44] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[44];
+                }
+                if exposed & (1u64 << 45) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[45] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[45];
+                }
+                if exposed & (1u64 << 46) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[46] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[46];
+                }
+                if exposed & (1u64 << 47) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[47] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[47];
+                }
+                if exposed & (1u64 << 48) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[48] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[48];
+                }
+                if exposed & (1u64 << 49) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[49] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[49];
+                }
+                if exposed & (1u64 << 50) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[50] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[50];
+                }
+                if exposed & (1u64 << 51) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[51] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[51];
+                }
+                if exposed & (1u64 << 52) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[52] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[52];
+                }
+                if exposed & (1u64 << 53) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[53] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[53];
+                }
+                if exposed & (1u64 << 54) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[54] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[54];
+                }
+                if exposed & (1u64 << 55) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[55] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[55];
+                }
+                if exposed & (1u64 << 56) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[56] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[56];
+                }
+                if exposed & (1u64 << 57) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[57] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[57];
+                }
+                if exposed & (1u64 << 58) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[58] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[58];
+                }
+                if exposed & (1u64 << 59) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[59] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[59];
+                }
+                if exposed & (1u64 << 60) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[60] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[60];
+                }
+                if exposed & (1u64 << 61) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[61] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[61];
+                }
+                if exposed & (1u64 << 62) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[62] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[62];
+                }
+                if exposed & (1u64 << 63) != 0
+                    && (!is_write || opaque_frozen & ALIASING_STATE.ancestors[63] == 0)
+                {
+                    allowed = true;
+                    possibly_local |= ALIASING_STATE.ancestors[63];
+                }
+                if !allowed {
+                    return ACCESS_NOT_EXPOSED;
+                }
+                let foreign = ALIASING_STATE.valid & !possibly_local;
+                let protected = ALIASING_STATE.protected & ALIASING_STATE.initialized;
+                if is_write {
+                    let disabled = foreign & !(ALIASING_STATE.interior & !ALIASING_STATE.active);
+                    if protected & disabled != 0 {
+                        return ACCESS_PROTECTOR;
+                    }
+                    ALIASING_STATE.valid &= !disabled;
+                } else {
+                    ALIASING_STATE.frozen |= ALIASING_STATE.active & foreign;
+                    ALIASING_STATE.conflicted |=
+                        protected & foreign & !ALIASING_STATE.active & !ALIASING_STATE.frozen;
+                }
+                ACCESS_OK
+            }
+        }
+
+        /// Record that the pointer tagged `tag` was exposed.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingExposeModel"]
+        fn aliasing_expose(tag: u8) {
+            unsafe {
+                if tag < ALIASING_STATE.count {
+                    let tag = if ALIASING_STATE.cell & (1u64 << tag) != 0 {
+                        ALIASING_STATE.alias[tag as usize]
+                    } else {
+                        tag
+                    };
+                    ALIASING_STATE.exposed |= 1u64 << tag;
+                } else if tag != EXPOSED_TAG {
+                    ALIASING_STATE.unknown_exposed = true;
+                }
             }
         }
 
