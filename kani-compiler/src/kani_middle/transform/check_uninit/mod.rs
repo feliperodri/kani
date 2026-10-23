@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use crate::kani_middle::kani_functions::{KaniFunction, KaniModel};
 pub use delayed_ub::DelayedUbPass;
 pub use ptr_uninit::UninitPass;
-pub(crate) use ptr_uninit::is_harness;
+pub(crate) use ptr_uninit::{is_harness, raw_ptr_arg};
 use rustc_public::mir::WithRetag;
 pub use ty_layout::{PointeeInfo, PointeeLayout};
 
