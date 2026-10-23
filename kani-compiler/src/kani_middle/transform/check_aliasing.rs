@@ -33,7 +33,7 @@ use crate::kani_middle::kani_functions::{KaniFunction, KaniModel};
 use crate::kani_middle::transform::body::{
     CheckType, InsertPosition, MutableBody, SourceInstruction,
 };
-use crate::kani_middle::transform::check_uninit::is_harness;
+use crate::kani_middle::transform::check_uninit::{is_harness, raw_ptr_arg};
 use crate::kani_middle::transform::{TransformPass, TransformationType};
 use crate::kani_queries::QueryDb;
 use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
@@ -67,6 +67,8 @@ const MSG_INVALIDATED: &str = "Undefined Behavior: memory accessed through a ref
 const MSG_PROTECTOR: &str = "Undefined Behavior: memory written while a function runs in a way that \
     invalidates a reference passed to that function, or written through such a reference after a \
     conflicting read (aliasing checks)";
+const MSG_DEALLOC_PROTECTED: &str = "Undefined Behavior: memory deallocated while a reference passed \
+    to a running function points to it (aliasing checks)";
 const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a pointer with only \
     read permission, derived from a shared reference or from a mutable reference frozen by a \
     later read through another pointer (aliasing checks)";
@@ -138,6 +140,8 @@ enum Action {
     /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
     /// intrinsics do.
     AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
+    /// Deallocate `size` bytes at `ptr`.
+    Dealloc { ptr: Operand, size: Operand },
     /// A construct the checks do not support: fail if reached.
     Unsupported { msg: String },
     /// Set a tag local.
@@ -861,6 +865,18 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 if let Some(name) = intrinsic_name(body, func) {
                     self.intrinsic_accesses(body, &name, args, &mut before);
                 }
+                if let Some(instance) = direct_callee(body, func)
+                    && instance.is_foreign_item()
+                    && matches!(
+                        instance.name().as_str(),
+                        "alloc::alloc::__rust_dealloc" | "alloc::alloc::__rust_realloc"
+                    )
+                {
+                    before.push(Action::Dealloc {
+                        ptr: raw_ptr_arg(&args[0], body.locals()),
+                        size: args[1].clone(),
+                    });
+                }
                 let callee = direct_callee(body, func).map(instance_id);
                 let has_pointer_args =
                     args.iter().any(|arg| is_pointer(arg.ty(body.locals()).unwrap()));
@@ -873,7 +889,20 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
                 if target.is_some() {
                     if let Some(tag_local) = self.dest_tag(destination) {
+                        let is_allocator = direct_callee(body, func).is_some_and(|instance| {
+                            instance.is_foreign_item()
+                                && matches!(
+                                    instance.name().as_str(),
+                                    "alloc::alloc::__rust_alloc"
+                                        | "alloc::alloc::__rust_alloc_zeroed"
+                                        | "alloc::alloc::__rust_realloc"
+                                )
+                        });
                         after.push(match (callee, provenance_intrinsic(body, func)) {
+                            // A new allocation: the pointer has the allocation's root tag.
+                            _ if is_allocator => {
+                                Action::SetTag { tag_local, value: TagValue::Const(ROOT_TAG) }
+                            }
                             // Pointer arithmetic keeps the provenance of its pointer operand.
                             (_, true) => {
                                 Action::SetTag { tag_local, value: self.operand_tag(&args[0]) }
@@ -990,6 +1019,33 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 ];
                 body.insert_call(&access, source, position, args, Place::from(code));
                 self.insert_access_checks(body, code, is_write, source, position);
+            }
+            Action::Dealloc { ptr, size } => {
+                let ptr_ty = ptr.ty(body.locals()).unwrap();
+                let u8_ptr = Ty::new_ptr(Ty::unsigned_ty(UintTy::U8), Mutability::Not);
+                let ptr = if ptr_ty == u8_ptr {
+                    ptr
+                } else {
+                    let cast = body.insert_ptr_cast(
+                        ptr,
+                        Ty::unsigned_ty(UintTy::U8),
+                        Mutability::Not,
+                        source,
+                        position,
+                    );
+                    Operand::Move(Place::from(cast))
+                };
+                let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let dealloc = self.model(KaniModel::AliasingDealloc, vec![]);
+                body.insert_call(&dealloc, source, position, vec![ptr, size], Place::from(code));
+                self.insert_ne_check(
+                    body,
+                    code,
+                    ACCESS_PROTECTOR,
+                    MSG_DEALLOC_PROTECTED,
+                    source,
+                    position,
+                );
             }
             Action::Unsupported { msg } => {
                 body.insert_check(&self.pass.unsupported_check_type, source, position, None, &msg);
