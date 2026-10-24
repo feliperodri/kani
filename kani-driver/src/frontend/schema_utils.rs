@@ -2335,12 +2335,14 @@ mod tests {
         h_plain.contract = Some(AssignsContract {
             contracted_function_name: "target_fn".to_string(),
             recursion_tracker: None,
+            checks_state: vec![],
         });
 
         let mut h_recursive = harness("recursive_contract_harness");
         h_recursive.contract = Some(AssignsContract {
             contracted_function_name: "recursive_target_fn".to_string(),
             recursion_tracker: Some("KANI_RECURSION_recursive_target_fn".to_string()),
+            checks_state: vec![],
         });
 
         let hrs = [
