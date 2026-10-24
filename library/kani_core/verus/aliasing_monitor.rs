@@ -851,15 +851,15 @@ pub open spec fn holders_upto(s: &MonitorState, b: u64, k: nat) -> u64
 {
     if k == 0 { 0u64 } else {
         let v = (k - 1) as nat;
-        holders_upto(s, b, v) | if s.ancestors[v as int] & b != 0 { 1u64 << (v as u64) } else {
-            0u64 }
+        holders_upto(s, b, v) | if v < s.count && s.ancestors[v as int] & b != 0 {
+            1u64 << (v as u64) } else { 0u64 }
     }
 }
 
 proof fn lemma_holders_upto(s: MonitorState, b: u64, k: nat)
     requires k <= 64,
     ensures forall|i: u64| i < 64 ==> bit(#[trigger] holders_upto(&s, b, k), i)
-        == (i < k && s.ancestors[i as int] & b != 0),
+        == (i < k && i < s.count && s.ancestors[i as int] & b != 0),
     decreases k,
 {
     if k == 0 {
@@ -867,9 +867,10 @@ proof fn lemma_holders_upto(s: MonitorState, b: u64, k: nat)
     } else {
         let v = (k - 1) as nat;
         lemma_holders_upto(s, b, v);
-        let add = if s.ancestors[v as int] & b != 0 { 1u64 << (v as u64) } else { 0u64 };
+        let add = if v < s.count && s.ancestors[v as int] & b != 0 { 1u64 << (v as u64) } else {
+            0u64 };
         assert forall|i: u64| i < 64 implies bit(holders_upto(&s, b, k), i)
-            == (i < k && s.ancestors[i as int] & b != 0) by {
+            == (i < k && i < s.count && s.ancestors[i as int] & b != 0) by {
             lemma_bit_or(holders_upto(&s, b, v), add, i);
             lemma_bit_single(v as u64, i);
             lemma_bit_zero(i);
@@ -883,8 +884,8 @@ pub open spec fn all_upto(s: &MonitorState, cands: u64, k: nat) -> u64
 {
     if k == 0 { u64::MAX } else {
         let c = (k - 1) as nat;
-        all_upto(s, cands, c) & if cands & (1u64 << (c as u64)) != 0 { s.ancestors[c as int] }
-            else { u64::MAX }
+        all_upto(s, cands, c) & if c < s.count && cands & (1u64 << (c as u64)) != 0 {
+            s.ancestors[c as int] } else { u64::MAX }
     }
 }
 
@@ -893,8 +894,8 @@ pub open spec fn any_upto(s: &MonitorState, cands: u64, k: nat) -> u64
 {
     if k == 0 { 0u64 } else {
         let c = (k - 1) as nat;
-        any_upto(s, cands, c) | if cands & (1u64 << (c as u64)) != 0 { s.ancestors[c as int] }
-            else { 0u64 }
+        any_upto(s, cands, c) | if c < s.count && cands & (1u64 << (c as u64)) != 0 {
+            s.ancestors[c as int] } else { 0u64 }
     }
 }
 
@@ -902,9 +903,9 @@ proof fn lemma_paths_upto(s: MonitorState, cands: u64, k: nat)
     requires k <= 64,
     ensures
         forall|i: u64| i < 64 ==> bit(#[trigger] all_upto(&s, cands, k), i)
-            == forall|c: u64| c < k && bit(cands, c) ==> bit(s.ancestors[c as int], i),
+            == forall|c: u64| c < k && c < s.count && bit(cands, c) ==> bit(s.ancestors[c as int], i),
         forall|i: u64| i < 64 ==> bit(#[trigger] any_upto(&s, cands, k), i)
-            == exists|c: u64| c < k && bit(cands, c) && bit(s.ancestors[c as int], i),
+            == exists|c: u64| c < k && c < s.count && bit(cands, c) && bit(s.ancestors[c as int], i),
     decreases k,
 {
     if k == 0 {
@@ -917,14 +918,14 @@ proof fn lemma_paths_upto(s: MonitorState, cands: u64, k: nat)
         let c = (k - 1) as nat;
         lemma_paths_upto(s, cands, c);
         lemma_test_bit(cands, c as u64);
-        let in_c = cands & (1u64 << (c as u64)) != 0;
+        let in_c = c < s.count && cands & (1u64 << (c as u64)) != 0;
         let pa = if in_c { s.ancestors[c as int] } else { u64::MAX };
         let po = if in_c { s.ancestors[c as int] } else { 0u64 };
         assert forall|i: u64| i < 64 implies {
             &&& bit(all_upto(&s, cands, k), i)
-                == forall|d: u64| d < k && bit(cands, d) ==> bit(s.ancestors[d as int], i)
+                == forall|d: u64| d < k && d < s.count && bit(cands, d) ==> bit(s.ancestors[d as int], i)
             &&& bit(any_upto(&s, cands, k), i)
-                == exists|d: u64| d < k && bit(cands, d) && bit(s.ancestors[d as int], i)
+                == exists|d: u64| d < k && d < s.count && bit(cands, d) && bit(s.ancestors[d as int], i)
         } by {
             lemma_bit_and(all_upto(&s, cands, c), pa, i);
             lemma_bit_or(any_upto(&s, cands, c), po, i);
@@ -932,18 +933,20 @@ proof fn lemma_paths_upto(s: MonitorState, cands: u64, k: nat)
             lemma_bit_zero(i);
             if !bit(all_upto(&s, cands, k), i) {
                 if bit(all_upto(&s, cands, c), i) {
-                    assert(bit(cands, c as u64) && !bit(s.ancestors[c as int], i));
+                    assert(c < s.count && bit(cands, c as u64) && !bit(s.ancestors[c as int], i));
                 } else {
-                    let d = choose|d: u64| d < c && bit(cands, d) && !bit(s.ancestors[d as int], i);
+                    let d = choose|d: u64| d < c && d < s.count && bit(cands, d)
+                        && !bit(s.ancestors[d as int], i);
                     assert(d < k);
                 }
             }
             if bit(any_upto(&s, cands, k), i) {
                 if !bit(any_upto(&s, cands, c), i) {
-                    assert(bit(cands, c as u64) && bit(s.ancestors[c as int], i));
+                    assert(c < s.count && bit(cands, c as u64) && bit(s.ancestors[c as int], i));
                 }
             } else {
-                assert forall|d: u64| !(d < k && bit(cands, d) && bit(s.ancestors[d as int], i)) by {
+                assert forall|d: u64| !(d < k && d < s.count && bit(cands, d)
+                    && bit(s.ancestors[d as int], i)) by {
                     if d == c { } else if d < c { }
                 }
             }
@@ -2100,7 +2103,7 @@ pub proof fn lemma_bit_upto(m: u64, i: u64)
 proof fn lemma_end_protector_masks(s: MonitorState, p: u64, d: u64, mine: u64, skip: u64)
     requires
         monitor_wf(&s), p < s.count, !bit(s.cell, p),
-        exists|h: u64| holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p),
+        exists|h: u64| #[trigger] holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p),
         mine == (d | (1u64 << p)) & s.exposed,
         mine == 0 ==> skip == 0,
         mine != 0 ==> exists|h2: u64| holders_spec(&s, (mine & ((!mine) + 1) as u64)
@@ -2118,7 +2121,7 @@ proof fn lemma_end_protector_masks(s: MonitorState, p: u64, d: u64, mine: u64, s
     }),
 {
     let a = abstraction(&s);
-    let h = choose|h: u64| holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p);
+    let h = choose|h: u64| #[trigger] holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p);
     let anc = s.ancestors[p as int];
     assert forall|v: u64| v < 64 implies bit(d, v) == desc_of(a, p as nat, v as nat) by {
         lemma_bit_and(h, !(1u64 << p), v);
@@ -2421,6 +2424,23 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
         if frame < 64 && t >= frame { unprotect(a.nodes[t]) } else { a.nodes[t] }) by {
         assert(mask_set(s.ancestors[t as int]) =~= mask_set(s0.ancestors[t as int]));
     }
+}
+
+/// A skipped step of `monitor_holders`: a free slot adds nothing.
+proof fn lemma_holders_skip(s: MonitorState, b: u64, v: nat, h: u64)
+    requires v < 64, v >= s.count, h == holders_upto(&s, b, v),
+    ensures h == holders_upto(&s, b, v + 1),
+{
+    lemma_or_zero(h);
+}
+
+/// A skipped step of `monitor_candidate_paths`: a free slot adds nothing.
+proof fn lemma_paths_skip(s: MonitorState, cands: u64, c: nat, all: u64, any: u64)
+    requires c < 64, c >= s.count, all == all_upto(&s, cands, c), any == any_upto(&s, cands, c),
+    ensures all == all_upto(&s, cands, c + 1), any == any_upto(&s, cands, c + 1),
+{
+    lemma_and_max(all);
+    lemma_or_zero(any);
 }
 fn main() {}
 } // verus!

@@ -207,7 +207,9 @@ macro_rules! kani_aliasing {
             size: usize,
             cell_mask: u64,
         ) -> bool {
-            monitor_covers(s, obj, offset, size) && {
+            // `cell_mask` is a constant: without cells the answer does not depend on the tracked
+            // byte, which keeps the monitor's cell bits concrete for symbolic execution.
+            cell_mask != 0 && monitor_covers(s, obj, offset, size) && {
                 let index = s.tracked_offset - offset;
                 index < 64 && (cell_mask >> index) & 1 != 0
             }
