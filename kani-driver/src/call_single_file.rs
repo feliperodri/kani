@@ -246,6 +246,12 @@ impl KaniSession {
             flags.push("-Zmir-enable-passes=-SingleUseConsts".into());
         }
 
+        // MIR optimizations remove reborrows and copies that retag (e.g. a returned reference),
+        // on the strength of the aliasing rules the checks verify: check the program before them.
+        if self.args.common_args.unstable_features.contains(UnstableFeature::AliasingChecks) {
+            flags.push("-Zmir-opt-level=0".into());
+        }
+
         if self.args.prove_safety_only {
             flags.push("-C".into());
             flags.push("debug-assertions=off".into());

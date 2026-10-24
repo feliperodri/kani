@@ -84,29 +84,45 @@ macro_rules! kani_aliasing {
             if !monitor_covers(s, obj, offset, size) {
                 return ACCESS_OK;
             }
-            if tag == EXPOSED_TAG {
-                let code = monitor_wildcard_access(s, is_write);
-                if code == ACCESS_UNKNOWN_EXPOSED {
-                    super::unsupported(
-                        "Kani's aliasing checks cannot check an access through a pointer created \
-                         from an integer once a pointer whose tag they do not know was exposed",
-                    );
-                }
-                return code;
-            }
-            if tag >= s.count {
+            let code = if tag == EXPOSED_TAG {
+                monitor_wildcard_access(s, is_write)
+            } else if tag < s.count {
+                monitor_access(s, tag, is_write)
+            } else {
+                ACCESS_UNKNOWN_TAG
+            };
+            report_unknown(code);
+            code
+        }
+
+        /// Report the results the checks cannot decide as unsupported.
+        fn report_unknown(code: u8) {
+            if code == ACCESS_UNKNOWN_TAG {
                 super::unsupported(
                     "Kani's aliasing checks do not know which reference this pointer was \
                      derived from, so they cannot check this access",
                 );
+            } else if code == ACCESS_UNKNOWN_EXPOSED {
+                super::unsupported(
+                    "Kani's aliasing checks cannot check an access through a pointer created \
+                     from an integer once a pointer whose tag they do not know was exposed",
+                );
+            } else if code == ACCESS_UNKNOWN_WILDCARD {
+                super::unsupported(
+                    "Kani's aliasing checks cannot check this access through pointers created \
+                     from integers: its result depends on the order in which Tree Borrows \
+                     visits the exposed pointers",
+                );
             }
-            monitor_access(s, tag, is_write)
         }
 
         /// Access the `size_of::<T>()` bytes at `ptr` through `tag`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingAccessModel"]
-        fn aliasing_access<T>(tag: u8, ptr: *const T, is_write: bool) -> u8 {
+        fn aliasing_access<T>(enabled: bool, tag: u8, ptr: *const T, is_write: bool) -> u8 {
+            if !enabled {
+                return ACCESS_OK;
+            }
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
             aliasing_access_bytes(tag, obj, offset, size_of::<T>(), is_write)
@@ -117,7 +133,15 @@ macro_rules! kani_aliasing {
         /// with an `UnsafeCell` performs, which does not touch the cell's bytes.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingReadOutsideCellsModel"]
-        fn aliasing_read_outside_cells<T>(tag: u8, ptr: *const T, cell_mask: u64) -> u8 {
+        fn aliasing_read_outside_cells<T>(
+            enabled: bool,
+            tag: u8,
+            ptr: *const T,
+            cell_mask: u64,
+        ) -> u8 {
+            if !enabled {
+                return ACCESS_OK;
+            }
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
             if in_cell(state(), obj, offset, size_of::<T>(), cell_mask) {
@@ -129,7 +153,15 @@ macro_rules! kani_aliasing {
         /// Access the `size_of_val(ptr)` bytes at `ptr` through `tag`, for an unsized `T`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingAccessUnsizedModel"]
-        fn aliasing_access_unsized<T: MetaSized>(tag: u8, ptr: *const T, is_write: bool) -> u8 {
+        fn aliasing_access_unsized<T: MetaSized>(
+            enabled: bool,
+            tag: u8,
+            ptr: *const T,
+            is_write: bool,
+        ) -> u8 {
+            if !enabled {
+                return ACCESS_OK;
+            }
             let size = match super::mem::checked_size_of_raw(ptr) {
                 Some(size) => size,
                 None => 0,
@@ -153,7 +185,13 @@ macro_rules! kani_aliasing {
 
         /// Whether the tracked byte is in the `size` bytes at `offset` of `obj` and inside an
         /// `UnsafeCell` of the referent: bit `i` of `cell_mask` is byte `i` of the referent.
-        fn in_cell(s: &MonitorState, obj: usize, offset: usize, size: usize, cell_mask: u64) -> bool {
+        fn in_cell(
+            s: &MonitorState,
+            obj: usize,
+            offset: usize,
+            size: usize,
+            cell_mask: u64,
+        ) -> bool {
             monitor_covers(s, obj, offset, size) && {
                 let index = s.tracked_offset - offset;
                 index < 64 && (cell_mask >> index) & 1 != 0
@@ -167,35 +205,56 @@ macro_rules! kani_aliasing {
         /// The read access that creating a reference performs is checked separately, before.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingNewBorrowBytesModel"]
+        #[allow(clippy::too_many_arguments)]
         fn aliasing_new_borrow_bytes(
             parent: u8,
             obj: usize,
             offset: usize,
             size: usize,
             cell_mask: u64,
+            freeze: bool,
             is_shared: bool,
             is_protected: bool,
+            is_strong: bool,
         ) -> u8 {
             let s = state();
             let covers = monitor_covers(s, obj, offset, size);
             let cell = in_cell(s, obj, offset, size, cell_mask);
-            monitor_new_borrow(s, parent, covers, cell, is_shared, is_protected)
+            monitor_new_borrow(s, parent, covers, cell, freeze, is_shared, is_protected, is_strong)
         }
 
         /// `aliasing_new_borrow_bytes` for a reference to the `size_of::<T>()` bytes at `ptr`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingNewBorrowModel"]
+        #[allow(clippy::too_many_arguments)]
         fn aliasing_new_borrow<T>(
+            enabled: bool,
             parent: u8,
             ptr: *const T,
             cell_mask: u64,
+            freeze: bool,
             is_shared: bool,
             is_protected: bool,
+            is_strong: bool,
         ) -> u8 {
+            // The pointer is in an enum variant that is not the active one.
+            if !enabled {
+                return UNKNOWN_TAG;
+            }
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
             let size = size_of::<T>();
-            aliasing_new_borrow_bytes(parent, obj, offset, size, cell_mask, is_shared, is_protected)
+            aliasing_new_borrow_bytes(
+                parent,
+                obj,
+                offset,
+                size,
+                cell_mask,
+                freeze,
+                is_shared,
+                is_protected,
+                is_strong,
+            )
         }
 
         /// `aliasing_new_borrow_bytes` for a reference to the `size_of_val(ptr)` bytes at `ptr`,
@@ -203,11 +262,18 @@ macro_rules! kani_aliasing {
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingNewBorrowUnsizedModel"]
         fn aliasing_new_borrow_unsized<T: MetaSized>(
+            enabled: bool,
             parent: u8,
             ptr: *const T,
+            freeze: bool,
             is_shared: bool,
             is_protected: bool,
+            is_strong: bool,
         ) -> u8 {
+            // The pointer is in an enum variant that is not the active one.
+            if !enabled {
+                return UNKNOWN_TAG;
+            }
             let size = match super::mem::checked_size_of_raw(ptr) {
                 Some(size) => size,
                 None => 0,
@@ -215,17 +281,32 @@ macro_rules! kani_aliasing {
             let thin = ptr as *const u8;
             let obj = super::mem::pointer_object(thin);
             let offset = super::mem::pointer_offset(thin);
-            aliasing_new_borrow_bytes(parent, obj, offset, size, 0, is_shared, is_protected)
+            aliasing_new_borrow_bytes(
+                parent,
+                obj,
+                offset,
+                size,
+                0,
+                freeze,
+                is_shared,
+                is_protected,
+                is_strong,
+            )
         }
 
-        /// Deallocate `size` bytes at `ptr`.
+        /// Deallocate `size` bytes at `ptr`, tagged `tag`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingDeallocModel"]
-        fn aliasing_dealloc(ptr: *const u8, size: usize) -> u8 {
+        fn aliasing_dealloc(tag: u8, ptr: *const u8, size: usize) -> u8 {
             let s = state();
             let obj = super::mem::pointer_object(ptr);
             let offset = super::mem::pointer_offset(ptr);
-            if monitor_covers(s, obj, offset, size) { monitor_dealloc(s) } else { ACCESS_OK }
+            if !monitor_covers(s, obj, offset, size) {
+                return ACCESS_OK;
+            }
+            let code = monitor_dealloc(s, tag);
+            report_unknown(code);
+            code
         }
 
         /// Record that the pointer tagged `tag` was exposed.
@@ -299,13 +380,26 @@ macro_rules! kani_aliasing {
             monitor_return(state(), frame_count, [tag0, tag1, tag2, tag3]);
         }
 
+        /// The protector of the argument tagged `tag` ends, before the function returns.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingEndProtectorModel"]
+        fn aliasing_end_protector(tag: u8) -> u8 {
+            let code = monitor_end_protector(state(), tag);
+            report_unknown(code);
+            code
+        }
+
         /// The tag of the `index`-th pointer in the value the call to `callee` that just
         /// returned produced, if `callee` recorded it; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingRetTagModel"]
         fn aliasing_ret_tag(callee: u64, index: usize) -> u8 {
             let c = calls();
-            if c.ret_callee == callee && index < MAX_RET_TAGS { c.ret_tags[index] } else { UNKNOWN_TAG }
+            if c.ret_callee == callee && index < MAX_RET_TAGS {
+                c.ret_tags[index]
+            } else {
+                UNKNOWN_TAG
+            }
         }
 
         /// Called once a caller has read the tags of a returned value.

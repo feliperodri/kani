@@ -75,6 +75,8 @@ pub enum KaniModel {
     AliasingDealloc,
     #[strum(serialize = "AliasingEndArgsModel")]
     AliasingEndArgs,
+    #[strum(serialize = "AliasingEndProtectorModel")]
+    AliasingEndProtector,
     #[strum(serialize = "AliasingEndRetModel")]
     AliasingEndRet,
     #[strum(serialize = "AliasingExposeModel")]
