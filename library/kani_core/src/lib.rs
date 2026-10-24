@@ -66,6 +66,8 @@ macro_rules! kani_lib {
                 kani_core::kani_mem_init!(core);
             }
 
+            // The monitor writes `x = x & m` so that its Verus proof states the same expressions.
+            #[allow(clippy::assign_op_pattern)]
             mod aliasing {
                 kani_core::kani_aliasing!(core);
             }
@@ -132,6 +134,8 @@ macro_rules! kani_lib {
             kani_core::kani_mem_init!(std);
         }
 
+        // The monitor writes `x = x & m` so that its Verus proof states the same expressions.
+        #[allow(clippy::assign_op_pattern)]
         mod aliasing {
             //! Runtime model of the aliasing checks (`-Z aliasing-checks`). See the documentation
             //! of `kani_core::kani_aliasing`.

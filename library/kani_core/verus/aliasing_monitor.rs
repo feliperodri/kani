@@ -200,12 +200,58 @@ pub proof fn lemma_subset(v: u64, l: u64)
     }
 }
 
+/// Bit `i` of the mask of tags `0..c`.
+pub proof fn lemma_bit_live(c: u64, i: u64)
+    requires 1 <= c <= 64, i < 64,
+    ensures bit(if c >= 64 { u64::MAX } else { ((1u64 << c) - 1u64) as u64 }, i) == (i < c),
+{
+    if c >= 64 {
+        assert((u64::MAX >> i) & 1u64 == 1u64) by (bit_vector) requires i < 64;
+    } else {
+        lemma_bit_below(c, i);
+    }
+}
+
+/// The lowest set bit of a non-zero `x`.
+pub proof fn lemma_lowest_bit(x: u64, i: u64)
+    requires x != 0, i < 64,
+    ensures
+        bit(x & ((!x) + 1) as u64, i) == (bit(x, i) && forall|j: u64| j < i ==> !bit(x, j)),
+{
+    assert(bit(x & ((!x) + 1) as u64, i) == (bit(x, i) && x & (((1u64 << i) - 1u64) as u64) == 0))
+        by (bit_vector) requires x != 0, i < 64;
+    if x & (((1u64 << i) - 1u64) as u64) == 0 {
+        assert forall|j: u64| j < i implies !bit(x, j) by {
+            assert(x & (((1u64 << i) - 1u64) as u64) == 0 && j < i && i < 64 ==> !((x >> j) & 1u64 == 1u64))
+                by (bit_vector);
+        }
+    } else {
+        if i > 0 {
+            lemma_and_nonzero(x, ((1u64 << i) - 1u64) as u64);
+            let j = choose|j: u64| j < 64 && bit(x, j) && bit(((1u64 << i) - 1u64) as u64, j);
+            lemma_bit_below(i, j);
+        } else {
+            assert(x & (((1u64 << 0u64) - 1u64) as u64) == 0) by (bit_vector);
+        }
+    }
+}
+
+/// The tags above tag `r`, from its bit.
+pub proof fn lemma_bit_above(r: u64, i: u64)
+    requires r < 64, i < 64,
+    ensures bit(!((1u64 << r) | (((1u64 << r) - 1u64) as u64)), i) == (i > r),
+{
+    assert(bit(!((1u64 << r) | (((1u64 << r) - 1u64) as u64)), i) == (i > r)) by (bit_vector)
+        requires r < 64, i < 64;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Abstract state: Tree Borrows at the tracked location
 // ---------------------------------------------------------------------------------------------
 
-/// Tree Borrows' permissions (Villani et al., PLDI 2025, Fig. 3), with the two variants of
-/// Reserved: conflicted (a protected tag that saw a foreign read) and interior-mutable.
+/// Tree Borrows' permissions as Miri implements them (`tree_borrows/perms.rs`), with Reserved
+/// split by `conflicted` (`ReservedFrz { conflicted }`) and interior mutability (`ReservedIM`).
+/// Miri's `Cell` permission is the `cell` flag of a node.
 pub enum Perm {
     Reserved { conflicted: bool, interior: bool },
     Active,
@@ -214,13 +260,19 @@ pub enum Perm {
 }
 
 pub struct Node {
-    /// The tag's ancestors, including itself.
+    /// The tag's ancestors in its tree, including itself.
     pub ancestors: ISet<nat>,
+    /// The tag is in the allocation's own tree, rooted at tag 0, not a wildcard tree.
+    pub main: bool,
     pub perm: Perm,
+    /// The tag is protected (a reference or `Box` argument of a running function), strongly so
+    /// (a reference).
     pub protected: bool,
+    pub strong: bool,
+    /// Miri's `accessed`: the permission at this location is initialized.
     pub initialized: bool,
-    /// A shared reference to the bytes of an `UnsafeCell`: not a node of the tree at this
-    /// location; accesses through it are accesses through `alias`.
+    /// A shared reference to the bytes of an `UnsafeCell` (Miri's `Cell` permission): not
+    /// affected by any access, and accesses through it are accesses through `alias`.
     pub cell: bool,
     pub alias: nat,
     pub exposed: bool,
@@ -252,8 +304,10 @@ pub open spec fn mask_set(m: u64) -> ISet<nat> {
 pub open spec fn node_of(s: &MonitorState, t: u64) -> Node {
     Node {
         ancestors: mask_set(s.ancestors[t as int]),
+        main: bit(s.main, t),
         perm: perm_of(s, t),
         protected: bit(s.protected, t),
+        strong: bit(s.strong, t),
         initialized: bit(s.initialized, t),
         cell: bit(s.cell, t),
         alias: s.alias[t as int] as nat,
@@ -270,13 +324,33 @@ pub open spec fn abstraction(s: &MonitorState) -> AbsState {
     }
 }
 
+pub open spec fn node_eq(x: Node, y: Node) -> bool {
+    &&& x.ancestors =~= y.ancestors
+    &&& x.main == y.main
+    &&& x.perm == y.perm
+    &&& x.protected == y.protected
+    &&& x.strong == y.strong
+    &&& x.initialized == y.initialized
+    &&& x.cell == y.cell
+    &&& x.alias == y.alias
+    &&& x.exposed == y.exposed
+}
+
+/// `b` has the tags of `a`, unchanged.
+pub open spec fn same_state(a: AbsState, b: AbsState) -> bool {
+    &&& b.count == a.count
+    &&& b.unknown_exposed == a.unknown_exposed
+    &&& forall|t: nat| t < a.count ==> node_eq(#[trigger] b.nodes[t], a.nodes[t])
+}
+
 /// The state after `monitor_initialize`: one root tag, Active and initialized.
 pub open spec fn initial_spec(a: AbsState) -> bool {
     &&& a.count == 1
-    &&& forall|t: nat| a.nodes.dom().contains(t) <==> t == 0
     &&& forall|u: nat| a.nodes[0].ancestors.contains(u) <==> u == 0
+    &&& a.nodes[0].main
     &&& a.nodes[0].perm == Perm::Active
     &&& !a.nodes[0].protected
+    &&& !a.nodes[0].strong
     &&& a.nodes[0].initialized
     &&& !a.nodes[0].cell
     &&& !a.nodes[0].exposed
@@ -284,24 +358,27 @@ pub open spec fn initial_spec(a: AbsState) -> bool {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Well-formedness of the monitor state (Stage 0-1: tags and ancestry)
+// Well-formedness of the monitor state
 // ---------------------------------------------------------------------------------------------
 
-/// Every bit set has no bit at or above `count`.
+/// No bit at or above `count`.
 pub open spec fn clean_above(m: u64, count: u64) -> bool {
     forall|i: u64| count <= i < 64 ==> !bit(m, i)
 }
 
 pub open spec fn monitor_wf(s: &MonitorState) -> bool {
     &&& 1 <= s.count <= 64
-    // The ancestors of a tag form a chain to the root: each tag is its own ancestor, the root
-    // is everyone's ancestor, ancestors are created first, and the relation is transitive.
+    // The ancestors of a tag form a chain in its tree: each tag is its own ancestor, ancestors
+    // are created first, the relation is transitive, and any two ancestors are related.
     &&& forall|t: u64| #![trigger s.ancestors[t as int]] t < s.count ==> {
         &&& bit(s.ancestors[t as int], t)
-        &&& bit(s.ancestors[t as int], 0)
         &&& forall|u: u64| u < 64 && bit(s.ancestors[t as int], u) ==> u <= t
         &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[t as int], u)
             && bit(s.ancestors[u as int], w) ==> bit(s.ancestors[t as int], w)
+        &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[t as int], u)
+            && bit(s.ancestors[t as int], w) && u <= w ==> bit(s.ancestors[w as int], u)
+        // The main tree is the one rooted at tag 0.
+        &&& bit(s.main, t) == bit(s.ancestors[t as int], 0)
     }
     // A shared reference to a cell's bytes points, through `alias`, at its nearest ancestor that
     // is a node of the tree; every other tag is its own alias.
@@ -313,101 +390,363 @@ pub open spec fn monitor_wf(s: &MonitorState) -> bool {
         s.alias[t as int] == t
     }
     &&& !bit(s.cell, 0)
-    // A frozen interior-mutable reference was written before (it was frozen by a foreign read).
-    &&& forall|t: u64| t < 64 && bit(s.frozen, t) && bit(s.interior, t) ==> bit(s.active, t)
-    // Exposing records the tag accesses act through, which is never a shared reference to a
-    // cell's bytes.
-    &&& forall|t: u64| t < 64 && bit(s.exposed, t) ==> !bit(s.cell, t)
-    // Only a protected, initialized, Reserved tag is conflicted.
-    &&& forall|t: u64| t < 64 && bit(s.conflicted, t) ==> !bit(s.active, t) && !bit(s.frozen, t)
-        && bit(s.protected, t) && bit(s.initialized, t)
+    &&& forall|t: u64| t < 64 ==> {
+        // A frozen interior-mutable reference was written before (it was frozen by a foreign
+        // read of an Active).
+        &&& (bit(s.frozen, t) && bit(s.interior, t) ==> bit(s.active, t))
+        // Exposing records the tag accesses act through, never a cell's shared reference.
+        &&& (bit(s.exposed, t) ==> !bit(s.cell, t))
+        // Only a protected Reserved is conflicted.
+        &&& (bit(s.conflicted, t) ==> !bit(s.active, t) && !bit(s.frozen, t)
+            && bit(s.protected, t))
+        // Miri: "`Unique` can only be reached on actually accessed locations".
+        &&& (bit(s.active, t) ==> bit(s.initialized, t))
+        // Miri never creates a protected `ReservedIM`.
+        &&& (bit(s.interior, t) ==> !bit(s.protected, t))
+        &&& (bit(s.strong, t) ==> bit(s.protected, t))
+    }
     // Nothing is recorded for tags that do not exist.
+    &&& clean_above(s.main, s.count as u64)
     &&& clean_above(s.valid, s.count as u64)
     &&& clean_above(s.active, s.count as u64)
     &&& clean_above(s.frozen, s.count as u64)
     &&& clean_above(s.conflicted, s.count as u64)
     &&& clean_above(s.interior, s.count as u64)
     &&& clean_above(s.protected, s.count as u64)
+    &&& clean_above(s.strong, s.count as u64)
     &&& clean_above(s.initialized, s.count as u64)
     &&& clean_above(s.cell, s.count as u64)
     &&& clean_above(s.exposed, s.count as u64)
 }
 
-// ---------------------------------------------------------------------------------------------
-// Stage 0-1: initialization, retags (tags and ancestry)
-// ---------------------------------------------------------------------------------------------
-
-/// The tag that accesses through `t` act through.
-pub open spec fn eff(a: AbsState, t: nat) -> nat {
-    if a.nodes[t].cell { a.nodes[t].alias } else { t }
+/// A tag on the path of a tag is a tag.
+pub proof fn lemma_ancestor_is_tag(s: MonitorState, e: u64, i: u64)
+    requires monitor_wf(&s), e < s.count, i < 64, bit(s.ancestors[e as int], i),
+    ensures i <= e, i < s.count,
+{
+    assert(s.ancestors[e as int] == s.ancestors[e as int]);
 }
 
-/// The node a retag creates as tag `n` (Tree Borrows: a child of `parent`, Reserved for a
-/// mutable reference and Frozen for a shared one; nothing for a shared reference to a cell's
-/// bytes, which acts as `eff(parent)`).
-pub open spec fn retag_node(
-    a: AbsState,
-    parent: nat,
-    n: nat,
-    covers: bool,
-    in_cell: bool,
-    is_shared: bool,
-    is_protected: bool,
-) -> Node {
-    let is_cell = is_shared && in_cell && covers;
-    Node {
-        ancestors: a.nodes[parent].ancestors.insert(n),
-        perm: if is_shared && !is_cell {
-            Perm::Frozen
+// ---------------------------------------------------------------------------------------------
+// Tree Borrows' transitions at one location (Miri `tree_borrows/perms.rs` and `tree.rs`)
+// ---------------------------------------------------------------------------------------------
+
+/// The transition of a node for an access local to it (through it or a descendant):
+/// `child_read` / `child_write`. `None`: undefined behavior.
+pub open spec fn local_step(n: Node, is_write: bool) -> Option<Node> {
+    match n.perm {
+        Perm::Disabled => None,
+        Perm::Frozen => if is_write { None } else { Some(Node { initialized: true, ..n }) },
+        Perm::Active => Some(Node { initialized: true, ..n }),
+        Perm::Reserved { conflicted, interior } => if !is_write {
+            Some(Node { initialized: true, ..n })
+        } else if conflicted && n.protected {
+            None
         } else {
-            Perm::Reserved { conflicted: false, interior: !is_shared && in_cell && covers }
+            Some(Node { perm: Perm::Active, initialized: true, ..n })
         },
-        protected: is_protected && !is_cell,
-        initialized: covers && !is_cell,
-        cell: is_cell,
-        alias: if is_cell { eff(a, parent) } else { n },
-        exposed: false,
     }
 }
 
-pub open spec fn node_eq(x: Node, y: Node) -> bool {
-    &&& x.ancestors =~= y.ancestors
-    &&& x.perm == y.perm
-    &&& x.protected == y.protected
-    &&& x.initialized == y.initialized
-    &&& x.cell == y.cell
-    &&& x.alias == y.alias
-    &&& x.exposed == y.exposed
-}
-
-/// `b` is `a` with the nodes of the tags in `changed` replaced; the others are unchanged.
-pub open spec fn same_nodes_except(a: AbsState, b: AbsState, changed: ISet<nat>) -> bool {
-    forall|t: nat| t < a.count && !changed.contains(t) ==> node_eq(#[trigger] b.nodes[t], a.nodes[t])
-}
-
-pub open spec fn retag_spec(
-    a: AbsState,
-    b: AbsState,
-    parent: nat,
-    covers: bool,
-    in_cell: bool,
-    is_shared: bool,
-    is_protected: bool,
-    r: nat,
-) -> bool {
-    if parent >= a.count {
-        r == parent && b.count == a.count && same_nodes_except(a, b, ISet::empty())
-    } else if a.count == 64 {
-        r == UNKNOWN_TAG && b.count == a.count && same_nodes_except(a, b, ISet::empty())
+/// The transition of a node for a foreign access: `foreign_read` / `foreign_write`, then
+/// `ProtectedDisabled` if a protected node with an initialized permission becomes Disabled.
+pub open spec fn foreign_step(n: Node, is_write: bool) -> Option<Node> {
+    let next = match n.perm {
+        Perm::Disabled => n.perm,
+        Perm::Frozen => if is_write { Perm::Disabled } else { Perm::Frozen },
+        Perm::Active => if is_write || n.protected { Perm::Disabled } else { Perm::Frozen },
+        Perm::Reserved { conflicted, interior } => if !is_write {
+            Perm::Reserved { conflicted: conflicted || n.protected, interior }
+        } else if interior {
+            n.perm
+        } else {
+            Perm::Disabled
+        },
+    };
+    if n.protected && n.initialized && n.perm != Perm::Disabled && next == Perm::Disabled {
+        None
     } else {
-        &&& r == a.count
-        &&& b.count == a.count + 1
-        &&& same_nodes_except(a, b, ISet::empty())
-        &&& node_eq(b.nodes[r], retag_node(a, parent, r, covers, in_cell, is_shared, is_protected))
+        Some(Node { perm: next, ..n })
     }
 }
 
-/// Bit `i` of a mask with bit `t` set, cleared or rewritten.
+/// The transition of tag `t` for an access whose local tags are `l` and foreign tags `f`.
+pub open spec fn apply_step(a: AbsState, l: ISet<nat>, f: ISet<nat>, t: nat, is_write: bool)
+    -> Option<Node>
+{
+    if l.contains(t) {
+        local_step(a.nodes[t], is_write)
+    } else if f.contains(t) {
+        foreign_step(a.nodes[t], is_write)
+    } else {
+        Some(a.nodes[t])
+    }
+}
+
+/// An access with local tags `l` and foreign tags `f` is undefined behavior if any tag's
+/// transition is; otherwise every tag takes its transition. Failing accesses change nothing.
+pub open spec fn apply_refines(a: AbsState, b: AbsState, l: ISet<nat>, f: ISet<nat>,
+    is_write: bool, code: u8) -> bool
+{
+    &&& (code == ACCESS_OK) == forall|t: nat| t < a.count ==> (#[trigger] apply_step(a, l, f, t,
+        is_write)) is Some
+    &&& code == ACCESS_OK || code == ACCESS_INVALIDATED || code == ACCESS_WRITE_FROZEN
+        || code == ACCESS_PROTECTOR
+    &&& code != ACCESS_OK ==> same_state(a, b)
+    &&& code == ACCESS_OK ==> {
+        &&& b.count == a.count
+        &&& b.unknown_exposed == a.unknown_exposed
+        &&& forall|t: nat| t < a.count ==> node_eq(#[trigger] b.nodes[t],
+            apply_step(a, l, f, t, is_write)->Some_0)
+    }
+}
+
+/// The masks of a successful `monitor_apply` from `s0` (`f` already restricted to valid tags).
+pub open spec fn apply_post(s0: &MonitorState, s: &MonitorState, l: u64, f: u64, is_write: bool)
+    -> bool
+{
+    let disabled = f & !(s0.interior & !s0.active);
+    &&& s.count == s0.count
+    &&& s.ancestors == s0.ancestors
+    &&& s.alias == s0.alias
+    &&& s.main == s0.main
+    &&& s.cell == s0.cell
+    &&& s.interior == s0.interior
+    &&& s.protected == s0.protected
+    &&& s.strong == s0.strong
+    &&& s.exposed == s0.exposed
+    &&& s.unknown_exposed == s0.unknown_exposed
+    &&& s.tracked_object_id == s0.tracked_object_id
+    &&& s.tracked_offset == s0.tracked_offset
+    &&& s.initialized == s0.initialized | l
+    &&& if is_write {
+        &&& s.valid == s0.valid & !disabled
+        &&& s.active == s0.active | l
+        &&& s.frozen == s0.frozen
+        &&& s.conflicted == s0.conflicted
+    } else {
+        &&& s.valid == s0.valid
+        &&& s.active == s0.active
+        &&& s.conflicted == s0.conflicted | (s0.protected & f & !s0.active & !s0.frozen)
+        &&& s.frozen == s0.frozen | (s0.active & f)
+    }
+}
+
+/// The conditions `monitor_apply` rejects are absent.
+pub open spec fn apply_allowed(s0: &MonitorState, l: u64, f: u64, is_write: bool) -> bool {
+    let disabled = f & !(s0.interior & !s0.active);
+    &&& s0.valid & l == l
+    &&& is_write ==> s0.frozen & l == 0
+    &&& is_write ==> s0.protected & s0.conflicted & l == 0
+    &&& is_write ==> (s0.protected & s0.initialized) & disabled == 0
+    &&& !is_write ==> s0.protected & s0.active & !s0.frozen & f == 0
+}
+
+/// The bits `monitor_apply` reads and writes, at bit `t`.
+proof fn lemma_apply_bits(s0: MonitorState, l: u64, f: u64, t: u64)
+    requires t < 64,
+    ensures ({
+        let disabled = f & !(s0.interior & !s0.active);
+        &&& bit(disabled, t) == (bit(f, t) && !(bit(s0.interior, t) && !bit(s0.active, t)))
+        &&& bit(s0.valid & !disabled, t) == (bit(s0.valid, t) && !bit(disabled, t))
+        &&& bit(s0.active | l, t) == (bit(s0.active, t) || bit(l, t))
+        &&& bit(s0.initialized | l, t) == (bit(s0.initialized, t) || bit(l, t))
+        &&& bit(s0.conflicted | (s0.protected & f & !s0.active & !s0.frozen), t)
+            == (bit(s0.conflicted, t) || (bit(s0.protected, t) && bit(f, t) && !bit(s0.active, t)
+                && !bit(s0.frozen, t)))
+        &&& bit(s0.frozen | (s0.active & f), t) == (bit(s0.frozen, t) || (bit(s0.active, t)
+            && bit(f, t)))
+        &&& bit(s0.valid & l, t) == (bit(s0.valid, t) && bit(l, t))
+        &&& bit(s0.frozen & l, t) == (bit(s0.frozen, t) && bit(l, t))
+        &&& bit(s0.protected & s0.conflicted & l, t) == (bit(s0.protected, t)
+            && bit(s0.conflicted, t) && bit(l, t))
+        &&& bit((s0.protected & s0.initialized) & disabled, t) == (bit(s0.protected, t)
+            && bit(s0.initialized, t) && bit(disabled, t))
+        &&& bit(s0.protected & s0.active & !s0.frozen & f, t) == (bit(s0.protected, t)
+            && bit(s0.active, t) && !bit(s0.frozen, t) && bit(f, t))
+    }),
+{
+    let disabled = f & !(s0.interior & !s0.active);
+    lemma_bit_and(f, !(s0.interior & !s0.active), t);
+    lemma_bit_not(s0.interior & !s0.active, t);
+    lemma_bit_and(s0.interior, !s0.active, t);
+    lemma_bit_not(s0.active, t);
+    lemma_bit_and(s0.valid, !disabled, t);
+    lemma_bit_not(disabled, t);
+    lemma_bit_or(s0.active, l, t);
+    lemma_bit_or(s0.initialized, l, t);
+    lemma_bit_and(s0.protected, f, t);
+    lemma_bit_and(s0.protected & f, !s0.active, t);
+    lemma_bit_and(s0.protected & f & !s0.active, !s0.frozen, t);
+    lemma_bit_not(s0.frozen, t);
+    lemma_bit_or(s0.conflicted, s0.protected & f & !s0.active & !s0.frozen, t);
+    lemma_bit_and(s0.active, f, t);
+    lemma_bit_or(s0.frozen, s0.active & f, t);
+    lemma_bit_and(s0.valid, l, t);
+    lemma_bit_and(s0.frozen, l, t);
+    lemma_bit_and(s0.protected, s0.conflicted, t);
+    lemma_bit_and(s0.protected & s0.conflicted, l, t);
+    lemma_bit_and(s0.protected, s0.initialized, t);
+    lemma_bit_and(s0.protected & s0.initialized, disabled, t);
+    lemma_bit_and(s0.protected, s0.active, t);
+    lemma_bit_and(s0.protected & s0.active, !s0.frozen, t);
+    lemma_bit_and(s0.protected & s0.active & !s0.frozen, f, t);
+}
+
+/// One tag after a successful `monitor_apply` is its transition.
+proof fn lemma_apply_node(s0: MonitorState, s: MonitorState, l: u64, f0: u64, is_write: bool,
+    t: u64)
+    requires
+        monitor_wf(&s0), t < s0.count, l & f0 == 0, l & s0.cell == 0, f0 & s0.cell == 0,
+        apply_allowed(&s0, l, f0 & s0.valid, is_write),
+        apply_post(&s0, &s, l, f0 & s0.valid, is_write),
+    ensures ({
+        let a = abstraction(&s0);
+        &&& apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is Some
+        &&& node_eq(node_of(&s, t), apply_step(a, mask_set(l), mask_set(f0), t as nat,
+            is_write)->Some_0)
+    }),
+{
+    let f = f0 & s0.valid;
+    lemma_apply_bits(s0, l, f, t);
+    lemma_bit_and(f0, s0.valid, t);
+    lemma_and_nonzero(l, f0);
+    lemma_and_nonzero(l, s0.cell);
+    lemma_subset(s0.valid, l);
+    if is_write {
+        lemma_and_nonzero(s0.frozen, l);
+        lemma_and_nonzero(s0.protected & s0.conflicted, l);
+        lemma_and_nonzero(s0.protected & s0.initialized, f & !(s0.interior & !s0.active));
+        lemma_bit_and(s0.protected, s0.conflicted, t);
+        lemma_bit_and(s0.protected, s0.initialized, t);
+    } else {
+        lemma_and_nonzero(s0.protected & s0.active & !s0.frozen, f);
+        lemma_bit_and(s0.protected, s0.active, t);
+        lemma_bit_and(s0.protected & s0.active, !s0.frozen, t);
+        lemma_bit_not(s0.frozen, t);
+    }
+    assert(mask_set(s.ancestors[t as int]) =~= mask_set(s0.ancestors[t as int]));
+}
+
+/// A rejected `monitor_apply` has a tag whose transition is undefined behavior.
+proof fn lemma_apply_ub(s0: MonitorState, l: u64, f0: u64, is_write: bool)
+    requires
+        monitor_wf(&s0), l & f0 == 0, l & s0.cell == 0, f0 & s0.cell == 0,
+        l & !(if s0.count >= 64 { u64::MAX } else { ((1u64 << s0.count) - 1u64) as u64 }) == 0,
+        !apply_allowed(&s0, l, f0 & s0.valid, is_write),
+    ensures
+        exists|t: nat| t < s0.count && (#[trigger] apply_step(abstraction(&s0), mask_set(l),
+            mask_set(f0), t, is_write)) is None,
+{
+    let f = f0 & s0.valid;
+    let live = if s0.count >= 64 { u64::MAX } else { ((1u64 << s0.count) - 1u64) as u64 };
+    let a = abstraction(&s0);
+    let d = f & !(s0.interior & !s0.active);
+    // A tag of `l` is a tag.
+    assert forall|t: u64| t < 64 && bit(l, t) implies t < s0.count by {
+        lemma_and_nonzero(l, !live);
+        lemma_bit_not(live, t);
+        lemma_bit_live(s0.count as u64, t);
+    }
+    lemma_and_nonzero(l, f0);
+    if s0.valid & l != l {
+        lemma_subset(s0.valid, l);
+        let t = choose|t: u64| t < 64 && bit(l, t) && !bit(s0.valid, t);
+        assert(apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is None);
+    } else if is_write && s0.frozen & l != 0 {
+        lemma_and_nonzero(s0.frozen, l);
+        let t = choose|t: u64| t < 64 && bit(s0.frozen, t) && bit(l, t);
+        lemma_subset(s0.valid, l);
+        assert(apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is None);
+    } else if is_write && s0.protected & s0.conflicted & l != 0 {
+        lemma_and_nonzero(s0.protected & s0.conflicted, l);
+        let t = choose|t: u64| t < 64 && bit(s0.protected & s0.conflicted, t) && bit(l, t);
+        lemma_bit_and(s0.protected, s0.conflicted, t);
+        lemma_subset(s0.valid, l);
+        lemma_and_nonzero(s0.frozen, l);
+        assert(apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is None);
+    } else if is_write {
+        lemma_and_nonzero(s0.protected & s0.initialized, d);
+        let t = choose|t: u64| t < 64 && bit(s0.protected & s0.initialized, t) && bit(d, t);
+        lemma_apply_bits(s0, l, f, t);
+        lemma_bit_and(f0, s0.valid, t);
+        lemma_bit_and(s0.protected, s0.initialized, t);
+        assert(t < s0.count) by { if t >= s0.count { assert(!bit(s0.valid, t)); } }
+        assert(!bit(l, t)) by { lemma_and_nonzero(l, f0); }
+        assert(apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is None);
+    } else {
+        lemma_and_nonzero(s0.protected & s0.active & !s0.frozen, f);
+        let t = choose|t: u64| t < 64 && bit(s0.protected & s0.active & !s0.frozen, t)
+            && bit(f, t);
+        lemma_apply_bits(s0, l, f, t);
+        lemma_bit_and(f0, s0.valid, t);
+        lemma_bit_and(s0.protected, s0.active, t);
+        lemma_bit_and(s0.protected & s0.active, !s0.frozen, t);
+        lemma_bit_not(s0.frozen, t);
+        assert(t < s0.count) by { if t >= s0.count { assert(!bit(s0.valid, t)); } }
+        assert(!bit(l, t)) by { lemma_and_nonzero(l, f0); }
+        assert(apply_step(a, mask_set(l), mask_set(f0), t as nat, is_write) is None);
+    }
+}
+
+/// A successful `monitor_apply` refines the transitions and keeps the state well-formed.
+proof fn lemma_apply_ok(s0: MonitorState, s: MonitorState, l: u64, f0: u64, is_write: bool)
+    requires
+        monitor_wf(&s0), l & f0 == 0, l & s0.cell == 0, f0 & s0.cell == 0,
+        apply_allowed(&s0, l, f0 & s0.valid, is_write),
+        apply_post(&s0, &s, l, f0 & s0.valid, is_write),
+    ensures
+        monitor_wf(&s),
+        apply_refines(abstraction(&s0), abstraction(&s), mask_set(l), mask_set(f0), is_write,
+            ACCESS_OK),
+{
+    let a = abstraction(&s0);
+    let b = abstraction(&s);
+    let f = f0 & s0.valid;
+    assert forall|t: nat| t < a.count implies {
+        &&& (#[trigger] apply_step(a, mask_set(l), mask_set(f0), t, is_write)) is Some
+        &&& node_eq(b.nodes[t], apply_step(a, mask_set(l), mask_set(f0), t, is_write)->Some_0)
+    } by {
+        lemma_apply_node(s0, s, l, f0, is_write, t as u64);
+    }
+    // Well-formedness: the tree and the aliases are unchanged; the permission invariants hold.
+    assert forall|t: u64| t < 64 implies {
+        &&& (bit(s.frozen, t) && bit(s.interior, t) ==> bit(s.active, t))
+        &&& (bit(s.exposed, t) ==> !bit(s.cell, t))
+        &&& (bit(s.conflicted, t) ==> !bit(s.active, t) && !bit(s.frozen, t)
+            && bit(s.protected, t))
+        &&& (bit(s.active, t) ==> bit(s.initialized, t))
+        &&& (bit(s.interior, t) ==> !bit(s.protected, t))
+        &&& (bit(s.strong, t) ==> bit(s.protected, t))
+        &&& (s0.count <= t ==> !bit(s.valid, t) && !bit(s.active, t) && !bit(s.frozen, t)
+            && !bit(s.conflicted, t) && !bit(s.initialized, t))
+    } by {
+        lemma_apply_bits(s0, l, f, t);
+        lemma_bit_and(f0, s0.valid, t);
+        if is_write {
+            lemma_and_nonzero(s0.protected & s0.conflicted, l);
+            lemma_bit_and(s0.protected, s0.conflicted, t);
+        }
+        if s0.count <= t && bit(l, t) {
+            lemma_subset(s0.valid, l);
+        }
+    }
+}
+
+/// The mask of the tags `0..c`.
+pub open spec fn live_mask(c: u64) -> u64 {
+    if c >= 64 { u64::MAX } else { ((1u64 << c) - 1u64) as u64 }
+}
+
+/// The exec test `m & (1 << t) != 0` is bit `t` of `m`.
+pub proof fn lemma_test_bit(m: u64, t: u64)
+    requires t < 64,
+    ensures (m & (1u64 << t) != 0) == bit(m, t),
+{
+    assert((m & (1u64 << t) != 0) <==> ((m >> t) & 1u64 == 1u64)) by (bit_vector) requires t < 64;
+}
+
+/// Bit `i` of `m` with bit `t` set or cleared.
 pub proof fn lemma_bit_set(m: u64, t: u64, i: u64)
     requires t < 64, i < 64,
     ensures
@@ -420,24 +759,23 @@ pub proof fn lemma_bit_set(m: u64, t: u64, i: u64)
     lemma_bit_single(t, i);
 }
 
-/// The exec test `m & (1 << t) != 0` is bit `t` of `m`.
-pub proof fn lemma_test_bit(m: u64, t: u64)
-    requires t < 64,
-    ensures (m & (1u64 << t) != 0) == bit(m, t),
-{
-    assert((m & (1u64 << t) != 0) <==> ((m >> t) & 1u64 == 1u64)) by (bit_vector) requires t < 64;
+/// The tag that accesses through `t` act through.
+pub open spec fn eff(a: AbsState, t: nat) -> nat {
+    if a.nodes[t].cell { a.nodes[t].alias } else { t }
 }
 
 pub proof fn lemma_initialize(s: MonitorState)
     requires
         s.count == 1,
         s.ancestors[0] == 1u64,
+        s.main == 1u64,
         s.valid == 1u64,
         s.active == 1u64,
         s.frozen == 0u64,
         s.conflicted == 0u64,
         s.interior == 0u64,
         s.protected == 0u64,
+        s.strong == 0u64,
         s.initialized == 1u64,
         s.cell == 0u64,
         s.alias[0] == 0u8,
@@ -455,73 +793,903 @@ pub proof fn lemma_initialize(s: MonitorState)
     }
 }
 
-/// How the bit sets change at bit `i` when `monitor_new_borrow` creates tag `t`.
-proof fn lemma_new_borrow_bits(
-    s0: MonitorState,
-    s: MonitorState,
-    t: u64,
-    i: u64,
-    is_cell: bool,
-    is_interior: bool,
-    is_initialized: bool,
-    is_protected: bool,
-    is_frozen: bool,
-)
-    requires
-        t < 64, i < 64,
-        s.valid == s0.valid | (1u64 << t),
-        s.active == s0.active & !(1u64 << t),
-        s.conflicted == s0.conflicted & !(1u64 << t),
-        s.exposed == s0.exposed & !(1u64 << t),
-        s.cell == if is_cell { s0.cell | (1u64 << t) } else { s0.cell & !(1u64 << t) },
-        s.interior == if is_interior { s0.interior | (1u64 << t) } else {
-            s0.interior & !(1u64 << t) },
-        s.initialized == if is_initialized { s0.initialized | (1u64 << t) } else {
-            s0.initialized & !(1u64 << t) },
-        s.protected == if is_protected { s0.protected | (1u64 << t) } else {
-            s0.protected & !(1u64 << t) },
-        s.frozen == if is_frozen { s0.frozen | (1u64 << t) } else { s0.frozen & !(1u64 << t) },
-    ensures
-        bit(s.valid, i) == (i == t || bit(s0.valid, i)),
-        bit(s.active, i) == (i != t && bit(s0.active, i)),
-        bit(s.conflicted, i) == (i != t && bit(s0.conflicted, i)),
-        bit(s.exposed, i) == (i != t && bit(s0.exposed, i)),
-        bit(s.cell, i) == if i == t { is_cell } else { bit(s0.cell, i) },
-        bit(s.interior, i) == if i == t { is_interior } else { bit(s0.interior, i) },
-        bit(s.initialized, i) == if i == t { is_initialized } else { bit(s0.initialized, i) },
-        bit(s.protected, i) == if i == t { is_protected } else { bit(s0.protected, i) },
-        bit(s.frozen, i) == if i == t { is_frozen } else { bit(s0.frozen, i) },
+pub proof fn lemma_and_max(x: u64)
+    ensures x & u64::MAX == x,
 {
-    lemma_bit_set(s0.valid, t, i);
-    lemma_bit_set(s0.active, t, i);
-    lemma_bit_set(s0.conflicted, t, i);
-    lemma_bit_set(s0.exposed, t, i);
-    lemma_bit_set(s0.cell, t, i);
-    lemma_bit_set(s0.interior, t, i);
-    lemma_bit_set(s0.initialized, t, i);
-    lemma_bit_set(s0.protected, t, i);
-    lemma_bit_set(s0.frozen, t, i);
+    assert(x & u64::MAX == x) by (bit_vector);
 }
 
-proof fn lemma_new_borrow(
-    s0: MonitorState,
-    s: MonitorState,
-    parent: u8,
-    covers: bool,
-    in_cell: bool,
-    is_shared: bool,
-    is_protected: bool,
-)
+pub proof fn lemma_or_zero(x: u64)
+    ensures x | 0u64 == x,
+{
+    assert(x | 0u64 == x) by (bit_vector);
+}
+
+/// `apply_refines` only looks at the tags `0..count` of its sets.
+proof fn lemma_apply_refines_ext(a: AbsState, b: AbsState, l1: ISet<nat>, f1: ISet<nat>,
+    l2: ISet<nat>, f2: ISet<nat>, is_write: bool, code: u8)
+    requires
+        forall|t: nat| t < a.count ==> (l1.contains(t) == l2.contains(t) && f1.contains(t)
+            == f2.contains(t)),
+        apply_refines(a, b, l1, f1, is_write, code),
+    ensures apply_refines(a, b, l2, f2, is_write, code),
+{
+    assert forall|t: nat| t < a.count implies apply_step(a, l1, f1, t, is_write)
+        == #[trigger] apply_step(a, l2, f2, t, is_write) by {}
+    if code == ACCESS_OK {
+        assert forall|t: nat| t < a.count implies node_eq(#[trigger] b.nodes[t],
+            apply_step(a, l2, f2, t, is_write)->Some_0) by {
+            assert(apply_step(a, l1, f1, t, is_write) == apply_step(a, l2, f2, t, is_write));
+        }
+    }
+    if forall|t: nat| t < a.count ==> (#[trigger] apply_step(a, l1, f1, t, is_write)) is Some {
+        assert forall|t: nat| t < a.count implies (#[trigger] apply_step(a, l2, f2, t, is_write))
+            is Some by {
+            assert(apply_step(a, l1, f1, t, is_write) == apply_step(a, l2, f2, t, is_write));
+        }
+    } else {
+        let t = choose|t: nat| t < a.count && !((#[trigger] apply_step(a, l1, f1, t, is_write))
+            is Some);
+        assert(apply_step(a, l1, f1, t, is_write) == apply_step(a, l2, f2, t, is_write));
+    }
+}
+
+pub proof fn lemma_shift_pos(f: u64)
+    requires f < 64,
+    ensures (1u64 << f) >= 1,
+{
+    assert((1u64 << f) >= 1u64) by (bit_vector) requires f < 64;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The written-out loops
+// ---------------------------------------------------------------------------------------------
+
+/// `monitor_holders` after the tags `0..k`.
+pub open spec fn holders_upto(s: &MonitorState, b: u64, k: nat) -> u64
+    decreases k,
+{
+    if k == 0 { 0u64 } else {
+        let v = (k - 1) as nat;
+        holders_upto(s, b, v) | if s.ancestors[v as int] & b != 0 { 1u64 << (v as u64) } else {
+            0u64 }
+    }
+}
+
+proof fn lemma_holders_upto(s: MonitorState, b: u64, k: nat)
+    requires k <= 64,
+    ensures forall|i: u64| i < 64 ==> bit(#[trigger] holders_upto(&s, b, k), i)
+        == (i < k && s.ancestors[i as int] & b != 0),
+    decreases k,
+{
+    if k == 0 {
+        assert forall|i: u64| i < 64 implies !bit(holders_upto(&s, b, 0), i) by { lemma_bit_zero(i); }
+    } else {
+        let v = (k - 1) as nat;
+        lemma_holders_upto(s, b, v);
+        let add = if s.ancestors[v as int] & b != 0 { 1u64 << (v as u64) } else { 0u64 };
+        assert forall|i: u64| i < 64 implies bit(holders_upto(&s, b, k), i)
+            == (i < k && s.ancestors[i as int] & b != 0) by {
+            lemma_bit_or(holders_upto(&s, b, v), add, i);
+            lemma_bit_single(v as u64, i);
+            lemma_bit_zero(i);
+        }
+    }
+}
+
+/// `monitor_candidate_paths` after the candidates `0..k`.
+pub open spec fn all_upto(s: &MonitorState, cands: u64, k: nat) -> u64
+    decreases k,
+{
+    if k == 0 { u64::MAX } else {
+        let c = (k - 1) as nat;
+        all_upto(s, cands, c) & if cands & (1u64 << (c as u64)) != 0 { s.ancestors[c as int] }
+            else { u64::MAX }
+    }
+}
+
+pub open spec fn any_upto(s: &MonitorState, cands: u64, k: nat) -> u64
+    decreases k,
+{
+    if k == 0 { 0u64 } else {
+        let c = (k - 1) as nat;
+        any_upto(s, cands, c) | if cands & (1u64 << (c as u64)) != 0 { s.ancestors[c as int] }
+            else { 0u64 }
+    }
+}
+
+proof fn lemma_paths_upto(s: MonitorState, cands: u64, k: nat)
+    requires k <= 64,
+    ensures
+        forall|i: u64| i < 64 ==> bit(#[trigger] all_upto(&s, cands, k), i)
+            == forall|c: u64| c < k && bit(cands, c) ==> bit(s.ancestors[c as int], i),
+        forall|i: u64| i < 64 ==> bit(#[trigger] any_upto(&s, cands, k), i)
+            == exists|c: u64| c < k && bit(cands, c) && bit(s.ancestors[c as int], i),
+    decreases k,
+{
+    if k == 0 {
+        assert forall|i: u64| i < 64 implies bit(all_upto(&s, cands, 0), i)
+            && !bit(any_upto(&s, cands, 0), i) by {
+            assert((u64::MAX >> i) & 1u64 == 1u64) by (bit_vector) requires i < 64;
+            lemma_bit_zero(i);
+        }
+    } else {
+        let c = (k - 1) as nat;
+        lemma_paths_upto(s, cands, c);
+        lemma_test_bit(cands, c as u64);
+        let in_c = cands & (1u64 << (c as u64)) != 0;
+        let pa = if in_c { s.ancestors[c as int] } else { u64::MAX };
+        let po = if in_c { s.ancestors[c as int] } else { 0u64 };
+        assert forall|i: u64| i < 64 implies {
+            &&& bit(all_upto(&s, cands, k), i)
+                == forall|d: u64| d < k && bit(cands, d) ==> bit(s.ancestors[d as int], i)
+            &&& bit(any_upto(&s, cands, k), i)
+                == exists|d: u64| d < k && bit(cands, d) && bit(s.ancestors[d as int], i)
+        } by {
+            lemma_bit_and(all_upto(&s, cands, c), pa, i);
+            lemma_bit_or(any_upto(&s, cands, c), po, i);
+            assert((u64::MAX >> i) & 1u64 == 1u64) by (bit_vector) requires i < 64;
+            lemma_bit_zero(i);
+            if !bit(all_upto(&s, cands, k), i) {
+                if bit(all_upto(&s, cands, c), i) {
+                    assert(bit(cands, c as u64) && !bit(s.ancestors[c as int], i));
+                } else {
+                    let d = choose|d: u64| d < c && bit(cands, d) && !bit(s.ancestors[d as int], i);
+                    assert(d < k);
+                }
+            }
+            if bit(any_upto(&s, cands, k), i) {
+                if !bit(any_upto(&s, cands, c), i) {
+                    assert(bit(cands, c as u64) && bit(s.ancestors[c as int], i));
+                }
+            } else {
+                assert forall|d: u64| !(d < k && bit(cands, d) && bit(s.ancestors[d as int], i)) by {
+                    if d == c { } else if d < c { }
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Stage 11: accesses through pointers created from integers (Miri `tree_borrows/wildcard.rs`)
+// ---------------------------------------------------------------------------------------------
+
+/// The exposed tags whose own permission allows the access (`strongest_allowed_local_access`):
+/// any but Disabled for a read; neither Frozen nor a protected conflicted Reserved for a write.
+pub open spec fn is_cand(a: AbsState, c: nat, is_write: bool) -> bool {
+    let n = a.nodes[c];
+    &&& c < a.count
+    &&& n.exposed
+    &&& !n.cell
+    &&& n.perm != Perm::Disabled
+    &&& is_write ==> n.perm != Perm::Frozen
+    &&& is_write ==> !(n.protected && n.perm matches Perm::Reserved { conflicted: true, .. })
+}
+
+pub open spec fn cand_mask(s: &MonitorState, is_write: bool) -> u64 {
+    let readable = s.exposed & s.valid & !s.cell;
+    if is_write { readable & !s.frozen & !(s.protected & s.conflicted) } else { readable }
+}
+
+proof fn lemma_cand(s: MonitorState, is_write: bool, c: u64)
+    requires monitor_wf(&s), c < 64,
+    ensures bit(cand_mask(&s, is_write), c) == is_cand(abstraction(&s), c as nat, is_write),
+{
+    lemma_bit_and(s.exposed, s.valid, c);
+    lemma_bit_and(s.exposed & s.valid, !s.cell, c);
+    lemma_bit_not(s.cell, c);
+    let r = s.exposed & s.valid & !s.cell;
+    lemma_bit_and(r, !s.frozen, c);
+    lemma_bit_not(s.frozen, c);
+    lemma_bit_and(s.protected, s.conflicted, c);
+    lemma_bit_not(s.protected & s.conflicted, c);
+    lemma_bit_and(r & !s.frozen, !(s.protected & s.conflicted), c);
+}
+
+/// A wildcard access, as Miri's `perform_wildcard_access` applies it to every tree other than
+/// the source's (`own`): a tag sees a local access if every candidate of its tree is in its
+/// subtree (`access_relatedness`: `total_num == local_num`), a foreign one if none is, and no
+/// access otherwise ("Either"). Only the main tree can lack candidates (wildcard trees count one
+/// more possible foreign access, `is_wildcard_tree`), and then the access is undefined behavior;
+/// for an access from a wildcard tree whose root is `r` (`max_local_tag`), a tag younger than
+/// `r` can only see a foreign access, a local one is undefined behavior, and the main tree must
+/// have a candidate no younger than `r` (`has_valid_exposed`).
+pub open spec fn wcand(a: AbsState, own: ISet<nat>, c: nat, is_write: bool) -> bool {
+    is_cand(a, c, is_write) && !own.contains(c)
+}
+
+pub open spec fn wmain_cand(a: AbsState, own: ISet<nat>, c: nat, is_write: bool) -> bool {
+    wcand(a, own, c, is_write) && a.nodes[c].main
+}
+
+pub open spec fn wmain_local(a: AbsState, own: ISet<nat>, t: nat, is_write: bool) -> bool {
+    &&& t < a.count
+    &&& a.nodes[t].main
+    &&& !a.nodes[t].cell
+    &&& forall|c: nat| #[trigger] wmain_cand(a, own, c, is_write) ==> a.nodes[c].ancestors.contains(t)
+}
+
+pub open spec fn wany(a: AbsState, own: ISet<nat>, t: nat, is_write: bool) -> bool {
+    exists|c: nat| #[trigger] wcand(a, own, c, is_write) && a.nodes[c].ancestors.contains(t)
+}
+
+pub open spec fn wild_ub(a: AbsState, own: ISet<nat>, root: Option<nat>, is_write: bool) -> bool {
+    ||| forall|c: nat| !#[trigger] wmain_cand(a, own, c, is_write)
+    ||| root is Some && forall|c: nat| #[trigger] wmain_cand(a, own, c, is_write) ==> c > root->Some_0
+    ||| root is Some && exists|t: nat| #[trigger] wmain_local(a, own, t, is_write) && t > root->Some_0
+}
+
+pub open spec fn wild_access(a: AbsState, own: ISet<nat>, root: Option<nat>, is_write: bool)
+    -> (u8, ISet<nat>, ISet<nat>)
+{
+    let main_local = ISet::new(|t: nat| wmain_local(a, own, t, is_write));
+    let foreign = ISet::new(|t: nat| t < a.count && !own.contains(t) && !a.nodes[t].cell
+        && !wmain_local(a, own, t, is_write)
+        && (!wany(a, own, t, is_write) || (root is Some && t > root->Some_0)));
+    if wild_ub(a, own, root, is_write) { (ACCESS_NOT_EXPOSED, ISet::empty(), ISet::empty()) }
+    else { (ACCESS_OK, main_local, foreign) }
+}
+
+/// The masks `monitor_wildcard_masks` computes.
+pub open spec fn wild_bits(s: &MonitorState, is_write: bool, own: u64, root: u64) -> (u8, u64, u64)
+{
+    let cands = cand_mask(s, is_write) & !own;
+    let main_cands = cands & s.main;
+    let main_all = all_upto(s, main_cands, 64);
+    let any = any_upto(s, cands, 64);
+    if main_cands == 0 {
+        (ACCESS_NOT_EXPOSED, 0u64, 0u64)
+    } else {
+        let main_local = main_all & s.main & !s.cell;
+        let above = if own == 0 { 0u64 } else { !(root | ((root - 1u64) as u64)) };
+        if own != 0 && (main_cands & !above == 0 || main_local & above != 0) {
+            (ACCESS_NOT_EXPOSED, 0u64, 0u64)
+        } else {
+            (ACCESS_OK, main_local, !own & !s.cell & !main_local & (!any | above))
+        }
+    }
+}
+
+/// The tree whose root is `r`, as a mask (`monitor_holders` of its bit).
+pub open spec fn tree_set(a: AbsState, r: nat) -> ISet<nat> {
+    ISet::new(|v: nat| v < a.count && #[trigger] a.nodes[v].ancestors.contains(r))
+}
+
+/// The source tree of a wildcard access, from its mask: none for an integer pointer.
+pub open spec fn wild_own(a: AbsState, own: u64, r: u64) -> ISet<nat> {
+    if own == 0 { ISet::empty() } else { tree_set(a, r as nat) }
+}
+
+pub open spec fn wild_root(own: u64, r: u64) -> Option<nat> {
+    if own == 0 { None } else { Some(r as nat) }
+}
+
+/// `wild_bits` computes `wild_access`: for an access through an integer pointer (`own == 0`), or
+/// from the wildcard tree rooted at `r` (`own` its tree, `root` its bit).
+#[verifier::rlimit(100)]
+proof fn lemma_wild_meaning(s: MonitorState, is_write: bool, own: u64, root: u64, r: u64)
+    requires
+        monitor_wf(&s),
+        own == 0 ==> root == 0,
+        own != 0 ==> r < s.count && root == 1u64 << r && !bit(s.main, r)
+            && forall|v: u64| v < 64 ==> bit(own, v) == (v < s.count
+                && bit(s.ancestors[v as int], r)),
+    ensures
+        wild_bits(&s, is_write, own, root).0 == wild_access(abstraction(&s), wild_own(abstraction(&s),
+            own, r), wild_root(own, r), is_write).0,
+        wild_bits(&s, is_write, own, root).0 == ACCESS_OK ==> forall|t: nat| t < s.count ==> (
+            #[trigger] mask_set(wild_bits(&s, is_write, own, root).1).contains(t)
+            == wild_access(abstraction(&s), wild_own(abstraction(&s), own, r), wild_root(own, r),
+                is_write).1.contains(t)),
+        wild_bits(&s, is_write, own, root).0 == ACCESS_OK ==> forall|t: nat| t < s.count ==> (
+            #[trigger] mask_set(wild_bits(&s, is_write, own, root).2).contains(t)
+            == wild_access(abstraction(&s), wild_own(abstraction(&s), own, r), wild_root(own, r),
+                is_write).2.contains(t)),
+        wild_bits(&s, is_write, own, root).0 == ACCESS_OK ==> ({
+            let l1 = wild_bits(&s, is_write, own, root).1;
+            let f1 = wild_bits(&s, is_write, own, root).2;
+            l1 & f1 == 0 && l1 & s.cell == 0 && f1 & s.cell == 0
+                && l1 & !live_mask(s.count as u64) == 0 && l1 & own == 0 && f1 & own == 0
+        }),
+{
+    let a = abstraction(&s);
+    let own_set = if own == 0 { ISet::<nat>::empty() } else { tree_set(a, r as nat) };
+    let rt = if own == 0 { None } else { Some(r as nat) };
+    let cands = cand_mask(&s, is_write) & !own;
+    let main_cands = cands & s.main;
+    lemma_paths_upto(s, main_cands, 64);
+    lemma_paths_upto(s, cands, 64);
+    let main_all = all_upto(&s, main_cands, 64);
+    let any = any_upto(&s, cands, 64);
+    let main_local = main_all & s.main & !s.cell;
+    let above = if own == 0 { 0u64 } else { !(root | ((root - 1u64) as u64)) };
+    // Candidates.
+    assert forall|c: u64| c < 64 implies {
+        &&& bit(cands, c) == (is_cand(a, c as nat, is_write) && !own_set.contains(c as nat))
+        &&& bit(main_cands, c) == (bit(cands, c) && bit(s.main, c))
+    } by {
+        lemma_cand(s, is_write, c);
+        lemma_bit_and(cand_mask(&s, is_write), !own, c);
+        lemma_bit_not(own, c);
+        lemma_bit_and(cands, s.main, c);
+        if own == 0 {
+            lemma_bit_zero(c);
+        } else if c < s.count {
+            assert(a.nodes[c as nat].ancestors.contains(r as nat) == bit(s.ancestors[c as int], r));
+        }
+    }
+    assert forall|t: u64| t < 64 implies {
+        &&& bit(main_local, t) == (bit(main_all, t) && bit(s.main, t) && !bit(s.cell, t))
+        &&& bit(above, t) == (own != 0 && t > r)
+    } by {
+        lemma_bit_and(main_all, s.main, t);
+        lemma_bit_and(main_all & s.main, !s.cell, t);
+        lemma_bit_not(s.cell, t);
+        if own != 0 { lemma_bit_above(r, t); } else { lemma_bit_zero(t); }
+    }
+    // Tags of `cands` are tags, and their ancestors are tags.
+    assert forall|c: u64, t: u64| c < 64 && t < 64 && bit(cands, c) && bit(s.ancestors[c as int], t)
+        implies t < s.count && c < s.count by {
+        lemma_cand(s, is_write, c);
+        lemma_bit_and(cand_mask(&s, is_write), !own, c);
+        lemma_ancestor_is_tag(s, c, t);
+    }
+    // The own tree has no tag of the main tree.
+    assert forall|v: u64| v < 64 && bit(own, v) implies !bit(s.main, v) by {
+        if own != 0 && bit(s.main, v) {
+            assert(s.ancestors[v as int] == s.ancestors[v as int]);
+            assert(bit(s.ancestors[v as int], 0));
+            assert(bit(s.ancestors[r as int], 0));
+        }
+        if own == 0 { lemma_bit_zero(v); }
+    }
+    // `main_all` and `any` at the tags.
+    assert forall|t: u64| t < 64 implies {
+        &&& bit(main_all, t) == forall|c: nat| #[trigger] wmain_cand(a, own_set, c, is_write)
+            ==> a.nodes[c].ancestors.contains(t as nat)
+        &&& bit(any, t) == wany(a, own_set, t as nat, is_write)
+    } by {
+        if bit(main_all, t) {
+            assert forall|c: nat| #[trigger] wmain_cand(a, own_set, c, is_write) implies
+                a.nodes[c].ancestors.contains(t as nat) by {
+                assert(c < 64);
+                assert(bit(main_cands, c as u64));
+            }
+        } else {
+            let c = choose|c: u64| c < 64 && bit(main_cands, c) && !bit(s.ancestors[c as int], t);
+            assert(wmain_cand(a, own_set, c as nat, is_write));
+        }
+        if bit(any, t) {
+            let c = choose|c: u64| c < 64 && bit(cands, c) && bit(s.ancestors[c as int], t);
+            assert(wcand(a, own_set, c as nat, is_write));
+            assert(a.nodes[c as nat].ancestors.contains(t as nat));
+        } else if wany(a, own_set, t as nat, is_write) {
+            let c = choose|c: nat| #[trigger] wcand(a, own_set, c, is_write)
+                && a.nodes[c].ancestors.contains(t as nat);
+            assert(c < 64);
+            assert(bit(cands, c as u64) && bit(s.ancestors[c as int], t));
+        }
+    }
+    assert forall|t: u64| t < 64 implies bit(main_local, t) == wmain_local(a, own_set, t as nat,
+        is_write) by {
+        if bit(s.main, t) && t >= s.count { assert(!bit(s.main, t)); }
+    }
+    // Whether the main tree has a candidate.
+    assert((main_cands == 0) == forall|c: nat| !#[trigger] wmain_cand(a, own_set, c, is_write)) by {
+        if main_cands == 0 {
+            assert forall|c: nat| !#[trigger] wmain_cand(a, own_set, c, is_write) by {
+                if wmain_cand(a, own_set, c, is_write) {
+                    assert(c < 64);
+                    assert(bit(main_cands, c as u64));
+                    lemma_bit_zero(c as u64);
+                }
+            }
+        } else {
+            lemma_nonzero_witness(main_cands);
+            let c = choose|c: u64| c < 64 && bit(main_cands, c);
+            assert(wmain_cand(a, own_set, c as nat, is_write));
+        }
+    }
+    if main_cands != 0 && own != 0 {
+        assert((main_cands & !above == 0) == forall|c: nat| #[trigger] wmain_cand(a, own_set, c,
+            is_write) ==> c > r) by {
+            lemma_and_nonzero(main_cands, !above);
+            if main_cands & !above != 0 {
+                let c = choose|c: u64| c < 64 && bit(main_cands, c) && bit(!above, c);
+                lemma_bit_not(above, c);
+                assert(wmain_cand(a, own_set, c as nat, is_write));
+            } else {
+                assert forall|c: nat| #[trigger] wmain_cand(a, own_set, c, is_write) implies c > r by {
+                    assert(c < 64);
+                    lemma_bit_not(above, c as u64);
+                }
+            }
+        }
+        assert((main_local & above != 0) == exists|t: nat| #[trigger] wmain_local(a, own_set, t,
+            is_write) && t > r) by {
+            lemma_and_nonzero(main_local, above);
+            if main_local & above != 0 {
+                let t = choose|t: u64| t < 64 && bit(main_local, t) && bit(above, t);
+                assert(wmain_local(a, own_set, t as nat, is_write));
+            } else if exists|t: nat| #[trigger] wmain_local(a, own_set, t, is_write) && t > r {
+                let t = choose|t: nat| #[trigger] wmain_local(a, own_set, t, is_write) && t > r;
+                assert(t < 64);
+                assert(bit(main_local, t as u64) && bit(above, t as u64));
+            }
+        }
+    }
+    let f1 = !own & !s.cell & !main_local & (!any | above);
+    assert forall|t: u64| t < 64 implies {
+        &&& bit(f1, t) == (!bit(own, t) && !bit(s.cell, t) && !bit(main_local, t)
+            && (!bit(any, t) || bit(above, t)))
+        &&& !(bit(main_local, t) && bit(f1, t))
+        &&& !(bit(main_local, t) && bit(s.cell, t))
+        &&& !(bit(f1, t) && bit(s.cell, t))
+        &&& (bit(main_local, t) ==> t < s.count)
+        &&& !(bit(main_local, t) && bit(own, t))
+        &&& !(bit(f1, t) && bit(own, t))
+        &&& (t < s.count ==> bit(own, t) == own_set.contains(t as nat))
+    } by {
+        lemma_bit_and(!own, !s.cell, t);
+        lemma_bit_and(!own & !s.cell, !main_local, t);
+        lemma_bit_and(!own & !s.cell & !main_local, !any | above, t);
+        lemma_bit_or(!any, above, t);
+        lemma_bit_not(own, t);
+        lemma_bit_not(s.cell, t);
+        lemma_bit_not(main_local, t);
+        lemma_bit_not(any, t);
+        if own == 0 { lemma_bit_zero(t); }
+        else if t < s.count {
+            assert(a.nodes[t as nat].ancestors.contains(r as nat) == bit(s.ancestors[t as int], r));
+        }
+    }
+    lemma_and_nonzero(main_local, f1);
+    lemma_and_nonzero(main_local, s.cell);
+    lemma_and_nonzero(f1, s.cell);
+    lemma_and_nonzero(main_local, own);
+    lemma_and_nonzero(f1, own);
+    lemma_and_nonzero(main_local, !live_mask(s.count as u64));
+    assert forall|t: u64| t < 64 && bit(main_local, t) implies !bit(!live_mask(s.count as u64), t) by {
+        lemma_bit_not(live_mask(s.count as u64), t);
+        lemma_bit_live(s.count as u64, t);
+    }
+}
+
+/// A failed operation changes nothing.
+pub open spec fn failed_unchanged(code: u8, s0: &MonitorState, s: &MonitorState) -> bool {
+    code != ACCESS_OK ==> *s == *s0
+}
+
+/// Masks with the same bits are equal.
+pub proof fn lemma_bits_ext(x: u64, y: u64)
+    requires forall|i: u64| i < 64 ==> bit(x, i) == bit(y, i),
+    ensures x == y,
+{
+    assert forall|i: u64| i < 64 implies !bit(x ^ y, i) by {
+        assert(bit(x ^ y, i) == (bit(x, i) != bit(y, i))) by (bit_vector) requires i < 64;
+    }
+    lemma_all_bits_clear(x ^ y);
+    assert(x ^ y == 0u64 ==> x == y) by (bit_vector);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Accesses (Miri `Tree::perform_access`)
+// ---------------------------------------------------------------------------------------------
+
+/// The lowest of the ancestors of `e`: the root of its tree.
+pub open spec fn lowest(a: AbsState, e: nat) -> nat {
+    choose|r: nat| a.nodes[e].ancestors.contains(r) && forall|u: nat|
+        #[trigger] a.nodes[e].ancestors.contains(u) ==> r <= u
+}
+
+/// The tags an access through `e` treats as local in its own tree: `e` and its ancestors.
+pub open spec fn local_set(a: AbsState, e: nat) -> ISet<nat> {
+    ISet::new(|t: nat| t < a.count && a.nodes[e].ancestors.contains(t) && !a.nodes[t].cell)
+}
+
+/// The tags an access through a tag `e` of the main tree treats as foreign: every other tag,
+/// those of the wildcard trees included (Miri: `max_local_tag` is the main root, so they only
+/// see foreign accesses).
+pub open spec fn foreign_set(a: AbsState, e: nat) -> ISet<nat> {
+    ISet::new(|t: nat| t < a.count && !a.nodes[e].ancestors.contains(t) && !a.nodes[t].cell)
+}
+
+/// An access through `tag`: a normal access to its own tree, and, from a wildcard tree, a
+/// wildcard access to the others (`Tree::perform_access` then `perform_wildcard_access` for every
+/// other root). `ACCESS_UNKNOWN_WILDCARD`: the checks give up (see `monitor_wildcard_masks`).
+pub open spec fn access_refines(a: AbsState, b: AbsState, tag: nat, is_write: bool, code: u8)
+    -> bool
+{
+    let e = eff(a, tag);
+    if a.nodes[e].main {
+        apply_refines(a, b, local_set(a, e), foreign_set(a, e), is_write, code)
+    } else if a.unknown_exposed {
+        code == ACCESS_UNKNOWN_EXPOSED && same_state(a, b)
+    } else {
+        let r = lowest(a, e);
+        let own = tree_set(a, r);
+        let (wc, wl, wf) = wild_access(a, own, Some(r), is_write);
+        if wc != ACCESS_OK {
+            code == wc && same_state(a, b)
+        } else {
+            code == ACCESS_UNKNOWN_WILDCARD || apply_refines(a, b, local_set(a, e).union(wl),
+                ISet::new(|t: nat| own.contains(t) && !a.nodes[e].ancestors.contains(t)
+                    && !a.nodes[t].cell).union(wf), is_write, code)
+        }
+    }
+}
+
+/// An access through a pointer created from an integer: a wildcard access to every tree.
+pub open spec fn wildcard_refines(a: AbsState, b: AbsState, is_write: bool, code: u8) -> bool {
+    if a.unknown_exposed {
+        code == ACCESS_UNKNOWN_EXPOSED && same_state(a, b)
+    } else {
+        let (wc, wl, wf) = wild_access(a, ISet::empty(), None, is_write);
+        if wc != ACCESS_OK {
+            code == wc && same_state(a, b)
+        } else {
+            code == ACCESS_UNKNOWN_WILDCARD || apply_refines(a, b, wl, wf, is_write, code)
+        }
+    }
+}
+
+pub open spec fn settle_bits(br: u64, bw: u64, s: &MonitorState, own: u64) -> bool {
+    (cand_mask(s, false) ^ br) & !own == 0 && (cand_mask(s, true) ^ bw) & !own == 0
+}
+
+/// A non-zero mask has a lowest set bit.
+proof fn lemma_lowest_exists(x: u64, k: u64)
+    requires
+        k <= 64,
+        forall|j: u64| j < k ==> !bit(x, j),
+        exists|i: u64| i < 64 && bit(x, i),
+    ensures exists|i: u64| i < 64 && bit(x, i) && forall|j: u64| j < i ==> !bit(x, j),
+    decreases 64 - k,
+{
+    if k < 64 {
+        if bit(x, k) {
+            assert(forall|j: u64| j < k ==> !bit(x, j));
+        } else {
+            lemma_lowest_exists(x, (k + 1) as u64);
+        }
+    } else {
+        let i = choose|i: u64| i < 64 && bit(x, i);
+        assert(i < k);
+    }
+}
+
+/// The root of the tree of a tag of a wildcard tree, as a bit, is the bit of `lowest`.
+proof fn lemma_root(s: MonitorState, e: u64)
+    requires monitor_wf(&s), e < s.count, !bit(s.main, e),
+    ensures ({
+        let a = abstraction(&s);
+        let anc = s.ancestors[e as int];
+        let r = lowest(a, e as nat);
+        &&& r < s.count
+        &&& anc & ((!anc) + 1) as u64 == 1u64 << (r as u64)
+        &&& !bit(s.main, r as u64)
+        &&& bit(anc, r as u64)
+        &&& forall|u: u64| u < 64 && bit(anc, u) ==> bit(s.ancestors[u as int], r as u64)
+        &&& !anc < u64::MAX
+    }),
+{
+    let a = abstraction(&s);
+    let anc = s.ancestors[e as int];
+    assert(bit(anc, e));
+    assert(anc != 0) by { lemma_bit_zero(e); }
+    lemma_lowest_exists(anc, 0);
+    let lo = choose|i: u64| i < 64 && bit(anc, i) && forall|j: u64| j < i ==> !bit(anc, j);
+    // `lowest` is `lo`.
+    assert(a.nodes[e as nat].ancestors.contains(lo as nat) && forall|u: nat|
+        #[trigger] a.nodes[e as nat].ancestors.contains(u) ==> lo as nat <= u) by {
+        assert forall|u: nat| #[trigger] a.nodes[e as nat].ancestors.contains(u) implies lo as nat <= u by {
+            if u < lo as nat { assert(!bit(anc, u as u64)); }
+        }
+    }
+    let r = lowest(a, e as nat);
+    assert(r == lo as nat) by {
+        assert(a.nodes[e as nat].ancestors.contains(r));
+        assert(r < 64);
+        if r < lo as nat { assert(!bit(anc, r as u64)); }
+        assert(lo as nat <= r);
+    }
+    // Its bit.
+    assert forall|i: u64| i < 64 implies bit(anc & ((!anc) + 1) as u64, i) == bit(1u64 << lo, i) by {
+        lemma_lowest_bit(anc, i);
+        lemma_bit_single(lo, i);
+        if bit(anc, i) && forall|j: u64| j < i ==> !bit(anc, j) {
+            if i < lo { } else if i > lo { assert(!bit(anc, lo)); }
+        }
+    }
+    lemma_bits_ext(anc & ((!anc) + 1) as u64, 1u64 << lo);
+    lemma_ancestor_is_tag(s, e, lo);
+    assert(s.ancestors[e as int] == s.ancestors[e as int]);
+    if bit(s.main, lo) {
+        assert(s.ancestors[lo as int] == s.ancestors[lo as int]);
+        assert(bit(s.ancestors[lo as int], 0));
+        assert(bit(anc, 0));
+    }
+    assert forall|u: u64| u < 64 && bit(anc, u) implies bit(s.ancestors[u as int], lo) by {
+        if u < lo { assert(!bit(anc, u)); }
+    }
+    assert(anc != 0u64 ==> !anc < u64::MAX) by (bit_vector);
+}
+
+/// The masks of an access through a tag `e` of the main tree meet `monitor_apply`'s
+/// requirements.
+proof fn lemma_access_main_masks(s: MonitorState, e: u64)
+    requires monitor_wf(&s), e < s.count, !bit(s.cell, e),
+    ensures ({
+        let anc = s.ancestors[e as int];
+        let l = anc & !s.cell;
+        let f = !anc & !s.cell;
+        &&& l & f == 0 && l & s.cell == 0 && f & s.cell == 0
+        &&& l & !live_mask(s.count as u64) == 0
+        &&& forall|t: u64| t < 64 ==> bit(l, t) == (bit(anc, t) && !bit(s.cell, t))
+            && bit(f, t) == (!bit(anc, t) && !bit(s.cell, t))
+    }),
+{
+    let anc = s.ancestors[e as int];
+    let l = anc & !s.cell;
+    let f = !anc & !s.cell;
+    let c = s.cell;
+    assert(l & f == 0 && l & c == 0 && f & c == 0) by (bit_vector)
+        requires l == anc & !c, f == !anc & !c;
+    assert forall|t: u64| t < 64 implies bit(l, t) == (bit(anc, t) && !bit(s.cell, t))
+        && bit(f, t) == (!bit(anc, t) && !bit(s.cell, t)) by {
+        lemma_bit_and(anc, !s.cell, t);
+        lemma_bit_and(!anc, !s.cell, t);
+        lemma_bit_not(anc, t);
+        lemma_bit_not(s.cell, t);
+    }
+    lemma_and_nonzero(l, !live_mask(s.count as u64));
+    assert forall|t: u64| t < 64 && bit(l, t) implies !bit(!live_mask(s.count as u64), t) by {
+        lemma_ancestor_is_tag(s, e, t);
+        lemma_bit_not(live_mask(s.count as u64), t);
+        lemma_bit_live(s.count as u64, t);
+    }
+}
+
+proof fn lemma_access_main_spec(s0: MonitorState, s: MonitorState, e: u64, tag: u8,
+    is_write: bool, code: u8)
+    requires
+        monitor_wf(&s0), tag < s0.count, e < s0.count, !bit(s0.cell, e), bit(s0.main, e),
+        e as nat == eff(abstraction(&s0), tag as nat),
+        apply_refines(abstraction(&s0), abstraction(&s), mask_set(s0.ancestors[e as int] & !s0.cell),
+            mask_set(!s0.ancestors[e as int] & !s0.cell), is_write, code),
+    ensures access_refines(abstraction(&s0), abstraction(&s), tag as nat, is_write, code),
+{
+    let a = abstraction(&s0);
+    lemma_access_main_masks(s0, e);
+    lemma_apply_refines_ext(a, abstraction(&s), mask_set(s0.ancestors[e as int] & !s0.cell),
+        mask_set(!s0.ancestors[e as int] & !s0.cell), local_set(a, e as nat),
+        foreign_set(a, e as nat), is_write, code);
+}
+
+/// The tree of a tag of a wildcard tree, from `monitor_holders`.
+proof fn lemma_access_wild_own(s: MonitorState, e: u64, own: u64)
+    requires
+        monitor_wf(&s), e < s.count, !bit(s.main, e),
+        forall|i: u64| i < 64 ==> bit(own, i) == (i < s.count && s.ancestors[i as int]
+            & (1u64 << (lowest(abstraction(&s), e as nat) as u64)) != 0),
+    ensures ({
+        let r = lowest(abstraction(&s), e as nat) as u64;
+        &&& forall|v: u64| v < 64 ==> bit(own, v) == (v < s.count && bit(s.ancestors[v as int], r))
+        &&& own != 0
+    }),
+{
+    lemma_root(s, e);
+    let r = lowest(abstraction(&s), e as nat) as u64;
+    assert forall|v: u64| v < 64 implies bit(own, v) == (v < s.count && bit(s.ancestors[v as int], r))
+    by {
+        lemma_test_bit(s.ancestors[v as int], r);
+    }
+    assert(bit(s.ancestors[r as int], r));
+    assert(bit(own, r));
+    lemma_bit_zero(r);
+}
+
+/// The masks of an access through a tag `e` of a wildcard tree meet `monitor_apply`'s
+/// requirements.
+proof fn lemma_access_wild_masks(s: MonitorState, e: u64, own: u64, wl: u64, wf: u64)
+    requires
+        monitor_wf(&s), e < s.count, !bit(s.main, e), !bit(s.cell, e),
+        forall|v: u64| v < 64 ==> bit(own, v) == (v < s.count && bit(s.ancestors[v as int],
+            lowest(abstraction(&s), e as nat) as u64)),
+        own != 0,
+        wl & wf == 0, wl & s.cell == 0, wf & s.cell == 0, wl & !live_mask(s.count as u64) == 0,
+        wl & own == 0, wf & own == 0,
+    ensures ({
+        let anc = s.ancestors[e as int];
+        let l = (anc & !s.cell) | wl;
+        let f = (own & !anc & !s.cell) | wf;
+        &&& l & f == 0 && l & s.cell == 0 && f & s.cell == 0
+        &&& l & !live_mask(s.count as u64) == 0
+    }),
+{
+    let anc = s.ancestors[e as int];
+    lemma_root(s, e);
+    lemma_access_main_masks(s, e);
+    // The ancestors of `e` are in its tree.
+    assert forall|t: u64| t < 64 && bit(anc, t) implies bit(own, t) by {
+        lemma_ancestor_is_tag(s, e, t);
+    }
+    let l = (anc & !s.cell) | wl;
+    let f = (own & !anc & !s.cell) | wf;
+    assert forall|t: u64| t < 64 implies !(bit(l, t) && bit(f, t)) && !(bit(l, t) && bit(s.cell, t))
+        && !(bit(f, t) && bit(s.cell, t)) && !(bit(l, t) && bit(!live_mask(s.count as u64), t)) by {
+        lemma_bit_or(anc & !s.cell, wl, t);
+        lemma_bit_or(own & !anc & !s.cell, wf, t);
+        lemma_bit_and(own, !anc, t);
+        lemma_bit_and(own & !anc, !s.cell, t);
+        lemma_bit_and(anc, !s.cell, t);
+        lemma_bit_not(anc, t);
+        lemma_bit_not(s.cell, t);
+        lemma_and_nonzero(wl, wf);
+        lemma_and_nonzero(wl, s.cell);
+        lemma_and_nonzero(wf, s.cell);
+        lemma_and_nonzero(wl, own);
+        lemma_and_nonzero(wf, own);
+        lemma_and_nonzero(wl, !live_mask(s.count as u64));
+        lemma_bit_not(live_mask(s.count as u64), t);
+        lemma_bit_live(s.count as u64, t);
+        if bit(anc, t) { lemma_ancestor_is_tag(s, e, t); }
+    }
+    lemma_and_nonzero(l, f);
+    lemma_and_nonzero(l, s.cell);
+    lemma_and_nonzero(f, s.cell);
+    lemma_and_nonzero(l, !live_mask(s.count as u64));
+}
+
+proof fn lemma_access_wild_spec(s0: MonitorState, s: MonitorState, e: u64, tag: u8,
+    is_write: bool, own: u64, wl: u64, wf: u64, code: u8)
+    requires
+        monitor_wf(&s0), tag < s0.count, e < s0.count, !bit(s0.cell, e), !bit(s0.main, e),
+        !s0.unknown_exposed,
+        e as nat == eff(abstraction(&s0), tag as nat),
+        forall|v: u64| v < 64 ==> bit(own, v) == (v < s0.count && bit(s0.ancestors[v as int],
+            lowest(abstraction(&s0), e as nat) as u64)),
+        own != 0,
+        wild_bits(&s0, is_write, own, 1u64 << (lowest(abstraction(&s0), e as nat) as u64))
+            == (ACCESS_OK, wl, wf),
+        apply_refines(abstraction(&s0), abstraction(&s),
+            mask_set((s0.ancestors[e as int] & !s0.cell) | wl),
+            mask_set((own & !s0.ancestors[e as int] & !s0.cell) | wf), is_write, code),
+    ensures access_refines(abstraction(&s0), abstraction(&s), tag as nat, is_write, code),
+{
+    let a = abstraction(&s0);
+    let r = lowest(a, e as nat);
+    lemma_root(s0, e);
+    assert((r as u64) as nat == r);
+    lemma_wild_meaning(s0, is_write, own, 1u64 << (r as u64), r as u64);
+    assert(wild_own(a, own, r as u64) == tree_set(a, r));
+    assert(wild_root(own, r as u64) == Some(r));
+    let own_set = tree_set(a, r);
+    let (wc, l2, f2) = wild_access(a, own_set, Some(r), is_write);
+    let anc = s0.ancestors[e as int];
+    let lspec = local_set(a, e as nat).union(l2);
+    let fspec = ISet::new(|t: nat| own_set.contains(t) && !a.nodes[e as nat].ancestors.contains(t)
+        && !a.nodes[t].cell).union(f2);
+    assert forall|t: nat| t < a.count implies mask_set((anc & !s0.cell) | wl).contains(t)
+        == lspec.contains(t) && mask_set((own & !anc & !s0.cell) | wf).contains(t)
+        == fspec.contains(t) by {
+        let u = t as u64;
+        assert(mask_set(wl).contains(t) == l2.contains(t));
+        assert(mask_set(wf).contains(t) == f2.contains(t));
+        lemma_bit_or(anc & !s0.cell, wl, u);
+        lemma_bit_or(own & !anc & !s0.cell, wf, u);
+        lemma_bit_and(own, !anc, u);
+        lemma_bit_and(own & !anc, !s0.cell, u);
+        lemma_bit_and(anc, !s0.cell, u);
+        lemma_bit_not(anc, u);
+        lemma_bit_not(s0.cell, u);
+        assert(own_set.contains(t) == (t < a.count && a.nodes[t].ancestors.contains(r)));
+    }
+    lemma_apply_refines_ext(a, abstraction(&s), mask_set((anc & !s0.cell) | wl),
+        mask_set((own & !anc & !s0.cell) | wf), lspec, fspec, is_write, code);
+}
+
+/// `r` is the mask of the tags whose ancestors meet `b`.
+pub open spec fn holders_spec(s: &MonitorState, b: u64, r: u64) -> bool {
+    forall|i: u64| i < 64 ==> bit(r, i) == (i < s.count && s.ancestors[i as int] & b != 0)
+}
+
+proof fn lemma_wildcard_spec(s0: MonitorState, s: MonitorState, is_write: bool, l: u64, f: u64,
+    code: u8)
+    requires
+        monitor_wf(&s0), !s0.unknown_exposed,
+        wild_bits(&s0, is_write, 0, 0) == (ACCESS_OK, l, f),
+        apply_refines(abstraction(&s0), abstraction(&s), mask_set(l), mask_set(f), is_write, code),
+    ensures
+        code == ACCESS_UNKNOWN_WILDCARD || wildcard_refines(abstraction(&s0), abstraction(&s),
+            is_write, code),
+        wildcard_refines(abstraction(&s0), abstraction(&s), is_write, ACCESS_UNKNOWN_WILDCARD),
+{
+    let a = abstraction(&s0);
+    lemma_wild_meaning(s0, is_write, 0, 0, 0);
+    assert(wild_own(a, 0, 0) == ISet::<nat>::empty());
+    assert(wild_root(0, 0) == None::<nat>);
+    let w = wild_access(a, ISet::empty(), None, is_write);
+    lemma_apply_refines_ext(a, abstraction(&s), mask_set(l), mask_set(f), w.1, w.2, is_write, code);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Retags (Miri `NewPermission` and `tb_reborrow`)
+// ---------------------------------------------------------------------------------------------
+
+/// The node a retag creates as tag `n` at the tracked location, from a pointer tagged `parent`
+/// (or created from an integer: `EXPOSED_TAG`, which starts a wildcard tree). In the range
+/// (`covers`) the permission depends on whether the byte is in an `UnsafeCell` (`in_cell`),
+/// outside it on whether the whole type is `Freeze` (`freeze`): a shared reference gets Frozen,
+/// or `Cell`; a mutable reference or `Box` gets Reserved, interior-mutable unless protected or
+/// frozen. Only the in-range part of a non-`Cell` permission is accessed (initialized).
+pub open spec fn retag_node(a: AbsState, parent: nat, n: nat, covers: bool, in_cell: bool,
+    freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool) -> Node
+{
+    let cellish = if covers { in_cell } else { !freeze };
+    let is_cell = is_shared && cellish;
+    let wild = parent == EXPOSED_TAG as nat;
+    Node {
+        ancestors: if wild { ISet::empty().insert(n) } else { a.nodes[parent].ancestors.insert(n) },
+        main: !wild && a.nodes[parent].main,
+        perm: if is_shared && !is_cell {
+            Perm::Frozen
+        } else {
+            Perm::Reserved { conflicted: false, interior: !is_shared && cellish && !is_protected }
+        },
+        protected: is_protected && !is_cell,
+        strong: is_protected && is_strong && !is_cell,
+        initialized: covers && !is_cell,
+        cell: is_cell,
+        alias: if is_cell { eff(a, parent) } else { n },
+        exposed: false,
+    }
+}
+
+pub open spec fn retag_spec(a: AbsState, b: AbsState, parent: nat, covers: bool, in_cell: bool,
+    freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool, r: nat) -> bool
+{
+    let cellish = if covers { in_cell } else { !freeze };
+    let is_cell = is_shared && cellish;
+    if parent >= a.count && parent != EXPOSED_TAG as nat {
+        r == parent && same_state(a, b)
+    } else if a.count == 64 {
+        r == UNKNOWN_TAG as nat && same_state(a, b)
+    } else if is_cell && parent == EXPOSED_TAG as nat {
+        r == UNKNOWN_TAG as nat && same_state(a, b)
+    } else {
+        &&& r == a.count
+        &&& b.count == a.count + 1
+        &&& b.unknown_exposed == a.unknown_exposed
+        &&& forall|t: nat| t < a.count ==> node_eq(#[trigger] b.nodes[t], a.nodes[t])
+        &&& node_eq(b.nodes[r], retag_node(a, parent, r, covers, in_cell, freeze, is_shared,
+            is_protected, is_strong))
+    }
+}
+
+#[verifier::rlimit(100)]
+proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers: bool,
+    in_cell: bool, freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool)
     requires
         monitor_wf(&s0),
-        parent < s0.count,
+        parent < s0.count || parent == EXPOSED_TAG,
         s0.count < 64,
         ({
             let t = s0.count as u64;
             let b = 1u64 << t;
-            let is_cell = is_shared && in_cell && covers;
+            let cellish = if covers { in_cell } else { !freeze };
+            let is_cell = is_shared && cellish;
+            let wild = parent == EXPOSED_TAG;
+            &&& !(is_cell && wild)
             &&& s.count == s0.count + 1
-            &&& s.ancestors@ == s0.ancestors@.update(t as int, s0.ancestors[parent as int] | b)
+            &&& s.tracked_object_id == s0.tracked_object_id
+            &&& s.tracked_offset == s0.tracked_offset
+            &&& s.unknown_exposed == s0.unknown_exposed
+            &&& s.ancestors@ == s0.ancestors@.update(t as int, if wild { b } else {
+                    s0.ancestors[parent as int] | b })
+            &&& s.main == if !wild && s0.main & (1u64 << parent) != 0 { s0.main | b } else {
+                    s0.main & !b }
             &&& s.valid == s0.valid | b
             &&& s.active == s0.active & !b
             &&& s.conflicted == s0.conflicted & !b
@@ -532,99 +1700,158 @@ proof fn lemma_new_borrow(
                     t as u8
                 })
             &&& s.cell == if is_cell { s0.cell | b } else { s0.cell & !b }
-            &&& s.interior == if !is_shared && in_cell && covers { s0.interior | b } else {
+            &&& s.interior == if !is_shared && cellish && !is_protected { s0.interior | b } else {
                     s0.interior & !b }
             &&& s.initialized == if covers && !is_cell { s0.initialized | b } else {
                     s0.initialized & !b }
             &&& s.protected == if is_protected && !is_cell { s0.protected | b } else {
                     s0.protected & !b }
+            &&& s.strong == if is_protected && is_strong && !is_cell { s0.strong | b } else {
+                    s0.strong & !b }
             &&& s.frozen == if is_shared && !is_cell { s0.frozen | b } else { s0.frozen & !b }
         }),
     ensures
         monitor_wf(&s),
-        retag_spec(abstraction(&s0), abstraction(&s), parent as nat, covers, in_cell, is_shared,
-            is_protected, s0.count as nat),
+        retag_spec(abstraction(&s0), abstraction(&s), parent as nat, covers, in_cell, freeze,
+            is_shared, is_protected, is_strong, s0.count as nat),
 {
     let t = s0.count as u64;
     let p = parent as u64;
-    let is_cell = is_shared && in_cell && covers;
-    let is_interior = !is_shared && in_cell && covers;
+    let wild = parent == EXPOSED_TAG;
+    let cellish = if covers { in_cell } else { !freeze };
+    let is_cell = is_shared && cellish;
+    let is_interior = !is_shared && cellish && !is_protected;
     let is_initialized = covers && !is_cell;
     let is_prot = is_protected && !is_cell;
+    let is_strong_p = is_protected && is_strong && !is_cell;
     let is_frozen = is_shared && !is_cell;
+    let in_main = !wild && bit(s0.main, p);
+    if !wild { lemma_test_bit(s0.main, p); lemma_test_bit(s0.cell, p); }
     assert forall|i: u64| i < 64 implies {
         &&& bit(s.valid, i) == (i == t || bit(s0.valid, i))
         &&& bit(s.active, i) == (i != t && bit(s0.active, i))
         &&& bit(s.conflicted, i) == (i != t && bit(s0.conflicted, i))
         &&& bit(s.exposed, i) == (i != t && bit(s0.exposed, i))
+        &&& bit(s.main, i) == if i == t { in_main } else { bit(s0.main, i) }
         &&& bit(s.cell, i) == if i == t { is_cell } else { bit(s0.cell, i) }
         &&& bit(s.interior, i) == if i == t { is_interior } else { bit(s0.interior, i) }
         &&& bit(s.initialized, i) == if i == t { is_initialized } else { bit(s0.initialized, i) }
         &&& bit(s.protected, i) == if i == t { is_prot } else { bit(s0.protected, i) }
+        &&& bit(s.strong, i) == if i == t { is_strong_p } else { bit(s0.strong, i) }
         &&& bit(s.frozen, i) == if i == t { is_frozen } else { bit(s0.frozen, i) }
     } by {
-        lemma_new_borrow_bits(s0, s, t, i, is_cell, is_interior, is_initialized, is_prot,
-            is_frozen);
+        lemma_bit_set(s0.valid, t, i);
+        lemma_bit_set(s0.active, t, i);
+        lemma_bit_set(s0.conflicted, t, i);
+        lemma_bit_set(s0.exposed, t, i);
+        lemma_bit_set(s0.main, t, i);
+        lemma_bit_set(s0.cell, t, i);
+        lemma_bit_set(s0.interior, t, i);
+        lemma_bit_set(s0.initialized, t, i);
+        lemma_bit_set(s0.protected, t, i);
+        lemma_bit_set(s0.strong, t, i);
+        lemma_bit_set(s0.frozen, t, i);
     }
-    assert forall|i: u64| i < 64 implies
-        bit(s0.ancestors[p as int] | (1u64 << t), i) == (i == t || bit(s0.ancestors[p as int], i))
-    by {
-        lemma_bit_set(s0.ancestors[p as int], t, i);
+    let ap = if wild { 0u64 } else { s0.ancestors[p as int] };
+    assert(s.ancestors[t as int] == ap | (1u64 << t)) by {
+        if wild { lemma_or_zero(1u64 << t); assert((0u64 | (1u64 << t)) == (1u64 << t)) by (bit_vector); }
     }
-    lemma_test_bit(s0.cell, p);
-    // Tags other than the new one keep their ancestors and aliases.
+    assert forall|i: u64| i < 64 implies bit(s.ancestors[t as int], i) == (i == t || bit(ap, i)) by {
+        lemma_bit_set(ap, t, i);
+        if wild { lemma_bit_zero(i); }
+    }
+    if !wild {
+        assert(bit(ap, p));
+        assert forall|u: u64| u < 64 && bit(ap, u) implies u <= p by {}
+    }
     assert forall|u: u64| u < t implies s.ancestors[u as int] == s0.ancestors[u as int]
         && s.alias[u as int] == s0.alias[u as int] by {}
-    let ap = s0.ancestors[p as int];
-    assert(s.ancestors[t as int] == ap | (1u64 << t));
-    // The new tag's ancestors: itself and its parent's.
-    assert forall|u: u64| u < 64 implies
-        bit(s.ancestors[t as int], u) == (u == t || bit(ap, u)) by {
-        lemma_bit_set(ap, t, u);
-    }
-    assert(bit(ap, p) && bit(ap, 0));
-    assert forall|u: u64| u < 64 && bit(ap, u) implies u <= p by {}
-    // wf: the tree.
+    // wf: the trees.
     assert forall|x: u64| #![trigger s.ancestors[x as int]] x < s.count implies {
         &&& bit(s.ancestors[x as int], x)
-        &&& bit(s.ancestors[x as int], 0)
         &&& forall|u: u64| u < 64 && bit(s.ancestors[x as int], u) ==> u <= x
         &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
             && bit(s.ancestors[u as int], w) ==> bit(s.ancestors[x as int], w)
+        &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
+            && bit(s.ancestors[x as int], w) && u <= w ==> bit(s.ancestors[w as int], u)
+        &&& bit(s.main, x) == bit(s.ancestors[x as int], 0)
     } by {
         if x < t {
             assert(s.ancestors[x as int] == s0.ancestors[x as int]);
-            assert(bit(s0.ancestors[x as int], x) && bit(s0.ancestors[x as int], 0));
-            assert forall|u: u64| u < 64 && bit(s.ancestors[x as int], u) implies u <= x by {
-                assert(bit(s0.ancestors[x as int], u));
-            }
+            assert(s0.ancestors[x as int] == s0.ancestors[x as int]);
+            lemma_bit_set(s0.main, t, x);
+            if !wild && bit(s0.main, p) { assert(bit(s.main, x) == bit(s0.main, x)); }
+            assert forall|u: u64| u < 64 && bit(s.ancestors[x as int], u) implies u <= x by {}
             assert forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
                 && bit(s.ancestors[u as int], w) implies bit(s.ancestors[x as int], w) by {
-                assert(bit(s0.ancestors[x as int], u));
                 assert(u <= x);
                 assert(s.ancestors[u as int] == s0.ancestors[u as int]);
+            }
+            assert forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
+                && bit(s.ancestors[x as int], w) && u <= w implies bit(s.ancestors[w as int], u) by {
+                assert(w <= x);
+                assert(s.ancestors[w as int] == s0.ancestors[w as int]);
             }
         } else {
             assert(x == t);
             lemma_bit_set(ap, t, t);
-            lemma_bit_set(ap, t, 0);
-            assert(bit(s.ancestors[x as int], x));
-            assert(bit(s.ancestors[x as int], 0));
             assert forall|u: u64| u < 64 && bit(s.ancestors[x as int], u) implies u <= x by {
                 if u != t {
                     assert(bit(ap, u));
+                    if wild {
+                        lemma_bit_zero(u);
+                    } else {
+                        assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
+                        assert(u <= p);
+                    }
                 }
             }
             assert forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
                 && bit(s.ancestors[u as int], w) implies bit(s.ancestors[x as int], w) by {
                 if u != t {
                     assert(bit(ap, u));
+                    if wild { lemma_bit_zero(u); }
+                    assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
                     assert(u <= p);
                     assert(s.ancestors[u as int] == s0.ancestors[u as int]);
-                    assert(bit(s0.ancestors[p as int], w));
+                    assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
                 }
             }
+            assert forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
+                && bit(s.ancestors[x as int], w) && u <= w implies bit(s.ancestors[w as int], u) by {
+                if w == t {
+                } else {
+                    assert(bit(ap, w));
+                    if wild { lemma_bit_zero(w); }
+                    assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
+                    assert(w <= p);
+                    if u == t { assert(false); }
+                    assert(bit(ap, u));
+                    assert(s.ancestors[w as int] == s0.ancestors[w as int]);
+                    assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
+                }
+            }
+            lemma_bit_set(ap, t, 0);
+            if !wild {
+                assert(s0.ancestors[p as int] == s0.ancestors[p as int]);
+                assert(bit(s0.main, p) == bit(s0.ancestors[p as int], 0));
+                assert(t != 0);
+                assert(bit(s.ancestors[x as int], 0) == bit(ap, 0));
+                assert(bit(s.main, x) == in_main);
+            } else {
+                lemma_bit_zero(0);
+                assert(t != 0);
+                assert(!bit(s.ancestors[x as int], 0));
+                assert(!bit(s.main, x));
+            }
         }
+            assert(bit(s.ancestors[x as int], x));
+        assert(forall|u: u64| u < 64 && bit(s.ancestors[x as int], u) ==> u <= x);
+        assert(forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
+            && bit(s.ancestors[u as int], w) ==> bit(s.ancestors[x as int], w));
+        assert(forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[x as int], u)
+            && bit(s.ancestors[x as int], w) && u <= w ==> bit(s.ancestors[w as int], u));
+        assert(bit(s.main, x) == bit(s.ancestors[x as int], 0));
     }
     // wf: aliases.
     assert forall|x: u64| #![trigger s.alias[x as int]] x < s.count implies if bit(s.cell, x) {
@@ -636,32 +1863,19 @@ proof fn lemma_new_borrow(
     } by {
         if x < t {
             assert(s.alias[x as int] == s0.alias[x as int]);
-            assert(bit(s.cell, x) == bit(s0.cell, x));
             if bit(s0.cell, x) {
                 assert(s0.alias[x as int] < x);
-                assert(bit(s.cell, s.alias[x as int] as u64) == bit(s0.cell, s0.alias[x as int] as u64));
             }
-        } else {
-            assert(x == t);
-            if is_cell && bit(s0.cell, p) {
-                let q = s0.alias[p as int] as u64;
-                assert(q < p && !bit(s0.cell, q) && bit(ap, q));
-                assert(bit(s.cell, q) == bit(s0.cell, q));
-            } else if is_cell {
-                assert(bit(s.cell, p) == bit(s0.cell, p));
-            }
+        } else if is_cell && bit(s0.cell, p) {
+            let q = s0.alias[p as int] as u64;
+            assert(s0.alias[p as int] == s0.alias[p as int]);
+            assert(q < p && !bit(s0.cell, q) && bit(ap, q));
         }
     }
-    assert(!bit(s.cell, 0));
     assert forall|i: u64| t + 1 <= i < 64 implies !bit(s.valid, i) && !bit(s.active, i)
         && !bit(s.frozen, i) && !bit(s.conflicted, i) && !bit(s.interior, i)
-        && !bit(s.protected, i) && !bit(s.initialized, i) && !bit(s.cell, i)
-        && !bit(s.exposed, i) by {}
-    assert forall|i: u64| i < 64 && bit(s.frozen, i) && bit(s.interior, i) implies bit(s.active, i) by {
-        if i != t {
-            assert(bit(s0.frozen, i) && bit(s0.interior, i));
-        }
-    }
+        && !bit(s.protected, i) && !bit(s.strong, i) && !bit(s.initialized, i)
+        && !bit(s.cell, i) && !bit(s.exposed, i) && !bit(s.main, i) by {}
     // The refinement.
     let a = abstraction(&s0);
     let b = abstraction(&s);
@@ -669,403 +1883,23 @@ proof fn lemma_new_borrow(
         assert(s.ancestors[x as int] == s0.ancestors[x as int]);
         assert(mask_set(s.ancestors[x as int]) =~= mask_set(s0.ancestors[x as int]));
     }
-    assert(b.nodes[t as nat].ancestors =~= a.nodes[parent as nat].ancestors.insert(t as nat));
-}
-
-// ---------------------------------------------------------------------------------------------
-// Stages 2-7 and 9: accesses (Tree Borrows' transitions at one location)
-// ---------------------------------------------------------------------------------------------
-
-/// Tree Borrows' transition of a node for an access that is local to it (the access goes
-/// through the node or one of its descendants). `None`: undefined behavior.
-pub open spec fn local_step(n: Node, is_write: bool) -> Option<Node> {
-    let prot = n.protected && n.initialized;
-    match n.perm {
-        Perm::Disabled => None,
-        Perm::Frozen => if is_write { None } else { Some(Node { initialized: true, ..n }) },
-        Perm::Active => Some(Node { initialized: true, ..n }),
-        Perm::Reserved { conflicted, interior } => if !is_write {
-            Some(Node { initialized: true, ..n })
-        } else if conflicted && prot {
-            None
-        } else {
-            Some(Node { perm: Perm::Active, initialized: true, ..n })
-        },
-    }
-}
-
-/// Tree Borrows' transition of a node for a foreign access. A protected node with an
-/// initialized permission must not become Disabled.
-pub open spec fn foreign_step(n: Node, is_write: bool) -> Option<Node> {
-    let prot = n.protected && n.initialized;
-    match n.perm {
-        Perm::Disabled => Some(n),
-        Perm::Frozen => if !is_write { Some(n) } else if prot { None } else {
-            Some(Node { perm: Perm::Disabled, ..n })
-        },
-        Perm::Active => if !is_write {
-            Some(Node { perm: Perm::Frozen, ..n })
-        } else if prot {
-            None
-        } else {
-            Some(Node { perm: Perm::Disabled, ..n })
-        },
-        Perm::Reserved { conflicted, interior } => if !is_write {
-            if prot { Some(Node { perm: Perm::Reserved { conflicted: true, interior }, ..n }) }
-            else { Some(n) }
-        } else if interior {
-            Some(n)
-        } else if prot {
-            None
-        } else {
-            Some(Node { perm: Perm::Disabled, ..n })
-        },
-    }
-}
-
-/// The transition of node `t` for an access through `e`. A shared reference to a cell's bytes
-/// is not a node at this location and never changes.
-pub open spec fn node_step(a: AbsState, e: nat, t: nat, is_write: bool) -> Option<Node> {
-    if a.nodes[t].cell {
-        Some(a.nodes[t])
-    } else if a.nodes[e].ancestors.contains(t) {
-        local_step(a.nodes[t], is_write)
+    if wild {
+        assert forall|i: nat| b.nodes[t as nat].ancestors.contains(i) == (i == t as nat) by {
+            if i < 64 { lemma_bit_set(ap, t, i as u64); lemma_bit_zero(i as u64); }
+        }
+        assert(b.nodes[t as nat].ancestors =~= ISet::<nat>::empty().insert(t as nat));
     } else {
-        foreign_step(a.nodes[t], is_write)
-    }
-}
-
-/// An access through tag `tag` is undefined behavior if any node's transition is.
-pub open spec fn access_ub(a: AbsState, tag: nat, is_write: bool) -> bool {
-    exists|t: nat| t < a.count && #[trigger] node_step(a, eff(a, tag), t, is_write) is None
-}
-
-/// The bits `monitor_access` computes from the tag `e` it acts through.
-pub open spec fn access_local(s: &MonitorState, e: u64) -> u64 {
-    s.ancestors[e as int] & !s.cell
-}
-
-pub open spec fn access_foreign(s: &MonitorState, e: u64) -> u64 {
-    s.valid & !s.ancestors[e as int] & !s.cell
-}
-
-proof fn lemma_access_masks(s: MonitorState, e: u64, i: u64)
-    requires i < 64,
-    ensures
-        bit(access_local(&s, e), i) == (bit(s.ancestors[e as int], i) && !bit(s.cell, i)),
-        bit(access_foreign(&s, e), i)
-            == (bit(s.valid, i) && !bit(s.ancestors[e as int], i) && !bit(s.cell, i)),
-{
-    lemma_bit_and(s.ancestors[e as int], !s.cell, i);
-    lemma_bit_not(s.cell, i);
-    lemma_bit_and(s.valid, !s.ancestors[e as int], i);
-    lemma_bit_and(s.valid & !s.ancestors[e as int], !s.cell, i);
-    lemma_bit_not(s.ancestors[e as int], i);
-}
-
-/// The tag `monitor_access` acts through is `eff`, and it is a node of the tree.
-proof fn lemma_access_eff(s: MonitorState, tag: u8, e: u8)
-    requires
-        monitor_wf(&s),
-        tag < s.count,
-        e == if s.cell & (1u64 << tag) != 0 { s.alias[tag as int] } else { tag },
-    ensures
-        e as nat == eff(abstraction(&s), tag as nat),
-        e < s.count,
-        !bit(s.cell, e as u64),
-{
-    lemma_test_bit(s.cell, tag as u64);
-    assert(s.alias[tag as int] == s.alias[tag as int]);
-}
-
-/// A tag in the path of `e` is a tag.
-proof fn lemma_local_is_tag(s: MonitorState, e: u64, i: u64)
-    requires monitor_wf(&s), e < s.count, i < 64, bit(s.ancestors[e as int], i),
-    ensures i <= e, i < s.count,
-{
-    assert(s.ancestors[e as int] == s.ancestors[e as int]);
-}
-
-/// UB witness: a disabled tag on the path.
-proof fn lemma_access_ub_invalid(s: MonitorState, tag: u8, e: u8, is_write: bool)
-    requires
-        monitor_wf(&s), tag < s.count, e as nat == eff(abstraction(&s), tag as nat), e < s.count,
-        s.valid & access_local(&s, e as u64) != access_local(&s, e as u64),
-    ensures access_ub(abstraction(&s), tag as nat, is_write),
-{
-    let l = access_local(&s, e as u64);
-    lemma_subset(s.valid, l);
-    let i = choose|i: u64| i < 64 && bit(l, i) && !bit(s.valid, i);
-    lemma_access_masks(s, e as u64, i);
-    lemma_local_is_tag(s, e as u64, i);
-    let a = abstraction(&s);
-    assert(a.nodes[e as nat].ancestors.contains(i as nat));
-    assert(node_step(a, eff(a, tag as nat), i as nat, is_write) is None);
-}
-
-/// UB witness: a write through a path with a frozen tag.
-proof fn lemma_access_ub_frozen(s: MonitorState, tag: u8, e: u8)
-    requires
-        monitor_wf(&s), tag < s.count, e as nat == eff(abstraction(&s), tag as nat), e < s.count,
-        s.valid & access_local(&s, e as u64) == access_local(&s, e as u64),
-        s.frozen & access_local(&s, e as u64) != 0,
-    ensures access_ub(abstraction(&s), tag as nat, true),
-{
-    let l = access_local(&s, e as u64);
-    lemma_subset(s.valid, l);
-    lemma_and_nonzero(s.frozen, l);
-    let i = choose|i: u64| i < 64 && bit(s.frozen, i) && bit(l, i);
-    lemma_access_masks(s, e as u64, i);
-    lemma_local_is_tag(s, e as u64, i);
-    let a = abstraction(&s);
-    assert(a.nodes[e as nat].ancestors.contains(i as nat));
-    assert(node_step(a, eff(a, tag as nat), i as nat, true) is None);
-}
-
-/// UB witness: a write that disables, or activates a conflicted, protected tag.
-proof fn lemma_access_ub_protector(s: MonitorState, tag: u8, e: u8)
-    requires
-        monitor_wf(&s), tag < s.count, e as nat == eff(abstraction(&s), tag as nat), e < s.count,
-        s.valid & access_local(&s, e as u64) == access_local(&s, e as u64),
-        s.frozen & access_local(&s, e as u64) == 0,
-        (s.protected & s.initialized) & ((access_foreign(&s, e as u64) & !(s.interior & !s.active))
-            | (s.conflicted & access_local(&s, e as u64))) != 0,
-    ensures access_ub(abstraction(&s), tag as nat, true),
-{
-    let l = access_local(&s, e as u64);
-    let f = access_foreign(&s, e as u64);
-    let d = f & !(s.interior & !s.active);
-    let pi = s.protected & s.initialized;
-    lemma_and_nonzero(pi, d | (s.conflicted & l));
-    let i = choose|i: u64| i < 64 && bit(pi, i) && bit(d | (s.conflicted & l), i);
-    lemma_access_masks(s, e as u64, i);
-    lemma_bit_and(s.protected, s.initialized, i);
-    lemma_bit_or(d, s.conflicted & l, i);
-    lemma_bit_and(s.conflicted, l, i);
-    lemma_bit_and(f, !(s.interior & !s.active), i);
-    lemma_bit_not(s.interior & !s.active, i);
-    lemma_bit_and(s.interior, !s.active, i);
-    lemma_bit_not(s.active, i);
-    lemma_subset(s.valid, l);
-    let a = abstraction(&s);
-    if bit(d, i) {
-        assert(i < s.count) by {
-            if i >= s.count { assert(!bit(s.valid, i)); }
-        }
-        assert(!a.nodes[e as nat].ancestors.contains(i as nat));
-        assert(node_step(a, eff(a, tag as nat), i as nat, true) is None);
-    } else {
-        lemma_local_is_tag(s, e as u64, i);
-        assert(a.nodes[e as nat].ancestors.contains(i as nat));
-        assert(node_step(a, eff(a, tag as nat), i as nat, true) is None);
-    }
-}
-
-/// The state after a successful access through `e`.
-pub open spec fn access_post_state(s0: &MonitorState, s: &MonitorState, e: u64, is_write: bool) -> bool {
-    let l = access_local(s0, e);
-    let f = access_foreign(s0, e);
-    let pi = s0.protected & s0.initialized;
-    &&& s.count == s0.count
-    &&& s.ancestors == s0.ancestors
-    &&& s.alias == s0.alias
-    &&& s.cell == s0.cell
-    &&& s.interior == s0.interior
-    &&& s.protected == s0.protected
-    &&& s.exposed == s0.exposed
-    &&& s.unknown_exposed == s0.unknown_exposed
-    &&& s.initialized == s0.initialized | l
-    &&& if is_write {
-        &&& s.valid == s0.valid & !(f & !(s0.interior & !s0.active))
-        &&& s.active == s0.active | l
-        &&& s.frozen == s0.frozen
-        &&& s.conflicted == s0.conflicted
-    } else {
-        &&& s.valid == s0.valid
-        &&& s.active == s0.active
-        &&& s.conflicted == s0.conflicted | (pi & f & !s0.active & !s0.frozen)
-        &&& s.frozen == s0.frozen | (s0.active & f)
-    }
-}
-
-/// The absence of the conditions `monitor_access` rejects.
-pub open spec fn access_allowed(s0: &MonitorState, e: u64, is_write: bool) -> bool {
-    let l = access_local(s0, e);
-    let f = access_foreign(s0, e);
-    let pi = s0.protected & s0.initialized;
-    &&& s0.valid & l == l
-    &&& is_write ==> s0.frozen & l == 0
-    &&& is_write ==> pi & ((f & !(s0.interior & !s0.active)) | (s0.conflicted & l)) == 0
-}
-
-/// One node after a successful access is Tree Borrows' transition of it.
-proof fn lemma_access_node(s0: MonitorState, s: MonitorState, e: u64, is_write: bool, t: u64)
-    requires
-        monitor_wf(&s0), e < s0.count, !bit(s0.cell, e), t < s0.count,
-        access_allowed(&s0, e, is_write),
-        access_post_state(&s0, &s, e, is_write),
-    ensures ({
-        let a = abstraction(&s0);
-        &&& node_step(a, e as nat, t as nat, is_write) is Some
-        &&& node_eq(node_of(&s, t), node_step(a, e as nat, t as nat, is_write)->Some_0)
-    }),
-{
-    let l = access_local(&s0, e);
-    let f = access_foreign(&s0, e);
-    let pi = s0.protected & s0.initialized;
-    let d = f & !(s0.interior & !s0.active);
-    lemma_access_masks(s0, e, t);
-    lemma_bit_and(s0.protected, s0.initialized, t);
-    lemma_bit_or(s0.initialized, l, t);
-    lemma_bit_and(f, !(s0.interior & !s0.active), t);
-    lemma_bit_not(s0.interior & !s0.active, t);
-    lemma_bit_and(s0.interior, !s0.active, t);
-    lemma_bit_not(s0.active, t);
-    lemma_bit_and(s0.valid, !d, t);
-    lemma_bit_not(d, t);
-    lemma_bit_or(s0.active, l, t);
-    lemma_bit_and(pi, f, t);
-    lemma_bit_and(pi & f, !s0.active, t);
-    lemma_bit_and(pi & f & !s0.active, !s0.frozen, t);
-    lemma_bit_not(s0.frozen, t);
-    lemma_bit_or(s0.conflicted, pi & f & !s0.active & !s0.frozen, t);
-    lemma_bit_and(s0.active, f, t);
-    lemma_bit_or(s0.frozen, s0.active & f, t);
-    lemma_subset(s0.valid, l);
-    if is_write {
-        lemma_and_nonzero(s0.frozen, l);
-        lemma_and_nonzero(pi, d | (s0.conflicted & l));
-        lemma_bit_or(d, s0.conflicted & l, t);
-        lemma_bit_and(s0.conflicted, l, t);
-    }
-    let a = abstraction(&s0);
-    assert(a.nodes[e as nat].ancestors.contains(t as nat) == bit(s0.ancestors[e as int], t));
-    assert(mask_set(s.ancestors[t as int]) =~= mask_set(s0.ancestors[t as int]));
-}
-
-/// A successful access refines Tree Borrows and keeps the state well-formed.
-proof fn lemma_access_ok(s0: MonitorState, s: MonitorState, tag: u8, e: u8, is_write: bool)
-    requires
-        monitor_wf(&s0), tag < s0.count, e as nat == eff(abstraction(&s0), tag as nat),
-        e < s0.count, !bit(s0.cell, e as u64),
-        access_allowed(&s0, e as u64, is_write),
-        access_post_state(&s0, &s, e as u64, is_write),
-    ensures
-        monitor_wf(&s),
-        access_refines(abstraction(&s0), abstraction(&s), tag as nat, is_write, ACCESS_OK),
-{
-    let a = abstraction(&s0);
-    let b = abstraction(&s);
-    assert forall|t: nat| t < a.count implies {
-        &&& node_step(a, eff(a, tag as nat), t, is_write) is Some
-        &&& node_eq(#[trigger] b.nodes[t], node_step(a, eff(a, tag as nat), t, is_write)->Some_0)
-    } by {
-        lemma_access_node(s0, s, e as u64, is_write, t as u64);
-    }
-    assert forall|t: nat| t < a.count implies
-        (#[trigger] node_step(a, eff(a, tag as nat), t, is_write)) is Some by {
-        lemma_access_node(s0, s, e as u64, is_write, t as u64);
-    }
-    assert(!access_ub(a, tag as nat, is_write));
-    // Well-formedness: the tree and aliases are unchanged; the permission invariants hold.
-    let l = access_local(&s0, e as u64);
-    let f = access_foreign(&s0, e as u64);
-    assert forall|i: u64| i < 64 implies {
-        &&& (bit(s.frozen, i) && bit(s.interior, i) ==> bit(s.active, i))
-        &&& (bit(s.conflicted, i) ==> !bit(s.active, i) && !bit(s.frozen, i)
-            && bit(s.protected, i) && bit(s.initialized, i))
-        &&& (s0.count <= i ==> !bit(s.valid, i) && !bit(s.active, i) && !bit(s.frozen, i)
-            && !bit(s.conflicted, i) && !bit(s.initialized, i))
-    } by {
-        if i < s0.count {
-            lemma_access_node(s0, s, e as u64, is_write, i);
-        }
-        lemma_access_masks(s0, e as u64, i);
-        let pi = s0.protected & s0.initialized;
-        let d = f & !(s0.interior & !s0.active);
-        lemma_bit_and(s0.protected, s0.initialized, i);
-        lemma_bit_or(s0.initialized, l, i);
-        lemma_bit_and(f, !(s0.interior & !s0.active), i);
-        lemma_bit_not(s0.interior & !s0.active, i);
-        lemma_bit_and(s0.interior, !s0.active, i);
-        lemma_bit_not(s0.active, i);
-        lemma_bit_and(s0.valid, !d, i);
-        lemma_bit_not(d, i);
-        lemma_bit_or(s0.active, l, i);
-        lemma_bit_and(pi, f, i);
-        lemma_bit_and(pi & f, !s0.active, i);
-        lemma_bit_and(pi & f & !s0.active, !s0.frozen, i);
-        lemma_bit_not(s0.frozen, i);
-        lemma_bit_or(s0.conflicted, pi & f & !s0.active & !s0.frozen, i);
-        lemma_bit_and(s0.active, f, i);
-        lemma_bit_or(s0.frozen, s0.active & f, i);
-        if s0.count <= i {
-            if bit(s0.ancestors[e as int], i) { lemma_local_is_tag(s0, e as u64, i); }
-        }
-        if is_write {
-            lemma_and_nonzero(pi, d | (s0.conflicted & l));
-            lemma_bit_or(d, s0.conflicted & l, i);
-            lemma_bit_and(s0.conflicted, l, i);
-        }
-    }
-}
-
-pub open spec fn access_refines(
-    before: AbsState,
-    after: AbsState,
-    tag: nat,
-    is_write: bool,
-    code: u8,
-) -> bool {
-    &&& (code == ACCESS_OK) == !access_ub(before, tag, is_write)
-    &&& code != ACCESS_OK ==> code == ACCESS_INVALIDATED || code == ACCESS_WRITE_FROZEN
-        || code == ACCESS_PROTECTOR
-    &&& code == ACCESS_OK ==> {
-        &&& after.count == before.count
-        &&& forall|t: nat| t < before.count ==> node_eq(#[trigger] after.nodes[t],
-                node_step(before, eff(before, tag), t, is_write)->Some_0)
+        assert(b.nodes[t as nat].ancestors =~= a.nodes[parent as nat].ancestors.insert(t as nat));
     }
 }
 
 // ---------------------------------------------------------------------------------------------
-// Stages 10-11: deallocation under a protector, exposed provenance
+// Exposure (Miri `expose_tag`)
 // ---------------------------------------------------------------------------------------------
 
-/// Deallocating the tracked location is undefined behavior if a protected tag has an
-/// initialized permission there that is not Disabled.
-pub open spec fn dealloc_ub(a: AbsState) -> bool {
-    exists|t: nat| t < a.count && {
-        let n = #[trigger] a.nodes[t];
-        !n.cell && n.perm != Perm::Disabled && n.protected && n.initialized
-    }
-}
-
-proof fn lemma_dealloc(s: MonitorState)
-    requires monitor_wf(&s),
-    ensures (s.protected & s.initialized & s.valid & !s.cell != 0) == dealloc_ub(abstraction(&s)),
-{
-    let m = s.protected & s.initialized & s.valid & !s.cell;
-    let a = abstraction(&s);
-    assert forall|i: u64| i < 64 implies bit(m, i) == (bit(s.protected, i) && bit(s.initialized, i)
-        && bit(s.valid, i) && !bit(s.cell, i)) by {
-        lemma_bit_and(s.protected, s.initialized, i);
-        lemma_bit_and(s.protected & s.initialized, s.valid, i);
-        lemma_bit_and(s.protected & s.initialized & s.valid, !s.cell, i);
-        lemma_bit_not(s.cell, i);
-    }
-    if m != 0 {
-        lemma_nonzero_witness(m);
-        let i = choose|i: u64| i < 64 && bit(m, i);
-        assert(i < s.count) by { if i >= s.count { assert(!bit(s.valid, i)); } }
-        assert(a.nodes[i as nat].perm != Perm::Disabled);
-    } else {
-        assert forall|t: nat| t < a.count implies !({
-            let n = #[trigger] a.nodes[t];
-            !n.cell && n.perm != Perm::Disabled && n.protected && n.initialized
-        }) by {
-            lemma_bit_zero(t as u64);
-        }
-    }
+/// `b` is `a` with the nodes of the tags in `changed` replaced; the others are unchanged.
+pub open spec fn same_nodes_except(a: AbsState, b: AbsState, changed: ISet<nat>) -> bool {
+    forall|t: nat| t < a.count && !changed.contains(t) ==> node_eq(#[trigger] b.nodes[t], a.nodes[t])
 }
 
 /// Exposing the pointer tagged `tag` exposes the tag accesses through it act through; exposing a
@@ -1084,12 +1918,11 @@ pub open spec fn expose_spec(a: AbsState, b: AbsState, tag: nat) -> bool {
 
 proof fn lemma_expose(s0: MonitorState, s: MonitorState, tag: u8, e: u8)
     requires
-        monitor_wf(&s0), tag < s0.count,
-        e == if s0.cell & (1u64 << tag) != 0 { s0.alias[tag as int] } else { tag },
+        monitor_wf(&s0), tag < s0.count, e < s0.count, !bit(s0.cell, e as u64),
+        e as nat == eff(abstraction(&s0), tag as nat),
         s == (MonitorState { exposed: s0.exposed | (1u64 << e), ..s0 }),
     ensures monitor_wf(&s), expose_spec(abstraction(&s0), abstraction(&s), tag as nat),
 {
-    lemma_access_eff(s0, tag, e);
     assert forall|i: u64| i < 64 implies bit(s.exposed, i) == (i == e || bit(s0.exposed, i)) by {
         lemma_bit_set(s0.exposed, e as u64, i);
     }
@@ -1097,6 +1930,312 @@ proof fn lemma_expose(s0: MonitorState, s: MonitorState, tag: u8, e: u8)
     let b = abstraction(&s);
     assert forall|t: nat| t < a.count && !iset![eff(a, tag as nat)].contains(t) implies
         node_eq(#[trigger] b.nodes[t], a.nodes[t]) by {}
+}
+
+// ---------------------------------------------------------------------------------------------
+// Stage 10: deallocation (Miri `Tree::dealloc`)
+// ---------------------------------------------------------------------------------------------
+
+/// A strongly protected tag has an initialized permission (`ProtectedDealloc`; `Cell`s excepted).
+pub open spec fn strong_ub(m: AbsState) -> bool {
+    exists|t: nat| t < m.count && {
+        let n = #[trigger] m.nodes[t];
+        n.protected && n.strong && n.initialized && !n.cell
+    }
+}
+
+/// Deallocating through `tag`: a write access through it (a wildcard one for a pointer created
+/// from an integer), then undefined behavior if a strongly protected tag has an initialized
+/// permission.
+pub open spec fn dealloc_refines(a: AbsState, b: AbsState, tag: nat, code: u8) -> bool {
+    exists|m: AbsState, c1: u8| #[trigger] dealloc_witness(a, b, tag, code, m, c1)
+}
+
+/// The state `m` after the write access, whose result is `c1`.
+pub open spec fn dealloc_witness(a: AbsState, b: AbsState, tag: nat, code: u8, m: AbsState, c1: u8)
+    -> bool
+{
+    {
+        &&& if tag == EXPOSED_TAG as nat {
+            wildcard_refines(a, m, true, c1)
+        } else if tag < a.count {
+            access_refines(a, m, tag, true, c1)
+        } else {
+            c1 == ACCESS_UNKNOWN_TAG && same_state(a, m)
+        }
+        &&& same_state(m, b)
+        &&& code == if c1 != ACCESS_OK { c1 } else if strong_ub(m) { ACCESS_PROTECTED_DEALLOC }
+            else { ACCESS_OK }
+    }
+}
+
+proof fn lemma_same_state_refl(a: AbsState)
+    ensures same_state(a, a),
+{
+    assert forall|t: nat| t < a.count implies node_eq(#[trigger] a.nodes[t], a.nodes[t]) by {
+        assert(a.nodes[t].ancestors =~= a.nodes[t].ancestors);
+    }
+}
+
+proof fn lemma_dealloc(s0: MonitorState, s: MonitorState, tag: u8, code: u8)
+    requires
+        monitor_wf(&s0), monitor_wf(&s),
+        tag == EXPOSED_TAG ==> wildcard_refines(abstraction(&s0), abstraction(&s), true, code),
+        tag != EXPOSED_TAG && tag < s0.count ==> access_refines(abstraction(&s0), abstraction(&s),
+            tag as nat, true, code),
+        tag != EXPOSED_TAG && tag >= s0.count ==> code == ACCESS_UNKNOWN_TAG && s == s0,
+    ensures
+        code != ACCESS_OK ==> dealloc_refines(abstraction(&s0), abstraction(&s), tag as nat, code),
+        code == ACCESS_OK ==> dealloc_refines(abstraction(&s0), abstraction(&s), tag as nat,
+            if s.protected & s.strong & s.initialized & !s.cell != 0 { ACCESS_PROTECTED_DEALLOC }
+            else { ACCESS_OK }),
+{
+    let a = abstraction(&s0);
+    let m = abstraction(&s);
+    lemma_same_state_refl(m);
+    lemma_same_state_refl(a);
+    let x = s.protected & s.strong & s.initialized & !s.cell;
+    assert forall|t: u64| t < 64 implies bit(x, t) == (bit(s.protected, t) && bit(s.strong, t)
+        && bit(s.initialized, t) && !bit(s.cell, t)) by {
+        lemma_bit_and(s.protected, s.strong, t);
+        lemma_bit_and(s.protected & s.strong, s.initialized, t);
+        lemma_bit_and(s.protected & s.strong & s.initialized, !s.cell, t);
+        lemma_bit_not(s.cell, t);
+    }
+    assert((x != 0) == strong_ub(m)) by {
+        if x != 0 {
+            lemma_nonzero_witness(x);
+            let t = choose|t: u64| t < 64 && bit(x, t);
+            assert(t < s.count) by { if t >= s.count { assert(!bit(s.protected, t)); } }
+            assert(m.nodes[t as nat].protected);
+        } else {
+            assert forall|t: nat| t < m.count implies !({
+                let n = #[trigger] m.nodes[t];
+                n.protected && n.strong && n.initialized && !n.cell
+            }) by {
+                lemma_bit_zero(t as u64);
+            }
+        }
+    }
+    if code != ACCESS_OK {
+        assert(dealloc_witness(a, m, tag as nat, code, m, code));
+    } else {
+        assert(dealloc_witness(a, m, tag as nat, if x != 0 { ACCESS_PROTECTED_DEALLOC }
+            else { ACCESS_OK }, m, code));
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Stage 9: the end of a protector (Miri `perform_protector_end_access`)
+// ---------------------------------------------------------------------------------------------
+
+/// The descendants of `p`, other than `p`.
+pub open spec fn desc_of(a: AbsState, p: nat, v: nat) -> bool {
+    v < a.count && v != p && a.nodes[v].ancestors.contains(p)
+}
+
+/// The tags of the subtree of `p`, `p` included, that are exposed.
+pub open spec fn exposed_mine(a: AbsState, p: nat, v: nat) -> bool {
+    (v == p || desc_of(a, p, v)) && a.nodes[v].exposed
+}
+
+/// The smallest of them (Miri's `min_exposed_child`).
+pub open spec fn min_exposed(a: AbsState, p: nat) -> nat {
+    choose|m: nat| exposed_mine(a, p, m) && forall|v: nat| #[trigger] exposed_mine(a, p, v) ==> m <= v
+}
+
+/// Whether `t` is in a wildcard tree that Miri skips on the protector end access of `p`: a tree
+/// rooted above the smallest exposed tag of `p`'s subtree, which may hang below `p`.
+pub open spec fn end_skipped(a: AbsState, p: nat, t: nat) -> bool {
+    &&& exists|v: nat| #[trigger] exposed_mine(a, p, v)
+    &&& !a.nodes[t].main
+    &&& forall|u: nat| #[trigger] a.nodes[t].ancestors.contains(u) ==> u > min_exposed(a, p)
+}
+
+/// When the protector of `p` ends and its permission is initialized, an access through it that
+/// its descendants do not see: a write if it is Active, a read otherwise. The wildcard trees
+/// that may hang below it are skipped too (`end_skipped`).
+pub open spec fn end_protector_refines(a: AbsState, b: AbsState, p: nat, code: u8) -> bool {
+    let n = a.nodes[p];
+    if !(p < a.count && n.protected && n.initialized && n.perm != Perm::Disabled && !n.cell) {
+        code == ACCESS_OK && same_state(a, b)
+    } else if !n.main {
+        code == ACCESS_UNKNOWN_WILDCARD && same_state(a, b)
+    } else {
+        apply_refines(a, b, local_set(a, p), ISet::new(|t: nat| t < a.count
+            && !a.nodes[p].ancestors.contains(t) && !desc_of(a, p, t) && !a.nodes[t].cell
+            && !end_skipped(a, p, t)), n.perm == Perm::Active, code)
+    }
+}
+
+proof fn lemma_end_protector_tests(s: MonitorState, p: u64)
+    requires monitor_wf(&s), p < s.count,
+    ensures
+        (s.protected & s.initialized & s.valid & !s.cell & (1u64 << p) == 0) == !(bit(s.protected, p)
+            && bit(s.initialized, p) && bit(s.valid, p) && !bit(s.cell, p)),
+        (s.main & (1u64 << p) == 0) == !bit(s.main, p),
+        (s.active & !s.frozen & (1u64 << p) != 0) == (bit(s.active, p) && !bit(s.frozen, p)),
+{
+    let x = s.protected & s.initialized & s.valid & !s.cell;
+    lemma_test_bit(x, p);
+    lemma_bit_and(s.protected, s.initialized, p);
+    lemma_bit_and(s.protected & s.initialized, s.valid, p);
+    lemma_bit_and(s.protected & s.initialized & s.valid, !s.cell, p);
+    lemma_bit_not(s.cell, p);
+    lemma_test_bit(s.main, p);
+    lemma_test_bit(s.active & !s.frozen, p);
+    lemma_bit_and(s.active, !s.frozen, p);
+    lemma_bit_not(s.frozen, p);
+}
+
+/// Bit `i` of the tags up to `m`, from the bit of `m`.
+pub proof fn lemma_bit_upto(m: u64, i: u64)
+    requires m < 64, i < 64,
+    ensures bit((1u64 << m) | (((1u64 << m) - 1u64) as u64), i) == (i <= m),
+{
+    assert(bit((1u64 << m) | (((1u64 << m) - 1u64) as u64), i) == (i <= m)) by (bit_vector)
+        requires m < 64, i < 64;
+}
+
+proof fn lemma_end_protector_masks(s: MonitorState, p: u64, d: u64, mine: u64, skip: u64)
+    requires
+        monitor_wf(&s), p < s.count, !bit(s.cell, p),
+        exists|h: u64| holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p),
+        mine == (d | (1u64 << p)) & s.exposed,
+        mine == 0 ==> skip == 0,
+        mine != 0 ==> exists|h2: u64| holders_spec(&s, (mine & ((!mine) + 1) as u64)
+            | (((mine & ((!mine) + 1) as u64) - 1u64) as u64), h2) && skip == !s.main & !h2,
+    ensures ({
+        let a = abstraction(&s);
+        let anc = s.ancestors[p as int];
+        let l = anc & !s.cell;
+        let f = !anc & !d & !s.cell & !skip;
+        &&& forall|v: u64| v < 64 ==> bit(d, v) == desc_of(a, p as nat, v as nat)
+        &&& l & f == 0 && l & s.cell == 0 && f & s.cell == 0
+        &&& l & !live_mask(s.count as u64) == 0
+        &&& forall|t: u64| t < s.count ==> #[trigger] bit(f, t) == (!bit(anc, t) && !bit(d, t)
+            && !bit(s.cell, t) && !end_skipped(a, p as nat, t as nat))
+    }),
+{
+    let a = abstraction(&s);
+    let h = choose|h: u64| holders_spec(&s, 1u64 << p, h) && d == h & !(1u64 << p);
+    let anc = s.ancestors[p as int];
+    assert forall|v: u64| v < 64 implies bit(d, v) == desc_of(a, p as nat, v as nat) by {
+        lemma_bit_and(h, !(1u64 << p), v);
+        lemma_bit_not(1u64 << p, v);
+        lemma_bit_single(p, v);
+        lemma_test_bit(s.ancestors[v as int], p);
+    }
+    // The exposed tags of the subtree.
+    assert forall|v: u64| v < 64 implies bit(mine, v) == exposed_mine(a, p as nat, v as nat) by {
+        lemma_bit_and(d | (1u64 << p), s.exposed, v);
+        lemma_bit_or(d, 1u64 << p, v);
+        lemma_bit_single(p, v);
+        if v >= s.count { assert(!bit(s.exposed, v)); }
+    }
+    assert forall|v: nat| #[trigger] exposed_mine(a, p as nat, v) implies v < 64 && bit(mine, v as u64) by {}
+    // The skipped tags.
+    assert forall|t: u64| t < s.count implies bit(skip, t) == end_skipped(a, p as nat, t as nat) by {
+        if mine == 0 {
+            lemma_bit_zero(t);
+            if exists|v: nat| #[trigger] exposed_mine(a, p as nat, v) {
+                let v = choose|v: nat| #[trigger] exposed_mine(a, p as nat, v);
+                lemma_bit_zero(v as u64);
+            }
+        } else {
+            lemma_nonzero_witness(mine);
+            lemma_lowest_exists(mine, 0);
+            let m = choose|i: u64| i < 64 && bit(mine, i) && forall|j: u64| j < i ==> !bit(mine, j);
+            let low = mine & ((!mine) + 1) as u64;
+            assert(!mine < u64::MAX) by {
+                assert(mine != 0u64 ==> !mine < u64::MAX) by (bit_vector);
+            }
+            assert forall|i: u64| i < 64 implies bit(low, i) == bit(1u64 << m, i) by {
+                lemma_lowest_bit(mine, i);
+                lemma_bit_single(m, i);
+                if bit(mine, i) && forall|j: u64| j < i ==> !bit(mine, j) {
+                    if i < m { } else if i > m { assert(!bit(mine, m)); }
+                }
+            }
+            lemma_bits_ext(low, 1u64 << m);
+            // `m` is the smallest exposed tag of the subtree.
+            assert(exposed_mine(a, p as nat, m as nat) && forall|v: nat|
+                #[trigger] exposed_mine(a, p as nat, v) ==> m as nat <= v) by {
+                assert forall|v: nat| #[trigger] exposed_mine(a, p as nat, v) implies m as nat <= v by {
+                    if v < m as nat { assert(!bit(mine, v as u64)); }
+                }
+            }
+            let mn = min_exposed(a, p as nat);
+            assert(mn == m as nat) by {
+                assert(exposed_mine(a, p as nat, mn));
+                assert(mn < 64 && bit(mine, mn as u64));
+                if mn < m as nat { assert(!bit(mine, mn as u64)); }
+            }
+            let upto = low | ((low - 1u64) as u64);
+            let h2 = choose|h2: u64| holders_spec(&s, upto, h2) && skip == !s.main & !h2;
+            lemma_bit_and(!s.main, !h2, t);
+            lemma_bit_not(s.main, t);
+            lemma_bit_not(h2, t);
+            lemma_and_nonzero(s.ancestors[t as int], upto);
+            assert forall|i: u64| i < 64 implies bit(upto, i) == (i <= m) by { lemma_bit_upto(m, i); }
+            if bit(h2, t) {
+                let u = choose|u: u64| u < 64 && bit(s.ancestors[t as int], u) && bit(upto, u);
+                assert(a.nodes[t as nat].ancestors.contains(u as nat));
+            } else {
+                assert forall|u: nat| #[trigger] a.nodes[t as nat].ancestors.contains(u) implies
+                    u > m as nat by {
+                    if u <= m as nat { assert(bit(upto, u as u64)); }
+                }
+            }
+            assert(exposed_mine(a, p as nat, m as nat));
+        }
+    }
+    lemma_access_main_masks(s, p);
+    let l = anc & !s.cell;
+    let f = !anc & !d & !s.cell & !skip;
+    assert forall|t: u64| t < 64 implies bit(f, t) == (!bit(anc, t) && !bit(d, t) && !bit(s.cell, t)
+        && !bit(skip, t)) && !(bit(l, t) && bit(f, t)) && !(bit(f, t) && bit(s.cell, t)) by {
+        lemma_bit_and(!anc, !d, t);
+        lemma_bit_and(!anc & !d, !s.cell, t);
+        lemma_bit_and(!anc & !d & !s.cell, !skip, t);
+        lemma_bit_not(anc, t);
+        lemma_bit_not(d, t);
+        lemma_bit_not(s.cell, t);
+        lemma_bit_not(skip, t);
+    }
+    lemma_and_nonzero(l, f);
+    lemma_and_nonzero(f, s.cell);
+}
+
+proof fn lemma_end_protector_spec(s0: MonitorState, s: MonitorState, p: u64, d: u64, skip: u64,
+    is_write: bool, code: u8)
+    requires
+        monitor_wf(&s0), p < s0.count, !bit(s0.cell, p), bit(s0.main, p), bit(s0.valid, p),
+        bit(s0.protected, p), bit(s0.initialized, p),
+        is_write == (bit(s0.active, p) && !bit(s0.frozen, p)),
+        forall|t: u64| t < s0.count ==> #[trigger] bit(!s0.ancestors[p as int] & !d & !s0.cell & !skip, t)
+            == (!bit(s0.ancestors[p as int], t) && !bit(d, t) && !bit(s0.cell, t)
+                && !end_skipped(abstraction(&s0), p as nat, t as nat)),
+        forall|v: u64| v < 64 ==> bit(d, v) == desc_of(abstraction(&s0), p as nat, v as nat),
+        apply_refines(abstraction(&s0), abstraction(&s), mask_set(s0.ancestors[p as int] & !s0.cell),
+            mask_set(!s0.ancestors[p as int] & !d & !s0.cell & !skip), is_write, code),
+    ensures
+        end_protector_refines(abstraction(&s0), abstraction(&s), p as nat, code),
+{
+    let a = abstraction(&s0);
+    let anc = s0.ancestors[p as int];
+    let fs = ISet::new(|t: nat| t < a.count && !a.nodes[p as nat].ancestors.contains(t)
+        && !desc_of(a, p as nat, t) && !a.nodes[t].cell && !end_skipped(a, p as nat, t));
+    lemma_access_main_masks(s0, p);
+    assert forall|t: nat| t < a.count implies mask_set(!anc & !d & !s0.cell & !skip).contains(t)
+        == fs.contains(t) by {
+        assert((t as u64) as nat == t);
+        assert((t as u64) < s0.count);
+        assert(bit(!anc & !d & !s0.cell & !skip, t as u64) == (!bit(anc, t as u64) && !bit(d, t as u64)
+            && !bit(s0.cell, t as u64) && !end_skipped(a, p as nat, (t as u64) as nat)));
+    }
+    lemma_apply_refines_ext(a, abstraction(&s), mask_set(anc & !s0.cell), mask_set(!anc & !d
+        & !s0.cell & !skip), local_set(a, p as nat), fs, is_write, code);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1115,6 +2254,7 @@ pub open spec fn kept_count(count: nat, frame: nat, kept: Seq<u8>) -> nat {
 pub open spec fn unprotect(n: Node) -> Node {
     Node {
         protected: false,
+        strong: false,
         perm: match n.perm {
             Perm::Reserved { conflicted, interior } => Perm::Reserved { conflicted: false, interior },
             p => p,
@@ -1123,18 +2263,15 @@ pub open spec fn unprotect(n: Node) -> Node {
     }
 }
 
+/// Unless one of them was exposed, the tags the returning function created and does not return
+/// are dropped.
 pub open spec fn return_spec(a: AbsState, b: AbsState, frame: nat, kept: Seq<u8>) -> bool {
-    &&& b.count == kept_count(a.count, frame, kept)
+    let c = kept_count(a.count, frame, kept);
+    let keep_all = exists|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed;
+    &&& b.count == if keep_all { a.count } else { c }
     &&& b.unknown_exposed == a.unknown_exposed
     &&& forall|t: nat| t < b.count ==> node_eq(#[trigger] b.nodes[t],
             if frame < 64 && t >= frame { unprotect(a.nodes[t]) } else { a.nodes[t] })
-}
-
-pub proof fn lemma_shift_pos(f: u64)
-    requires f < 64,
-    ensures (1u64 << f) >= 1,
-{
-    assert((1u64 << f) >= 1u64) by (bit_vector) requires f < 64;
 }
 
 proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame: u8, kept: [u8; 4],
@@ -1146,6 +2283,7 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
         s1 == if frame < 64 {
             MonitorState {
                 protected: s0.protected & (((1u64 << frame) - 1u64) as u64),
+                strong: s0.strong & (((1u64 << frame) - 1u64) as u64),
                 conflicted: s0.conflicted & (((1u64 << frame) - 1u64) as u64),
                 ..s0
             }
@@ -1156,17 +2294,19 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
             let step = |c: nat, k: u8| if frame <= k && k < s0.count && c <= k { k as nat + 1 } else { c };
             step(step(step(step(frame as nat, kept[0]), kept[1]), kept[2]), kept[3])
         },
-        // Unreachable tags are dropped.
-        s == if count < s1.count {
+        // Unreachable tags are dropped, unless one was exposed.
+        s == if count < s1.count && s1.exposed & !(((1u64 << count) - 1u64) as u64) == 0 {
             let below = ((1u64 << count) - 1u64) as u64;
             MonitorState {
                 count: count,
+                main: s1.main & below,
                 valid: s1.valid & below,
                 active: s1.active & below,
                 frozen: s1.frozen & below,
                 conflicted: s1.conflicted & below,
                 interior: s1.interior & below,
                 protected: s1.protected & below,
+                strong: s1.strong & below,
                 initialized: s1.initialized & below,
                 cell: s1.cell & below,
                 exposed: s1.exposed & below,
@@ -1179,58 +2319,91 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
         monitor_wf(&s),
         return_spec(abstraction(&s0), abstraction(&s), frame as nat, kept@),
 {
-    // Bits below the frame and below the new count.
+    // Bits below the frame.
     assert forall|i: u64| i < 64 implies {
         &&& bit(s1.protected, i) == (bit(s0.protected, i) && (frame >= 64 || i < frame))
+        &&& bit(s1.strong, i) == (bit(s0.strong, i) && (frame >= 64 || i < frame))
         &&& bit(s1.conflicted, i) == (bit(s0.conflicted, i) && (frame >= 64 || i < frame))
     } by {
         if frame < 64 {
             lemma_bit_below(frame as u64, i);
             lemma_bit_and(s0.protected, ((1u64 << frame) - 1u64) as u64, i);
+            lemma_bit_and(s0.strong, ((1u64 << frame) - 1u64) as u64, i);
             lemma_bit_and(s0.conflicted, ((1u64 << frame) - 1u64) as u64, i);
         }
     }
+    let a = abstraction(&s0);
+    let c = kept_count(a.count, frame as nat, kept@);
+    let drop = count < s1.count && s1.exposed & !(((1u64 << count) - 1u64) as u64) == 0;
+    // Whether a dropped tag was exposed.
+    if count < s1.count {
+        let below = ((1u64 << count) - 1u64) as u64;
+        assert(count >= 1);
+        lemma_and_nonzero(s1.exposed, !below);
+        assert((s1.exposed & !below != 0) == exists|t: nat| c <= t < a.count
+            && (#[trigger] a.nodes[t]).exposed) by {
+            assert(c == count as nat);
+            if s1.exposed & !below != 0 {
+                let t = choose|t: u64| t < 64 && bit(s1.exposed, t) && bit(!below, t);
+                lemma_bit_not(below, t);
+                lemma_bit_below(count as u64, t);
+                assert(t < s0.count) by { if t >= s0.count { assert(!bit(s0.exposed, t)); } }
+                assert(a.nodes[t as nat].exposed);
+            } else if exists|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed {
+                let t = choose|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed;
+                lemma_bit_not(below, t as u64);
+                lemma_bit_below(count as u64, t as u64);
+            }
+        }
+    } else {
+        assert(c == a.count);
+    }
     let n = s.count;
-    assert(n >= 1);
-    assert(n <= s0.count);
     assert forall|i: u64| i < 64 implies {
+        &&& bit(s.main, i) == (bit(s1.main, i) && i < n)
         &&& bit(s.valid, i) == (bit(s1.valid, i) && i < n)
         &&& bit(s.active, i) == (bit(s1.active, i) && i < n)
         &&& bit(s.frozen, i) == (bit(s1.frozen, i) && i < n)
         &&& bit(s.conflicted, i) == (bit(s1.conflicted, i) && i < n)
         &&& bit(s.interior, i) == (bit(s1.interior, i) && i < n)
         &&& bit(s.protected, i) == (bit(s1.protected, i) && i < n)
+        &&& bit(s.strong, i) == (bit(s1.strong, i) && i < n)
         &&& bit(s.initialized, i) == (bit(s1.initialized, i) && i < n)
         &&& bit(s.cell, i) == (bit(s1.cell, i) && i < n)
         &&& bit(s.exposed, i) == (bit(s1.exposed, i) && i < n)
     } by {
-        if count < s1.count {
+        if drop {
             let below = ((1u64 << count) - 1u64) as u64;
             lemma_bit_below(count as u64, i);
+            lemma_bit_and(s1.main, below, i);
             lemma_bit_and(s1.valid, below, i);
             lemma_bit_and(s1.active, below, i);
             lemma_bit_and(s1.frozen, below, i);
             lemma_bit_and(s1.conflicted, below, i);
             lemma_bit_and(s1.interior, below, i);
             lemma_bit_and(s1.protected, below, i);
+            lemma_bit_and(s1.strong, below, i);
             lemma_bit_and(s1.initialized, below, i);
             lemma_bit_and(s1.cell, below, i);
             lemma_bit_and(s1.exposed, below, i);
         } else {
             if i >= n {
-                assert(!bit(s0.valid, i) && !bit(s0.active, i) && !bit(s0.frozen, i)
-                    && !bit(s0.conflicted, i) && !bit(s0.interior, i) && !bit(s0.protected, i)
-                    && !bit(s0.initialized, i) && !bit(s0.cell, i) && !bit(s0.exposed, i));
+                assert(!bit(s0.main, i) && !bit(s0.valid, i) && !bit(s0.active, i)
+                    && !bit(s0.frozen, i) && !bit(s0.conflicted, i) && !bit(s0.interior, i)
+                    && !bit(s0.protected, i) && !bit(s0.strong, i) && !bit(s0.initialized, i)
+                    && !bit(s0.cell, i) && !bit(s0.exposed, i));
             }
         }
     }
     // Well-formedness: the remaining tags keep their ancestors and aliases.
     assert forall|t: u64| #![trigger s.ancestors[t as int]] t < s.count implies {
         &&& bit(s.ancestors[t as int], t)
-        &&& bit(s.ancestors[t as int], 0)
         &&& forall|u: u64| u < 64 && bit(s.ancestors[t as int], u) ==> u <= t
         &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[t as int], u)
             && bit(s.ancestors[u as int], w) ==> bit(s.ancestors[t as int], w)
+        &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(s.ancestors[t as int], u)
+            && bit(s.ancestors[t as int], w) && u <= w ==> bit(s.ancestors[w as int], u)
+        &&& bit(s.main, t) == bit(s.ancestors[t as int], 0)
     } by {
         assert(s0.ancestors[t as int] == s0.ancestors[t as int]);
     }
@@ -1243,381 +2416,11 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
     } by {
         assert(s0.alias[t as int] == s0.alias[t as int]);
     }
-    let a = abstraction(&s0);
     let b = abstraction(&s);
     assert forall|t: nat| t < b.count implies node_eq(#[trigger] b.nodes[t],
         if frame < 64 && t >= frame { unprotect(a.nodes[t]) } else { a.nodes[t] }) by {
         assert(mask_set(s.ancestors[t as int]) =~= mask_set(s0.ancestors[t as int]));
     }
 }
-
-// ---------------------------------------------------------------------------------------------
-// Stage 11: accesses through pointers created from integers (Tree Borrows' wildcard accesses)
-// ---------------------------------------------------------------------------------------------
-
-/// Exposed tag `e` allows an access: it and every tag on its path are not Disabled, and for a
-/// write, none of them is Frozen.
-pub open spec fn wild_cand(a: AbsState, e: nat, is_write: bool) -> bool {
-    &&& e < a.count
-    &&& !a.nodes[e].cell
-    &&& a.nodes[e].exposed
-    &&& forall|u: nat| #![trigger a.nodes[u]] u < a.count && a.nodes[e].ancestors.contains(u)
-        && !a.nodes[u].cell ==> a.nodes[u].perm != Perm::Disabled
-            && (is_write ==> a.nodes[u].perm != Perm::Frozen)
-}
-
-/// Node `t` is on the path of some exposed tag that allows the access.
-pub open spec fn wild_local(a: AbsState, t: nat, is_write: bool) -> bool {
-    exists|e: nat| wild_cand(a, e, is_write) && #[trigger] a.nodes[e].ancestors.contains(t)
-}
-
-/// A wildcard access only changes the nodes that are foreign to every allowing exposed tag.
-pub open spec fn wild_step(a: AbsState, t: nat, is_write: bool) -> Option<Node> {
-    if a.nodes[t].cell || wild_local(a, t, is_write) {
-        Some(a.nodes[t])
-    } else {
-        foreign_step(a.nodes[t], is_write)
-    }
-}
-
-pub open spec fn wildcard_refines(a: AbsState, b: AbsState, is_write: bool, code: u8) -> bool {
-    if a.unknown_exposed {
-        code == ACCESS_UNKNOWN_EXPOSED
-    } else {
-        &&& (code == ACCESS_NOT_EXPOSED) == !(exists|e: nat| wild_cand(a, e, is_write))
-        &&& code == ACCESS_OK || code == ACCESS_NOT_EXPOSED || code == ACCESS_PROTECTOR
-        &&& (exists|e: nat| wild_cand(a, e, is_write)) ==> ((code == ACCESS_OK) == forall|t: nat|
-                t < a.count ==> (#[trigger] wild_step(a, t, is_write)) is Some)
-        &&& code == ACCESS_OK ==> {
-            &&& b.count == a.count
-            &&& b.unknown_exposed == a.unknown_exposed
-            &&& forall|t: nat| t < a.count ==> node_eq(#[trigger] b.nodes[t],
-                    wild_step(a, t, is_write)->Some_0)
-        }
-    }
-}
-
-/// The exec test for candidate `e`.
-pub open spec fn cand_bits(s: &MonitorState, e: u64, is_write: bool) -> bool {
-    let path = s.ancestors[e as int] & !s.cell;
-    &&& s.exposed & s.valid & (1u64 << e) != 0
-    &&& s.valid & path == path
-    &&& (!is_write || s.frozen & path == 0)
-}
-
-/// `allowed` and `possibly_local` after considering the candidates `0..k`.
-pub open spec fn allowed_upto(s: &MonitorState, is_write: bool, k: nat) -> bool
-    decreases k,
-{
-    if k == 0 { false } else {
-        allowed_upto(s, is_write, (k - 1) as nat) || cand_bits(s, (k - 1) as u64, is_write)
-    }
-}
-
-pub open spec fn local_upto(s: &MonitorState, is_write: bool, k: nat) -> u64
-    decreases k,
-{
-    if k == 0 { 0u64 } else {
-        local_upto(s, is_write, (k - 1) as nat)
-            | if cand_bits(s, (k - 1) as u64, is_write) { s.ancestors[(k - 1) as int] } else { 0u64 }
-    }
-}
-
-pub proof fn lemma_or_zero(x: u64)
-    ensures x | 0u64 == x,
-{
-    assert(x | 0u64 == x) by (bit_vector);
-}
-
-/// The exec candidate test is `wild_cand`.
-proof fn lemma_cand_bits(s: MonitorState, e: u64, is_write: bool)
-    requires monitor_wf(&s), e < 64,
-    ensures cand_bits(&s, e, is_write) == wild_cand(abstraction(&s), e as nat, is_write),
-{
-    let path = s.ancestors[e as int] & !s.cell;
-    let a = abstraction(&s);
-    lemma_test_bit(s.exposed & s.valid, e);
-    lemma_bit_and(s.exposed, s.valid, e);
-    lemma_subset(s.valid, path);
-    lemma_and_nonzero(s.frozen, path);
-    assert forall|i: u64| i < 64 implies bit(path, i) == (bit(s.ancestors[e as int], i)
-        && !bit(s.cell, i)) by {
-        lemma_bit_and(s.ancestors[e as int], !s.cell, i);
-        lemma_bit_not(s.cell, i);
-    }
-    if e < s.count {
-        assert forall|u: u64| u < 64 && bit(s.ancestors[e as int], u) implies u < s.count by {
-            lemma_local_is_tag(s, e, u);
-        }
-        if cand_bits(&s, e, is_write) {
-            assert(bit(s.ancestors[e as int], e));
-            assert forall|u: nat| #![trigger a.nodes[u]] u < a.count
-                && a.nodes[e as nat].ancestors.contains(u) && !a.nodes[u].cell implies
-                a.nodes[u].perm != Perm::Disabled && (is_write ==> a.nodes[u].perm != Perm::Frozen)
-            by {
-                assert(bit(path, u as u64));
-            }
-        }
-        if wild_cand(a, e as nat, is_write) {
-            assert(bit(s.ancestors[e as int], e));
-            assert forall|i: u64| i < 64 && bit(path, i) implies bit(s.valid, i) by {
-                assert(a.nodes[i as nat].perm != Perm::Disabled);
-            }
-            if is_write {
-                assert forall|i: u64| !(i < 64 && bit(s.frozen, i) && bit(path, i)) by {
-                    if i < 64 && bit(path, i) {
-                        assert(a.nodes[i as nat].perm != Perm::Frozen);
-                    }
-                }
-            }
-        }
-    } else {
-        assert(!bit(s.exposed, e));
-    }
-}
-
-/// The exec candidate loop computes, after all 64 candidates, whether some candidate allows the
-/// access and the union of their paths.
-proof fn lemma_upto(s: MonitorState, is_write: bool, k: nat)
-    requires monitor_wf(&s), k <= 64,
-    ensures
-        allowed_upto(&s, is_write, k)
-            == exists|e: nat| e < k && wild_cand(abstraction(&s), e, is_write),
-        forall|t: u64| t < 64 ==> (bit(local_upto(&s, is_write, k), t) == exists|e: nat| e < k
-            && wild_cand(abstraction(&s), e, is_write)
-            && #[trigger] abstraction(&s).nodes[e].ancestors.contains(t as nat)),
-    decreases k,
-{
-    let a = abstraction(&s);
-    if k == 0 {
-        assert forall|t: u64| t < 64 implies !bit(local_upto(&s, is_write, 0), t) by {
-            lemma_bit_zero(t);
-        }
-    } else {
-        let j = (k - 1) as nat;
-        lemma_upto(s, is_write, j);
-        lemma_cand_bits(s, j as u64, is_write);
-        let prev = local_upto(&s, is_write, j);
-        let add = if cand_bits(&s, j as u64, is_write) { s.ancestors[j as int] } else { 0u64 };
-        assert forall|t: u64| t < 64 implies (bit(local_upto(&s, is_write, k), t) == exists|e: nat|
-            e < k && wild_cand(a, e, is_write) && #[trigger] a.nodes[e].ancestors.contains(t as nat))
-        by {
-            lemma_bit_or(prev, add, t);
-            lemma_bit_zero(t);
-            if bit(local_upto(&s, is_write, k), t) {
-                if !bit(prev, t) {
-                    assert(a.nodes[j].ancestors.contains(t as nat));
-                }
-            } else {
-                assert forall|e: nat| e < k && wild_cand(a, e, is_write) implies
-                    !a.nodes[e].ancestors.contains(t as nat) by {
-                    if e == j {
-                        assert(bit(add, t) == bit(s.ancestors[j as int], t));
-                    }
-                }
-            }
-        }
-        if allowed_upto(&s, is_write, k) && !allowed_upto(&s, is_write, j) {
-            assert(wild_cand(a, j, is_write));
-        }
-    }
-}
-
-/// The bits a wildcard access computes, at bit `i`.
-proof fn lemma_wild_bits(s0: MonitorState, pl: u64, i: u64)
-    requires i < 64,
-    ensures ({
-        let f = s0.valid & !pl & !s0.cell;
-        let pi = s0.protected & s0.initialized;
-        let d = f & !(s0.interior & !s0.active);
-        &&& bit(f, i) == (bit(s0.valid, i) && !bit(pl, i) && !bit(s0.cell, i))
-        &&& bit(pi, i) == (bit(s0.protected, i) && bit(s0.initialized, i))
-        &&& bit(d, i) == (bit(f, i) && !(bit(s0.interior, i) && !bit(s0.active, i)))
-        &&& bit(s0.valid & !d, i) == (bit(s0.valid, i) && !bit(d, i))
-        &&& bit(pi & d, i) == (bit(pi, i) && bit(d, i))
-        &&& bit(s0.conflicted | (pi & f & !s0.active & !s0.frozen), i) == (bit(s0.conflicted, i)
-            || (bit(pi, i) && bit(f, i) && !bit(s0.active, i) && !bit(s0.frozen, i)))
-        &&& bit(s0.frozen | (s0.active & f), i) == (bit(s0.frozen, i) || (bit(s0.active, i)
-            && bit(f, i)))
-    }),
-{
-    let f = s0.valid & !pl & !s0.cell;
-    let pi = s0.protected & s0.initialized;
-    let d = f & !(s0.interior & !s0.active);
-    lemma_bit_and(s0.valid, !pl, i);
-    lemma_bit_not(pl, i);
-    lemma_bit_and(s0.valid & !pl, !s0.cell, i);
-    lemma_bit_not(s0.cell, i);
-    lemma_bit_and(s0.protected, s0.initialized, i);
-    lemma_bit_and(f, !(s0.interior & !s0.active), i);
-    lemma_bit_not(s0.interior & !s0.active, i);
-    lemma_bit_and(s0.interior, !s0.active, i);
-    lemma_bit_not(s0.active, i);
-    lemma_bit_and(s0.valid, !d, i);
-    lemma_bit_not(d, i);
-    lemma_bit_and(pi, d, i);
-    lemma_bit_and(pi, f, i);
-    lemma_bit_and(pi & f, !s0.active, i);
-    lemma_bit_and(pi & f & !s0.active, !s0.frozen, i);
-    lemma_bit_not(s0.frozen, i);
-    lemma_bit_or(s0.conflicted, pi & f & !s0.active & !s0.frozen, i);
-    lemma_bit_and(s0.active, f, i);
-    lemma_bit_or(s0.frozen, s0.active & f, i);
-}
-
-/// One node after a successful wildcard access is `wild_step` of it.
-proof fn lemma_wild_node(s0: MonitorState, s: MonitorState, is_write: bool, pl: u64, t: u64)
-    requires
-        monitor_wf(&s0), t < s0.count,
-        forall|i: u64| i < 64 ==> bit(pl, i) == wild_local(abstraction(&s0), i as nat, is_write),
-        ({
-            let f = s0.valid & !pl & !s0.cell;
-            let pi = s0.protected & s0.initialized;
-            let d = f & !(s0.interior & !s0.active);
-            &&& is_write ==> pi & d == 0
-            &&& s == if is_write {
-                    MonitorState { valid: s0.valid & !d, ..s0 }
-                } else {
-                    MonitorState {
-                        conflicted: s0.conflicted | (pi & f & !s0.active & !s0.frozen),
-                        frozen: s0.frozen | (s0.active & f),
-                        ..s0
-                    }
-                }
-        }),
-    ensures ({
-        let a = abstraction(&s0);
-        &&& wild_step(a, t as nat, is_write) is Some
-        &&& node_eq(node_of(&s, t), wild_step(a, t as nat, is_write)->Some_0)
-    }),
-{
-    let f = s0.valid & !pl & !s0.cell;
-    let pi = s0.protected & s0.initialized;
-    let d = f & !(s0.interior & !s0.active);
-    lemma_bit_and(s0.valid, !pl, t);
-    lemma_bit_not(pl, t);
-    lemma_bit_and(s0.valid & !pl, !s0.cell, t);
-    lemma_bit_not(s0.cell, t);
-    lemma_bit_and(s0.protected, s0.initialized, t);
-    lemma_bit_and(f, !(s0.interior & !s0.active), t);
-    lemma_bit_not(s0.interior & !s0.active, t);
-    lemma_bit_and(s0.interior, !s0.active, t);
-    lemma_bit_not(s0.active, t);
-    lemma_bit_and(s0.valid, !d, t);
-    lemma_bit_not(d, t);
-    lemma_bit_and(pi, f, t);
-    lemma_bit_and(pi & f, !s0.active, t);
-    lemma_bit_and(pi & f & !s0.active, !s0.frozen, t);
-    lemma_bit_not(s0.frozen, t);
-    lemma_bit_or(s0.conflicted, pi & f & !s0.active & !s0.frozen, t);
-    lemma_bit_and(s0.active, f, t);
-    lemma_bit_or(s0.frozen, s0.active & f, t);
-    if is_write {
-        lemma_and_nonzero(pi, d);
-    }
-    assert(mask_set(s.ancestors[t as int]) =~= mask_set(s0.ancestors[t as int]));
-}
-
-/// The result of a wildcard access, from `allowed` and `possibly_local` as the exec code computed
-/// them.
-proof fn lemma_wildcard(s0: MonitorState, s: MonitorState, is_write: bool, pl: u64, code: u8)
-    requires
-        monitor_wf(&s0),
-        !s0.unknown_exposed,
-        pl == local_upto(&s0, is_write, 64),
-        ({
-            let f = s0.valid & !pl & !s0.cell;
-            let pi = s0.protected & s0.initialized;
-            let d = f & !(s0.interior & !s0.active);
-            if !allowed_upto(&s0, is_write, 64) {
-                code == ACCESS_NOT_EXPOSED && s == s0
-            } else if is_write && pi & d != 0 {
-                code == ACCESS_PROTECTOR && s == s0
-            } else {
-                &&& code == ACCESS_OK
-                &&& s == if is_write {
-                        MonitorState { valid: s0.valid & !d, ..s0 }
-                    } else {
-                        MonitorState {
-                            conflicted: s0.conflicted | (pi & f & !s0.active & !s0.frozen),
-                            frozen: s0.frozen | (s0.active & f),
-                            ..s0
-                        }
-                    }
-            }
-        }),
-    ensures
-        monitor_wf(&s),
-        wildcard_refines(abstraction(&s0), abstraction(&s), is_write, code),
-{
-    let a = abstraction(&s0);
-    lemma_upto(s0, is_write, 64);
-    let f = s0.valid & !pl & !s0.cell;
-    let pi = s0.protected & s0.initialized;
-    let d = f & !(s0.interior & !s0.active);
-    assert((exists|e: nat| wild_cand(a, e, is_write)) == allowed_upto(&s0, is_write, 64)) by {
-        if exists|e: nat| wild_cand(a, e, is_write) {
-            let e = choose|e: nat| wild_cand(a, e, is_write);
-            assert(e < 64);
-        }
-    }
-    assert forall|i: u64| i < 64 implies {
-        &&& bit(f, i) == (bit(s0.valid, i) && !bit(pl, i) && !bit(s0.cell, i))
-        &&& bit(pi, i) == (bit(s0.protected, i) && bit(s0.initialized, i))
-        &&& bit(d, i) == (bit(f, i) && !(bit(s0.interior, i) && !bit(s0.active, i)))
-        &&& bit(s0.valid & !d, i) == (bit(s0.valid, i) && !bit(d, i))
-        &&& bit(s0.conflicted | (pi & f & !s0.active & !s0.frozen), i) == (bit(s0.conflicted, i)
-            || (bit(pi, i) && bit(f, i) && !bit(s0.active, i) && !bit(s0.frozen, i)))
-        &&& bit(s0.frozen | (s0.active & f), i) == (bit(s0.frozen, i) || (bit(s0.active, i)
-            && bit(f, i)))
-        &&& bit(pl, i) == wild_local(a, i as nat, is_write)
-    } by {
-        lemma_bit_and(s0.valid, !pl, i);
-        lemma_bit_not(pl, i);
-        lemma_bit_and(s0.valid & !pl, !s0.cell, i);
-        lemma_bit_not(s0.cell, i);
-        lemma_bit_and(s0.protected, s0.initialized, i);
-        lemma_bit_and(f, !(s0.interior & !s0.active), i);
-        lemma_bit_not(s0.interior & !s0.active, i);
-        lemma_bit_and(s0.interior, !s0.active, i);
-        lemma_bit_not(s0.active, i);
-        lemma_bit_and(s0.valid, !d, i);
-        lemma_bit_not(d, i);
-        lemma_bit_and(pi, f, i);
-        lemma_bit_and(pi & f, !s0.active, i);
-        lemma_bit_and(pi & f & !s0.active, !s0.frozen, i);
-        lemma_bit_not(s0.frozen, i);
-        lemma_bit_or(s0.conflicted, pi & f & !s0.active & !s0.frozen, i);
-        lemma_bit_and(s0.active, f, i);
-        lemma_bit_or(s0.frozen, s0.active & f, i);
-    }
-    if allowed_upto(&s0, is_write, 64) {
-        if is_write && pi & d != 0 {
-            lemma_and_nonzero(pi, d);
-            let i = choose|i: u64| i < 64 && bit(pi, i) && bit(d, i);
-            assert(i < s0.count) by { if i >= s0.count { assert(!bit(s0.valid, i)); } }
-            assert(wild_step(a, i as nat, is_write) is None);
-        } else {
-            if is_write { lemma_and_nonzero(pi, d); }
-            assert forall|t: nat| t < a.count implies (#[trigger] wild_step(a, t, is_write)) is Some
-                && node_eq(abstraction(&s).nodes[t], wild_step(a, t, is_write)->Some_0) by {
-                lemma_wild_node(s0, s, is_write, pl, t as u64);
-            }
-            // The permission invariants.
-            assert forall|i: u64| i < 64 implies
-                (bit(s.frozen, i) && bit(s.interior, i) ==> bit(s.active, i))
-                && (bit(s.conflicted, i) ==> !bit(s.active, i) && !bit(s.frozen, i)
-                    && bit(s.protected, i) && bit(s.initialized, i))
-                && (s0.count <= i ==> !bit(s.valid, i) && !bit(s.frozen, i)
-                    && !bit(s.conflicted, i)) by {
-                lemma_wild_bits(s0, pl, i);
-                if is_write { lemma_bit_zero(i); }
-            }
-            assert(s.ancestors == s0.ancestors && s.alias == s0.alias && s.cell == s0.cell);
-        }
-    }
-}
-
 fn main() {}
-
 } // verus!
