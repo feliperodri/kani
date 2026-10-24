@@ -264,7 +264,8 @@ macro_rules! kani_aliasing_monitor {
         pub fn monitor_holders_step(s: &MonitorState, b: u64, v: usize, h: u64) -> u64 {
             #[cfg(verus_keep_ghost)]
             proof! { lemma_or_zero(h); }
-            if s.ancestors[v] & b != 0 { h | (1u64 << v) } else { h }
+            // `v < count` first: `count` is concrete, so symbolic execution skips the free slots.
+            if v < s.count as usize && s.ancestors[v] & b != 0 { h | (1u64 << v) } else { h }
         }
 
         /// The tags whose ancestors meet `b`: with `b` the bit of a tag, its descendants and
@@ -278,70 +279,392 @@ macro_rules! kani_aliasing_monitor {
         pub fn monitor_holders(s: &MonitorState, b: u64) -> u64 {
             let mut h = 0u64;
             // Written out instead of looping, so that a harness's unwinding bound does not apply.
-            h = monitor_holders_step(s, b, 0, h);
-            h = monitor_holders_step(s, b, 1, h);
-            h = monitor_holders_step(s, b, 2, h);
-            h = monitor_holders_step(s, b, 3, h);
-            h = monitor_holders_step(s, b, 4, h);
-            h = monitor_holders_step(s, b, 5, h);
-            h = monitor_holders_step(s, b, 6, h);
-            h = monitor_holders_step(s, b, 7, h);
-            h = monitor_holders_step(s, b, 8, h);
-            h = monitor_holders_step(s, b, 9, h);
-            h = monitor_holders_step(s, b, 10, h);
-            h = monitor_holders_step(s, b, 11, h);
-            h = monitor_holders_step(s, b, 12, h);
-            h = monitor_holders_step(s, b, 13, h);
-            h = monitor_holders_step(s, b, 14, h);
-            h = monitor_holders_step(s, b, 15, h);
-            h = monitor_holders_step(s, b, 16, h);
-            h = monitor_holders_step(s, b, 17, h);
-            h = monitor_holders_step(s, b, 18, h);
-            h = monitor_holders_step(s, b, 19, h);
-            h = monitor_holders_step(s, b, 20, h);
-            h = monitor_holders_step(s, b, 21, h);
-            h = monitor_holders_step(s, b, 22, h);
-            h = monitor_holders_step(s, b, 23, h);
-            h = monitor_holders_step(s, b, 24, h);
-            h = monitor_holders_step(s, b, 25, h);
-            h = monitor_holders_step(s, b, 26, h);
-            h = monitor_holders_step(s, b, 27, h);
-            h = monitor_holders_step(s, b, 28, h);
-            h = monitor_holders_step(s, b, 29, h);
-            h = monitor_holders_step(s, b, 30, h);
-            h = monitor_holders_step(s, b, 31, h);
-            h = monitor_holders_step(s, b, 32, h);
-            h = monitor_holders_step(s, b, 33, h);
-            h = monitor_holders_step(s, b, 34, h);
-            h = monitor_holders_step(s, b, 35, h);
-            h = monitor_holders_step(s, b, 36, h);
-            h = monitor_holders_step(s, b, 37, h);
-            h = monitor_holders_step(s, b, 38, h);
-            h = monitor_holders_step(s, b, 39, h);
-            h = monitor_holders_step(s, b, 40, h);
-            h = monitor_holders_step(s, b, 41, h);
-            h = monitor_holders_step(s, b, 42, h);
-            h = monitor_holders_step(s, b, 43, h);
-            h = monitor_holders_step(s, b, 44, h);
-            h = monitor_holders_step(s, b, 45, h);
-            h = monitor_holders_step(s, b, 46, h);
-            h = monitor_holders_step(s, b, 47, h);
-            h = monitor_holders_step(s, b, 48, h);
-            h = monitor_holders_step(s, b, 49, h);
-            h = monitor_holders_step(s, b, 50, h);
-            h = monitor_holders_step(s, b, 51, h);
-            h = monitor_holders_step(s, b, 52, h);
-            h = monitor_holders_step(s, b, 53, h);
-            h = monitor_holders_step(s, b, 54, h);
-            h = monitor_holders_step(s, b, 55, h);
-            h = monitor_holders_step(s, b, 56, h);
-            h = monitor_holders_step(s, b, 57, h);
-            h = monitor_holders_step(s, b, 58, h);
-            h = monitor_holders_step(s, b, 59, h);
-            h = monitor_holders_step(s, b, 60, h);
-            h = monitor_holders_step(s, b, 61, h);
-            h = monitor_holders_step(s, b, 62, h);
-            h = monitor_holders_step(s, b, 63, h);
+            // Only the tags `0..count` (`count` is concrete for symbolic execution).
+            let n = s.count as usize;
+            if 0 < n {
+                h = monitor_holders_step(s, b, 0, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 0, h); }
+            }
+            if 1 < n {
+                h = monitor_holders_step(s, b, 1, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 1, h); }
+            }
+            if 2 < n {
+                h = monitor_holders_step(s, b, 2, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 2, h); }
+            }
+            if 3 < n {
+                h = monitor_holders_step(s, b, 3, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 3, h); }
+            }
+            if 4 < n {
+                h = monitor_holders_step(s, b, 4, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 4, h); }
+            }
+            if 5 < n {
+                h = monitor_holders_step(s, b, 5, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 5, h); }
+            }
+            if 6 < n {
+                h = monitor_holders_step(s, b, 6, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 6, h); }
+            }
+            if 7 < n {
+                h = monitor_holders_step(s, b, 7, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 7, h); }
+            }
+            if 8 < n {
+                h = monitor_holders_step(s, b, 8, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 8, h); }
+            }
+            if 9 < n {
+                h = monitor_holders_step(s, b, 9, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 9, h); }
+            }
+            if 10 < n {
+                h = monitor_holders_step(s, b, 10, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 10, h); }
+            }
+            if 11 < n {
+                h = monitor_holders_step(s, b, 11, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 11, h); }
+            }
+            if 12 < n {
+                h = monitor_holders_step(s, b, 12, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 12, h); }
+            }
+            if 13 < n {
+                h = monitor_holders_step(s, b, 13, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 13, h); }
+            }
+            if 14 < n {
+                h = monitor_holders_step(s, b, 14, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 14, h); }
+            }
+            if 15 < n {
+                h = monitor_holders_step(s, b, 15, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 15, h); }
+            }
+            if 16 < n {
+                h = monitor_holders_step(s, b, 16, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 16, h); }
+            }
+            if 17 < n {
+                h = monitor_holders_step(s, b, 17, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 17, h); }
+            }
+            if 18 < n {
+                h = monitor_holders_step(s, b, 18, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 18, h); }
+            }
+            if 19 < n {
+                h = monitor_holders_step(s, b, 19, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 19, h); }
+            }
+            if 20 < n {
+                h = monitor_holders_step(s, b, 20, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 20, h); }
+            }
+            if 21 < n {
+                h = monitor_holders_step(s, b, 21, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 21, h); }
+            }
+            if 22 < n {
+                h = monitor_holders_step(s, b, 22, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 22, h); }
+            }
+            if 23 < n {
+                h = monitor_holders_step(s, b, 23, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 23, h); }
+            }
+            if 24 < n {
+                h = monitor_holders_step(s, b, 24, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 24, h); }
+            }
+            if 25 < n {
+                h = monitor_holders_step(s, b, 25, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 25, h); }
+            }
+            if 26 < n {
+                h = monitor_holders_step(s, b, 26, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 26, h); }
+            }
+            if 27 < n {
+                h = monitor_holders_step(s, b, 27, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 27, h); }
+            }
+            if 28 < n {
+                h = monitor_holders_step(s, b, 28, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 28, h); }
+            }
+            if 29 < n {
+                h = monitor_holders_step(s, b, 29, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 29, h); }
+            }
+            if 30 < n {
+                h = monitor_holders_step(s, b, 30, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 30, h); }
+            }
+            if 31 < n {
+                h = monitor_holders_step(s, b, 31, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 31, h); }
+            }
+            if 32 < n {
+                h = monitor_holders_step(s, b, 32, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 32, h); }
+            }
+            if 33 < n {
+                h = monitor_holders_step(s, b, 33, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 33, h); }
+            }
+            if 34 < n {
+                h = monitor_holders_step(s, b, 34, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 34, h); }
+            }
+            if 35 < n {
+                h = monitor_holders_step(s, b, 35, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 35, h); }
+            }
+            if 36 < n {
+                h = monitor_holders_step(s, b, 36, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 36, h); }
+            }
+            if 37 < n {
+                h = monitor_holders_step(s, b, 37, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 37, h); }
+            }
+            if 38 < n {
+                h = monitor_holders_step(s, b, 38, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 38, h); }
+            }
+            if 39 < n {
+                h = monitor_holders_step(s, b, 39, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 39, h); }
+            }
+            if 40 < n {
+                h = monitor_holders_step(s, b, 40, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 40, h); }
+            }
+            if 41 < n {
+                h = monitor_holders_step(s, b, 41, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 41, h); }
+            }
+            if 42 < n {
+                h = monitor_holders_step(s, b, 42, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 42, h); }
+            }
+            if 43 < n {
+                h = monitor_holders_step(s, b, 43, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 43, h); }
+            }
+            if 44 < n {
+                h = monitor_holders_step(s, b, 44, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 44, h); }
+            }
+            if 45 < n {
+                h = monitor_holders_step(s, b, 45, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 45, h); }
+            }
+            if 46 < n {
+                h = monitor_holders_step(s, b, 46, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 46, h); }
+            }
+            if 47 < n {
+                h = monitor_holders_step(s, b, 47, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 47, h); }
+            }
+            if 48 < n {
+                h = monitor_holders_step(s, b, 48, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 48, h); }
+            }
+            if 49 < n {
+                h = monitor_holders_step(s, b, 49, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 49, h); }
+            }
+            if 50 < n {
+                h = monitor_holders_step(s, b, 50, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 50, h); }
+            }
+            if 51 < n {
+                h = monitor_holders_step(s, b, 51, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 51, h); }
+            }
+            if 52 < n {
+                h = monitor_holders_step(s, b, 52, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 52, h); }
+            }
+            if 53 < n {
+                h = monitor_holders_step(s, b, 53, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 53, h); }
+            }
+            if 54 < n {
+                h = monitor_holders_step(s, b, 54, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 54, h); }
+            }
+            if 55 < n {
+                h = monitor_holders_step(s, b, 55, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 55, h); }
+            }
+            if 56 < n {
+                h = monitor_holders_step(s, b, 56, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 56, h); }
+            }
+            if 57 < n {
+                h = monitor_holders_step(s, b, 57, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 57, h); }
+            }
+            if 58 < n {
+                h = monitor_holders_step(s, b, 58, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 58, h); }
+            }
+            if 59 < n {
+                h = monitor_holders_step(s, b, 59, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 59, h); }
+            }
+            if 60 < n {
+                h = monitor_holders_step(s, b, 60, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 60, h); }
+            }
+            if 61 < n {
+                h = monitor_holders_step(s, b, 61, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 61, h); }
+            }
+            if 62 < n {
+                h = monitor_holders_step(s, b, 62, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 62, h); }
+            }
+            if 63 < n {
+                h = monitor_holders_step(s, b, 63, h);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_holders_skip(*s, b, 63, h); }
+            }
             #[cfg(verus_keep_ghost)]
             proof! {
                 lemma_holders_upto(*s, b, 64);
@@ -388,7 +711,7 @@ macro_rules! kani_aliasing_monitor {
         ) {
             #[cfg(verus_keep_ghost)]
             proof! { lemma_and_max(*all); lemma_or_zero(*any); }
-            if cands & (1u64 << c) != 0 {
+            if c < s.count as usize && cands & (1u64 << c) != 0 {
                 *all = *all & s.ancestors[c];
                 *any = *any | s.ancestors[c];
             }
@@ -404,70 +727,392 @@ macro_rules! kani_aliasing_monitor {
             let mut all = u64::MAX;
             let mut any = 0u64;
             // Written out instead of looping, so that a harness's unwinding bound does not apply.
-            monitor_paths_step(s, cands, 0, &mut all, &mut any);
-            monitor_paths_step(s, cands, 1, &mut all, &mut any);
-            monitor_paths_step(s, cands, 2, &mut all, &mut any);
-            monitor_paths_step(s, cands, 3, &mut all, &mut any);
-            monitor_paths_step(s, cands, 4, &mut all, &mut any);
-            monitor_paths_step(s, cands, 5, &mut all, &mut any);
-            monitor_paths_step(s, cands, 6, &mut all, &mut any);
-            monitor_paths_step(s, cands, 7, &mut all, &mut any);
-            monitor_paths_step(s, cands, 8, &mut all, &mut any);
-            monitor_paths_step(s, cands, 9, &mut all, &mut any);
-            monitor_paths_step(s, cands, 10, &mut all, &mut any);
-            monitor_paths_step(s, cands, 11, &mut all, &mut any);
-            monitor_paths_step(s, cands, 12, &mut all, &mut any);
-            monitor_paths_step(s, cands, 13, &mut all, &mut any);
-            monitor_paths_step(s, cands, 14, &mut all, &mut any);
-            monitor_paths_step(s, cands, 15, &mut all, &mut any);
-            monitor_paths_step(s, cands, 16, &mut all, &mut any);
-            monitor_paths_step(s, cands, 17, &mut all, &mut any);
-            monitor_paths_step(s, cands, 18, &mut all, &mut any);
-            monitor_paths_step(s, cands, 19, &mut all, &mut any);
-            monitor_paths_step(s, cands, 20, &mut all, &mut any);
-            monitor_paths_step(s, cands, 21, &mut all, &mut any);
-            monitor_paths_step(s, cands, 22, &mut all, &mut any);
-            monitor_paths_step(s, cands, 23, &mut all, &mut any);
-            monitor_paths_step(s, cands, 24, &mut all, &mut any);
-            monitor_paths_step(s, cands, 25, &mut all, &mut any);
-            monitor_paths_step(s, cands, 26, &mut all, &mut any);
-            monitor_paths_step(s, cands, 27, &mut all, &mut any);
-            monitor_paths_step(s, cands, 28, &mut all, &mut any);
-            monitor_paths_step(s, cands, 29, &mut all, &mut any);
-            monitor_paths_step(s, cands, 30, &mut all, &mut any);
-            monitor_paths_step(s, cands, 31, &mut all, &mut any);
-            monitor_paths_step(s, cands, 32, &mut all, &mut any);
-            monitor_paths_step(s, cands, 33, &mut all, &mut any);
-            monitor_paths_step(s, cands, 34, &mut all, &mut any);
-            monitor_paths_step(s, cands, 35, &mut all, &mut any);
-            monitor_paths_step(s, cands, 36, &mut all, &mut any);
-            monitor_paths_step(s, cands, 37, &mut all, &mut any);
-            monitor_paths_step(s, cands, 38, &mut all, &mut any);
-            monitor_paths_step(s, cands, 39, &mut all, &mut any);
-            monitor_paths_step(s, cands, 40, &mut all, &mut any);
-            monitor_paths_step(s, cands, 41, &mut all, &mut any);
-            monitor_paths_step(s, cands, 42, &mut all, &mut any);
-            monitor_paths_step(s, cands, 43, &mut all, &mut any);
-            monitor_paths_step(s, cands, 44, &mut all, &mut any);
-            monitor_paths_step(s, cands, 45, &mut all, &mut any);
-            monitor_paths_step(s, cands, 46, &mut all, &mut any);
-            monitor_paths_step(s, cands, 47, &mut all, &mut any);
-            monitor_paths_step(s, cands, 48, &mut all, &mut any);
-            monitor_paths_step(s, cands, 49, &mut all, &mut any);
-            monitor_paths_step(s, cands, 50, &mut all, &mut any);
-            monitor_paths_step(s, cands, 51, &mut all, &mut any);
-            monitor_paths_step(s, cands, 52, &mut all, &mut any);
-            monitor_paths_step(s, cands, 53, &mut all, &mut any);
-            monitor_paths_step(s, cands, 54, &mut all, &mut any);
-            monitor_paths_step(s, cands, 55, &mut all, &mut any);
-            monitor_paths_step(s, cands, 56, &mut all, &mut any);
-            monitor_paths_step(s, cands, 57, &mut all, &mut any);
-            monitor_paths_step(s, cands, 58, &mut all, &mut any);
-            monitor_paths_step(s, cands, 59, &mut all, &mut any);
-            monitor_paths_step(s, cands, 60, &mut all, &mut any);
-            monitor_paths_step(s, cands, 61, &mut all, &mut any);
-            monitor_paths_step(s, cands, 62, &mut all, &mut any);
-            monitor_paths_step(s, cands, 63, &mut all, &mut any);
+            // Only the tags `0..count` (`count` is concrete for symbolic execution).
+            let n = s.count as usize;
+            if 0 < n {
+                monitor_paths_step(s, cands, 0, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 0, all, any); }
+            }
+            if 1 < n {
+                monitor_paths_step(s, cands, 1, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 1, all, any); }
+            }
+            if 2 < n {
+                monitor_paths_step(s, cands, 2, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 2, all, any); }
+            }
+            if 3 < n {
+                monitor_paths_step(s, cands, 3, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 3, all, any); }
+            }
+            if 4 < n {
+                monitor_paths_step(s, cands, 4, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 4, all, any); }
+            }
+            if 5 < n {
+                monitor_paths_step(s, cands, 5, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 5, all, any); }
+            }
+            if 6 < n {
+                monitor_paths_step(s, cands, 6, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 6, all, any); }
+            }
+            if 7 < n {
+                monitor_paths_step(s, cands, 7, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 7, all, any); }
+            }
+            if 8 < n {
+                monitor_paths_step(s, cands, 8, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 8, all, any); }
+            }
+            if 9 < n {
+                monitor_paths_step(s, cands, 9, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 9, all, any); }
+            }
+            if 10 < n {
+                monitor_paths_step(s, cands, 10, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 10, all, any); }
+            }
+            if 11 < n {
+                monitor_paths_step(s, cands, 11, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 11, all, any); }
+            }
+            if 12 < n {
+                monitor_paths_step(s, cands, 12, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 12, all, any); }
+            }
+            if 13 < n {
+                monitor_paths_step(s, cands, 13, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 13, all, any); }
+            }
+            if 14 < n {
+                monitor_paths_step(s, cands, 14, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 14, all, any); }
+            }
+            if 15 < n {
+                monitor_paths_step(s, cands, 15, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 15, all, any); }
+            }
+            if 16 < n {
+                monitor_paths_step(s, cands, 16, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 16, all, any); }
+            }
+            if 17 < n {
+                monitor_paths_step(s, cands, 17, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 17, all, any); }
+            }
+            if 18 < n {
+                monitor_paths_step(s, cands, 18, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 18, all, any); }
+            }
+            if 19 < n {
+                monitor_paths_step(s, cands, 19, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 19, all, any); }
+            }
+            if 20 < n {
+                monitor_paths_step(s, cands, 20, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 20, all, any); }
+            }
+            if 21 < n {
+                monitor_paths_step(s, cands, 21, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 21, all, any); }
+            }
+            if 22 < n {
+                monitor_paths_step(s, cands, 22, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 22, all, any); }
+            }
+            if 23 < n {
+                monitor_paths_step(s, cands, 23, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 23, all, any); }
+            }
+            if 24 < n {
+                monitor_paths_step(s, cands, 24, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 24, all, any); }
+            }
+            if 25 < n {
+                monitor_paths_step(s, cands, 25, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 25, all, any); }
+            }
+            if 26 < n {
+                monitor_paths_step(s, cands, 26, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 26, all, any); }
+            }
+            if 27 < n {
+                monitor_paths_step(s, cands, 27, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 27, all, any); }
+            }
+            if 28 < n {
+                monitor_paths_step(s, cands, 28, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 28, all, any); }
+            }
+            if 29 < n {
+                monitor_paths_step(s, cands, 29, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 29, all, any); }
+            }
+            if 30 < n {
+                monitor_paths_step(s, cands, 30, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 30, all, any); }
+            }
+            if 31 < n {
+                monitor_paths_step(s, cands, 31, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 31, all, any); }
+            }
+            if 32 < n {
+                monitor_paths_step(s, cands, 32, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 32, all, any); }
+            }
+            if 33 < n {
+                monitor_paths_step(s, cands, 33, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 33, all, any); }
+            }
+            if 34 < n {
+                monitor_paths_step(s, cands, 34, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 34, all, any); }
+            }
+            if 35 < n {
+                monitor_paths_step(s, cands, 35, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 35, all, any); }
+            }
+            if 36 < n {
+                monitor_paths_step(s, cands, 36, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 36, all, any); }
+            }
+            if 37 < n {
+                monitor_paths_step(s, cands, 37, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 37, all, any); }
+            }
+            if 38 < n {
+                monitor_paths_step(s, cands, 38, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 38, all, any); }
+            }
+            if 39 < n {
+                monitor_paths_step(s, cands, 39, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 39, all, any); }
+            }
+            if 40 < n {
+                monitor_paths_step(s, cands, 40, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 40, all, any); }
+            }
+            if 41 < n {
+                monitor_paths_step(s, cands, 41, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 41, all, any); }
+            }
+            if 42 < n {
+                monitor_paths_step(s, cands, 42, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 42, all, any); }
+            }
+            if 43 < n {
+                monitor_paths_step(s, cands, 43, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 43, all, any); }
+            }
+            if 44 < n {
+                monitor_paths_step(s, cands, 44, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 44, all, any); }
+            }
+            if 45 < n {
+                monitor_paths_step(s, cands, 45, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 45, all, any); }
+            }
+            if 46 < n {
+                monitor_paths_step(s, cands, 46, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 46, all, any); }
+            }
+            if 47 < n {
+                monitor_paths_step(s, cands, 47, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 47, all, any); }
+            }
+            if 48 < n {
+                monitor_paths_step(s, cands, 48, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 48, all, any); }
+            }
+            if 49 < n {
+                monitor_paths_step(s, cands, 49, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 49, all, any); }
+            }
+            if 50 < n {
+                monitor_paths_step(s, cands, 50, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 50, all, any); }
+            }
+            if 51 < n {
+                monitor_paths_step(s, cands, 51, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 51, all, any); }
+            }
+            if 52 < n {
+                monitor_paths_step(s, cands, 52, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 52, all, any); }
+            }
+            if 53 < n {
+                monitor_paths_step(s, cands, 53, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 53, all, any); }
+            }
+            if 54 < n {
+                monitor_paths_step(s, cands, 54, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 54, all, any); }
+            }
+            if 55 < n {
+                monitor_paths_step(s, cands, 55, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 55, all, any); }
+            }
+            if 56 < n {
+                monitor_paths_step(s, cands, 56, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 56, all, any); }
+            }
+            if 57 < n {
+                monitor_paths_step(s, cands, 57, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 57, all, any); }
+            }
+            if 58 < n {
+                monitor_paths_step(s, cands, 58, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 58, all, any); }
+            }
+            if 59 < n {
+                monitor_paths_step(s, cands, 59, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 59, all, any); }
+            }
+            if 60 < n {
+                monitor_paths_step(s, cands, 60, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 60, all, any); }
+            }
+            if 61 < n {
+                monitor_paths_step(s, cands, 61, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 61, all, any); }
+            }
+            if 62 < n {
+                monitor_paths_step(s, cands, 62, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 62, all, any); }
+            }
+            if 63 < n {
+                monitor_paths_step(s, cands, 63, &mut all, &mut any);
+            } else {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_paths_skip(*s, cands, 63, all, any); }
+            }
             (all, any)
         }
 
@@ -552,8 +1197,14 @@ macro_rules! kani_aliasing_monitor {
             let ancestors = s.ancestors[e as usize];
             let local = ancestors & !s.cell;
             #[cfg(verus_keep_ghost)]
-            proof! { lemma_test_bit(s.main, e as u64); lemma_access_main_masks(s0, e as u64); }
-            if s.main & (1u64 << e) != 0 {
+            proof! {
+                lemma_test_bit(s.main, e as u64);
+                lemma_access_main_masks(s0, e as u64);
+                lemma_bit_live(s.count as u64, e as u64);
+            }
+            // Checking first that there is no wildcard tree keeps this branch concrete for
+            // symbolic execution when `e` is not (it depends on the tracked byte through `cell`).
+            if s.main == monitor_live(s) || s.main & (1u64 << e) != 0 {
                 // Every tag of a wildcard tree sees a foreign access from the main tree.
                 let code = monitor_apply(s, local, !ancestors & !s.cell, is_write);
                 #[cfg(verus_keep_ghost)]
