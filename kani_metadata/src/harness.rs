@@ -16,6 +16,10 @@ pub struct AssignsContract {
     /// A static global variable used to track recursion that must not be havocked.
     /// This is only needed if the function is tagged with `#[kani::recursive]`
     pub recursion_tracker: Option<String>,
+    /// The state of Kani's own checks (static globals) that must not be havocked either: the
+    /// aliasing checks' monitor starts from its initial state, not an arbitrary one.
+    #[serde(default)]
+    pub checks_state: Vec<String>,
 }
 
 /// We emit this structure for each annotated proof harness (`#[kani::proof]`) we find.

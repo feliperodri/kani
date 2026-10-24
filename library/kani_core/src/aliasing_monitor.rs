@@ -9,6 +9,11 @@
 //
 // The rules are Tree Borrows' as Miri implements them (`miri/src/borrow_tracker/tree_borrows`).
 //
+// Every function is exported as `__VERIFIER_kani_aliasing_*`: CBMC's contract instrumentation
+// (DFCC) does not instrument functions with that prefix, so a function contract's `modifies`
+// check does not check, at great cost, the monitor's writes to its own state, the only memory it
+// writes (its functions only take `&mut MonitorState`).
+//
 // The same code is verified with Verus (`library/kani_core/verus`): the Verus crate includes
 // this file and expands this macro, and the `verus_verify` / `verus_spec` attributes below only
 // exist when Verus compiles it (`verus_keep_ghost`). A normal build ignores them.
@@ -121,6 +126,7 @@ macro_rules! kani_aliasing_monitor {
         #[cfg_attr(verus_keep_ghost, verus_spec(
             ensures monitor_wf(&*final(s)), initial_spec(abstraction(&*final(s)))
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_initialize"))]
         pub fn monitor_initialize(s: &mut MonitorState, obj: usize, offset: usize) {
             s.tracked_object_id = obj;
             s.tracked_offset = offset;
@@ -145,6 +151,7 @@ macro_rules! kani_aliasing_monitor {
 
         /// Whether the `size` bytes at `offset` of object `obj` contain the tracked byte.
         #[cfg_attr(verus_keep_ghost, verus_verify)]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_covers"))]
         pub fn monitor_covers(s: &MonitorState, obj: usize, offset: usize, size: usize) -> bool {
             s.tracked_object_id == obj
                 && s.tracked_offset >= offset
@@ -157,6 +164,7 @@ macro_rules! kani_aliasing_monitor {
             requires monitor_wf(s), tag < s.count,
             ensures r as nat == eff(abstraction(s), tag as nat), r < s.count, !bit(s.cell, r as u64),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_eff"))]
         pub fn monitor_eff(s: &MonitorState, tag: u8) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof! { lemma_test_bit(s.cell, tag as u64); }
@@ -180,6 +188,7 @@ macro_rules! kani_aliasing_monitor {
                 final(s).tracked_offset == old(s).tracked_offset,
                 failed_unchanged(r, &*old(s), &*final(s)),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_apply"))]
         pub fn monitor_apply(s: &mut MonitorState, local: u64, foreign: u64, is_write: bool) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
@@ -234,6 +243,7 @@ macro_rules! kani_aliasing_monitor {
             requires 1 <= s.count <= 64,
             ensures r == live_mask(s.count as u64),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_live"))]
         pub fn monitor_live(s: &MonitorState) -> u64 {
             if s.count >= 64 {
                 u64::MAX
@@ -250,6 +260,7 @@ macro_rules! kani_aliasing_monitor {
             requires v < 64, h == holders_upto(s, b, v as nat),
             ensures r == holders_upto(s, b, (v + 1) as nat),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_holders_step"))]
         pub fn monitor_holders_step(s: &MonitorState, b: u64, v: usize, h: u64) -> u64 {
             #[cfg(verus_keep_ghost)]
             proof! { lemma_or_zero(h); }
@@ -263,6 +274,7 @@ macro_rules! kani_aliasing_monitor {
             requires 1 <= s.count <= 64,
             ensures holders_spec(s, b, r),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_holders"))]
         pub fn monitor_holders(s: &MonitorState, b: u64) -> u64 {
             let mut h = 0u64;
             // Written out instead of looping, so that a harness's unwinding bound does not apply.
@@ -347,6 +359,7 @@ macro_rules! kani_aliasing_monitor {
         /// _access`), not looking at its ancestors.
         #[cfg_attr(verus_keep_ghost, verus_verify)]
         #[cfg_attr(verus_keep_ghost, verus_spec(r => ensures r == cand_mask(s, is_write)))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_candidates"))]
         pub fn monitor_candidates(s: &MonitorState, is_write: bool) -> u64 {
             let readable = s.exposed & s.valid & !s.cell;
             if is_write {
@@ -365,6 +378,7 @@ macro_rules! kani_aliasing_monitor {
             ensures *final(all) == all_upto(s, cands, (c + 1) as nat),
                 *final(any) == any_upto(s, cands, (c + 1) as nat),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_paths_step"))]
         pub fn monitor_paths_step(
             s: &MonitorState,
             cands: u64,
@@ -385,6 +399,7 @@ macro_rules! kani_aliasing_monitor {
         #[cfg_attr(verus_keep_ghost, verus_spec(r =>
             ensures r.0 == all_upto(s, cands, 64), r.1 == any_upto(s, cands, 64),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_candidate_paths"))]
         pub fn monitor_candidate_paths(s: &MonitorState, cands: u64) -> (u64, u64) {
             let mut all = u64::MAX;
             let mut any = 0u64;
@@ -474,6 +489,7 @@ macro_rules! kani_aliasing_monitor {
             requires own == 0 || root >= 1,
             ensures r == wild_bits(s, is_write, own, root),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_wildcard_masks"))]
         pub fn monitor_wildcard_masks(
             s: &MonitorState,
             is_write: bool,
@@ -506,6 +522,7 @@ macro_rules! kani_aliasing_monitor {
         #[cfg_attr(verus_keep_ghost, verus_spec(r =>
             ensures r == settle_bits(before_read, before_write, s, own),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_wildcard_settle"))]
         pub fn monitor_wildcard_settle(
             before_read: u64,
             before_write: u64,
@@ -527,6 +544,7 @@ macro_rules! kani_aliasing_monitor {
                 final(s).tracked_object_id == old(s).tracked_object_id,
                 final(s).tracked_offset == old(s).tracked_offset,
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_access"))]
         pub fn monitor_access(s: &mut MonitorState, tag: u8, is_write: bool) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
@@ -597,6 +615,7 @@ macro_rules! kani_aliasing_monitor {
                 final(s).tracked_object_id == old(s).tracked_object_id,
                 final(s).tracked_offset == old(s).tracked_offset,
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_wildcard_access"))]
         pub fn monitor_wildcard_access(s: &mut MonitorState, is_write: bool) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
@@ -640,6 +659,7 @@ macro_rules! kani_aliasing_monitor {
                 final(s).tracked_offset == old(s).tracked_offset,
         ))]
         #[allow(clippy::too_many_arguments)]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_new_borrow"))]
         pub fn monitor_new_borrow(
             s: &mut MonitorState,
             parent: u8,
@@ -722,6 +742,7 @@ macro_rules! kani_aliasing_monitor {
                 monitor_wf(&*final(s)),
                 dealloc_refines(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat, r),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_dealloc"))]
         pub fn monitor_dealloc(s: &mut MonitorState, tag: u8) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
@@ -751,6 +772,7 @@ macro_rules! kani_aliasing_monitor {
                 monitor_wf(&*final(s)),
                 expose_spec(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_expose"))]
         pub fn monitor_expose(s: &mut MonitorState, tag: u8) {
             if tag < s.count {
                 #[cfg(verus_keep_ghost)]
@@ -775,6 +797,7 @@ macro_rules! kani_aliasing_monitor {
                 end_protector_refines(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat,
                     r),
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_end_protector"))]
         pub fn monitor_end_protector(s: &mut MonitorState, tag: u8) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
@@ -837,6 +860,7 @@ macro_rules! kani_aliasing_monitor {
                 final(s).tracked_object_id == old(s).tracked_object_id,
                 final(s).tracked_offset == old(s).tracked_offset,
         ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_return"))]
         pub fn monitor_return(s: &mut MonitorState, frame_count: u8, kept: [u8; 4]) {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }

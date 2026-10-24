@@ -49,7 +49,36 @@ impl GotocCtx<'_, '_> {
             .unwrap();
         self.attach_modifies_contract(modify);
         let recursion_tracker = self.find_recursion_tracker(items);
-        AssignsContract { recursion_tracker, contracted_function_name: modify.mangled_name() }
+        let checks_state = self.find_checks_state(items);
+        AssignsContract {
+            recursion_tracker,
+            checks_state,
+            contracted_function_name: modify.mangled_name(),
+        }
+    }
+
+    /// The statics that hold the state of the aliasing checks, in the `file:name` form that
+    /// `--nondet-static-exclude` expects (see `find_recursion_tracker`). A contract harness havocs
+    /// every other static; the checks' monitor must start from its initial state instead, or every
+    /// check would reason about arbitrary monitor states.
+    fn find_checks_state(&mut self, items: &[MonoItem]) -> Vec<String> {
+        items
+            .iter()
+            .filter_map(|item| {
+                let MonoItem::Static(static_item) = item else { return None };
+                let marker = crate::kani_middle::attributes::fn_marker(*static_item)?;
+                matches!(marker.as_str(), "KaniAliasingState" | "KaniAliasingCallState").then(
+                    || {
+                        let loc = self.codegen_span_stable(static_item.span());
+                        format!(
+                            "{}:{}",
+                            loc.filename().expect("static should have a file name"),
+                            crate::kani_middle::strip_local_crate_prefix(static_item.name()),
+                        )
+                    },
+                )
+            })
+            .collect()
     }
 
     /// The name and location for the recursion tracker should match the exact information added
@@ -139,11 +168,12 @@ impl GotocCtx<'_, '_> {
             .typ
             .clone();
 
-        // Find the memory-initialization shadow-memory static. It is tagged with the
-        // `KaniMemoryInitializationState` `fn_marker` (a `#[rustc_diagnostic_item]`
-        // can no longer be applied to statics). Its goto symbol is named after the
-        // static's mangled name, matching `codegen_static`.
-        let shadow_memory_assign = {
+        // Find the state of Kani's own checks, which their instrumentation writes in any
+        // function: the memory-initialization shadow memory and the aliasing checks' monitor.
+        // These statics are tagged with an `fn_marker` (a `#[rustc_diagnostic_item]` can no
+        // longer be applied to statics). Their goto symbols are named after the statics'
+        // mangled names, matching `codegen_static`, and only exist if the checks are on.
+        let shadow_memory_assign: Vec<_> = {
             let mut crates = rustc_public::find_crates("kani");
             if crates.is_empty() {
                 // In case we are using `kani_core`.
@@ -152,22 +182,22 @@ impl GotocCtx<'_, '_> {
             crates
                 .into_iter()
                 .flat_map(|krate| krate.statics())
-                .find(|static_def| {
-                    crate::kani_middle::attributes::fn_marker(*static_def).as_deref()
-                        == Some("KaniMemoryInitializationState")
+                .filter(|static_def| {
+                    matches!(
+                        crate::kani_middle::attributes::fn_marker(*static_def).as_deref(),
+                        Some(
+                            "KaniMemoryInitializationState"
+                                | "KaniAliasingState"
+                                | "KaniAliasingCallState"
+                        )
+                    )
                 })
                 .map(|static_def| Instance::from(static_def).mangled_name())
-                .and_then(|shadow_memory_table| {
-                    self.symbol_table.lookup(&shadow_memory_table).cloned()
+                .filter_map(|state| self.symbol_table.lookup(&state).cloned())
+                .map(|state_symbol| {
+                    Lambda::as_contract_for(&goto_annotated_fn_typ, None, state_symbol.to_expr())
                 })
-                .map(|shadow_memory_symbol| {
-                    vec![Lambda::as_contract_for(
-                        &goto_annotated_fn_typ,
-                        None,
-                        shadow_memory_symbol.to_expr(),
-                    )]
-                })
-                .unwrap_or_default()
+                .collect()
         };
 
         // The last argument is a tuple with addresses that can be modified.
