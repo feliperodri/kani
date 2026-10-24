@@ -62,6 +62,7 @@ const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
 const ACCESS_PROTECTOR: u8 = 3;
 const ACCESS_NOT_EXPOSED: u8 = 4;
+const ACCESS_PROTECTED_DEALLOC: u8 = 8;
 const MAX_ARG_TAGS: usize = 8;
 const MAX_RET_TAGS: usize = 4;
 
@@ -128,8 +129,16 @@ enum PathElem {
 type PathKey = (Local, Vec<PathElem>);
 
 /// Bounds on the pointers tracked inside one aggregate local.
-const MAX_PATH_DEPTH: usize = 4;
+const MAX_PATH_DEPTH: usize = 8;
 const MAX_PATHS_PER_LOCAL: usize = 16;
+
+/// How Miri retags the pointer at a path: a reference, or the pointer inside a `Box`, which is
+/// retagged like a mutable reference but only weakly protected.
+#[derive(Debug, Clone, Copy)]
+struct RetagKind {
+    is_shared: bool,
+    is_box: bool,
+}
 
 /// Where the tag of a pointer comes from.
 #[derive(Debug, Clone, Copy)]
@@ -138,18 +147,23 @@ enum TagValue {
     Local(Local),
 }
 
+/// The enum variants a pointer inside an aggregate is in: an action on it only happens if each
+/// place has the variant (its discriminant), as Miri retags only the references of the active
+/// variant.
+type Guard = Vec<(Place, u128)>;
+
 /// One piece of instrumentation for an instruction.
 #[derive(Debug, Clone)]
 enum Action {
     /// Check and record an access to `place` through `tag`.
-    Access { place: Place, tag: TagValue, is_write: bool },
+    Access { place: Place, tag: TagValue, is_write: bool, guard: Guard },
     /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
     /// intrinsics do.
     AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
     /// Record that the pointer tagged `tag` was exposed.
     Expose { tag: TagValue },
-    /// Deallocate `size` bytes at `ptr`.
-    Dealloc { ptr: Operand, size: Operand },
+    /// Deallocate `size` bytes at `ptr`, tagged `tag`.
+    Dealloc { ptr: Operand, tag: TagValue, size: Operand },
     /// A construct the checks do not support: fail if reached.
     Unsupported { msg: String },
     /// Set a tag local.
@@ -165,10 +179,14 @@ enum Action {
         cell_mask: u64,
         is_shared: bool,
         is_protected: bool,
+        is_strong: bool,
+        guard: Guard,
     },
     /// The read that creating a shared reference to `place` performs, except at the bytes in
     /// `cell_mask`.
-    ReadOutsideCells { place: Place, tag: TagValue, cell_mask: u64 },
+    ReadOutsideCells { place: Place, tag: TagValue, cell_mask: u64, guard: Guard },
+    /// The protector of the argument tagged by `tag_local` ends.
+    EndProtector { tag_local: Local },
     /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
     DropRetag { place: Place, parent: TagValue, callee: u64 },
     /// Record the argument tags of a direct call.
@@ -193,6 +211,10 @@ struct Instrumenter<'a, 'tcx> {
     /// Ghost local holding the number of tags in use when the function started, if the
     /// function may create tags (it creates references or calls functions).
     frame_count: Option<Local>,
+    /// Ghost locals holding the tags of the protected retags of the arguments, in order.
+    protector_tags: Vec<Local>,
+    /// The locals of the original body, for the types of the places it uses.
+    locals: Vec<rustc_public::mir::LocalDecl>,
 }
 
 impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
@@ -222,6 +244,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             address_taken,
             own_id: instance_id(instance),
             frame_count: None,
+            protector_tags: vec![],
+            locals: body.locals().to_vec(),
         }
     }
 
@@ -242,9 +266,21 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
             self.tags.insert(key, tag_local);
         }
-        let has_reference_args =
-            (1..=body.arg_count()).any(|local| body.locals()[local].ty.kind().is_ref());
-        let may_create_tags = has_reference_args
+        // The pointers in the arguments that are retagged with a protector when the function
+        // starts: references and `Box`es, inside aggregates too.
+        let mut entry_retags = vec![];
+        for local in 1..=body.arg_count() {
+            let ty = body.locals()[local].ty;
+            for path in self.flat_paths(ty) {
+                let Some(&tag_local) = self.tags.get(&(local, path.clone())) else { continue };
+                let Some(kind) = self.retag_kind(ty, &path) else { continue };
+                let Some((place, guard)) = self.path_place(local, ty, &path) else { continue };
+                let protector = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
+                entry_retags.push((place, guard, kind, tag_local, protector));
+            }
+        }
+        self.protector_tags = entry_retags.iter().map(|(.., protector)| *protector).collect();
+        let may_create_tags = !entry_retags.is_empty()
             || body.blocks().iter().any(|block| {
                 matches!(block.terminator.kind, TerminatorKind::Call { .. })
                     || block
@@ -263,9 +299,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         let mut work = vec![];
         for (bb, block) in body.blocks().iter().enumerate() {
             for (idx, stmt) in block.statements.iter().enumerate() {
-                let actions = self.statement_actions(body, &stmt.kind);
-                if !actions.is_empty() {
-                    work.push((SourceInstruction::Statement { idx, bb }, actions, vec![]));
+                let (before, after) = self.statement_actions(body, &stmt.kind);
+                if !before.is_empty() || !after.is_empty() {
+                    work.push((SourceInstruction::Statement { idx, bb }, before, after));
                 }
             }
             let (before, after) = self.terminator_actions(body, &block.terminator.kind);
@@ -332,28 +368,21 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             let ret = unit_place(body, span);
             body.insert_call(&end_args, &mut source, InsertPosition::Before, vec![], ret);
         }
-        // Reference arguments are retagged when the function starts: a read through the
-        // caller's tag, then a child that stays protected until the function returns.
-        for local in 1..=body.arg_count() {
-            let ty = body.locals()[local].ty;
-            let Some(&tag_local) = self.tags.get(&(local, vec![])) else { continue };
-            let Some(pointee) = ty.kind().builtin_deref(true) else { continue };
-            if !ty.kind().is_ref() {
-                continue;
-            }
-            let is_shared = pointee.mutability == Mutability::Not;
-            let referent = Place { local, projection: vec![ProjectionElem::Deref] };
-            let actions = self.reborrow(
-                body,
-                &referent,
-                TagValue::Local(tag_local),
-                Some(tag_local),
-                is_shared,
-                true,
-            );
+        // The references and `Box`es in the arguments are retagged when the function starts: a
+        // read through the caller's tag, then a child that stays protected until the function
+        // returns (strongly for references).
+        for (place, guard, kind, tag_local, protector) in entry_retags {
+            let actions =
+                self.retag(body, &place, kind, TagValue::Local(tag_local), tag_local, true, guard);
             for action in actions {
                 self.insert(body, action, &mut source, InsertPosition::Before);
             }
+            self.insert(
+                body,
+                Action::SetTag { tag_local: protector, value: TagValue::Local(tag_local) },
+                &mut source,
+                InsertPosition::Before,
+            );
         }
         let mut keys: Vec<(PathKey, Local)> =
             self.tags.iter().map(|(key, tag)| (key.clone(), *tag)).collect();
@@ -386,10 +415,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
         let pointer =
             Place { local: place.local, projection: place.projection[..first_deref].to_vec() };
-        if pointer.ty(body.locals()).unwrap().kind().is_box() {
-            return Some(TagValue::Const(ROOT_TAG));
-        }
-        Some(self.key_tag(path_key(&pointer)))
+        let pointer_ty = pointer.ty(body.locals()).unwrap();
+        Some(self.key_tag(path_key(&pointer).map(|(local, mut path)| {
+            // The pointer inside a `Box`, which is where its tag is.
+            if !is_pointer(pointer_ty) {
+                path.extend(self.flat_paths(pointer_ty).into_iter().next().unwrap_or_default());
+            }
+            (local, path)
+        })))
     }
 
     /// The tag of the pointer at `key`, if it has a tag local.
@@ -413,8 +446,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             out.push(prefix);
             return;
         }
-        // A `Box` owns its allocation: dereferencing one always uses the root tag.
-        if depth == 0 || ty.kind().is_box() {
+        if depth == 0 {
             return;
         }
         let internal = rustc_internal::internal(self.tcx, ty);
@@ -450,8 +482,120 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     push(vec![PathElem::Field(index)], normalize(Unnormalized::new(field_ty)));
                 }
             }
+            // A pattern type such as `NonNull`'s `*const T is !null`: its field 0 is the value.
+            rustc_middle::ty::TyKind::Pat(inner, _) => {
+                push(vec![PathElem::Field(0)], normalize(Unnormalized::new(*inner)));
+            }
             _ => {}
         }
+    }
+
+    /// The type of field `field` of variant `variant` (`None` for a struct, tuple, closure or
+    /// pattern type) of `ty`.
+    fn field_ty(&self, ty: Ty, variant: Option<usize>, field: usize) -> Option<Ty> {
+        let internal = rustc_internal::internal(self.tcx, ty);
+        let typing_env = TypingEnv::fully_monomorphized();
+        let normalize = |field_ty: Unnormalized<'tcx, rustc_middle::ty::Ty<'tcx>>| {
+            rustc_internal::stable(self.tcx.normalize_erasing_regions(typing_env, field_ty))
+        };
+        match (internal.kind(), variant) {
+            (rustc_middle::ty::TyKind::Tuple(tys), None) => {
+                tys.get(field).map(|field_ty| normalize(Unnormalized::new(*field_ty)))
+            }
+            (rustc_middle::ty::TyKind::Adt(def, args), variant) if !def.is_union() => {
+                let variant =
+                    def.variants().get(rustc_abi::VariantIdx::from_usize(variant.unwrap_or(0)))?;
+                let field = variant.fields.get(rustc_abi::FieldIdx::from_usize(field))?;
+                Some(normalize(field.ty(self.tcx, args)))
+            }
+            (rustc_middle::ty::TyKind::Closure(_, args), None) => args
+                .as_closure()
+                .upvar_tys()
+                .get(field)
+                .map(|field_ty| normalize(Unnormalized::new(*field_ty))),
+            (rustc_middle::ty::TyKind::Pat(inner, _), None) if field == 0 => {
+                Some(normalize(Unnormalized::new(*inner)))
+            }
+            _ => None,
+        }
+    }
+
+    /// The place of the pointer at `path` inside `local` (of type `ty`), and the enum variants
+    /// it is in.
+    fn path_place(&self, local: Local, ty: Ty, path: &[PathElem]) -> Option<(Place, Guard)> {
+        self.path_place_from(&Place::from(local), ty, path)
+    }
+
+    /// The place of the pointer at `path` inside the place `base` (of type `ty`), and the enum
+    /// variants inside `base` it is in.
+    fn path_place_from(&self, base: &Place, ty: Ty, path: &[PathElem]) -> Option<(Place, Guard)> {
+        let local = base.local;
+        let mut projection = base.projection.clone();
+        let mut guard = vec![];
+        let mut ty = ty;
+        let mut variant = None;
+        for elem in path {
+            match elem {
+                PathElem::Downcast(index) => {
+                    let RigidTy::Adt(def, _) = ty.kind().rigid()?.clone() else { return None };
+                    let idx = rustc_public::ty::VariantIdx::to_val(*index);
+                    let discr = def.discriminant_for_variant(idx).val;
+                    guard.push((Place { local, projection: projection.clone() }, discr));
+                    projection.push(ProjectionElem::Downcast(idx));
+                    variant = Some(*index);
+                }
+                PathElem::Field(index) => {
+                    ty = self.field_ty(ty, variant.take(), *index)?;
+                    projection.push(ProjectionElem::Field(*index, ty));
+                }
+            }
+        }
+        Some((Place { local, projection }, guard))
+    }
+
+    /// How the pointer at `path` inside a value of type `ty` is retagged, if it is: references,
+    /// and the pointer inside a `Box`, whose pointee type is not pinned (Miri does not retag
+    /// mutable references and `Box`es to types that are not `Unpin`).
+    fn retag_kind(&self, ty: Ty, path: &[PathElem]) -> Option<RetagKind> {
+        // The types along the path.
+        let mut tys = vec![ty];
+        let mut variant = None;
+        for elem in path {
+            match elem {
+                PathElem::Downcast(index) => variant = Some(*index),
+                PathElem::Field(index) => {
+                    let next = self.field_ty(*tys.last().unwrap(), variant.take(), *index)?;
+                    tys.push(next);
+                }
+            }
+        }
+        // Miri does not retag inside `MaybeDangling`, `ManuallyDrop` or a coroutine.
+        if tys[..tys.len() - 1]
+            .iter()
+            .any(|ty| rustc_internal::internal(self.tcx, *ty).is_like_maybe_dangling())
+        {
+            return None;
+        }
+        let leaf = *tys.last().unwrap();
+        let (pointee, kind) = if let Some(pointee) =
+            leaf.kind().is_ref().then(|| leaf.kind().builtin_deref(true)).flatten()
+        {
+            let is_shared = pointee.mutability == Mutability::Not;
+            (pointee.ty, RetagKind { is_shared, is_box: false })
+        } else {
+            // The raw pointer inside a `Box`: `Box.0: Unique`, `Unique.0: NonNull`,
+            // `NonNull.0: pattern type`, field 0 of which is the pointer.
+            let n = tys.len();
+            if n < 5 || !tys[n - 5].kind().is_box() || !leaf.kind().is_raw_ptr() {
+                return None;
+            }
+            let pointee = leaf.kind().builtin_deref(true)?.ty;
+            (pointee, RetagKind { is_shared: false, is_box: true })
+        };
+        if !kind.is_shared && !self.is_unpin(pointee) {
+            return None;
+        }
+        Some(kind)
     }
 
     /// The bytes of a value of type `ty` that are inside an `UnsafeCell`, as a mask over its first
@@ -553,10 +697,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
-    /// The tag that the pointer at `suffix` inside the value of `rvalue` has.
-    fn rvalue_subtag(&self, rvalue: &Rvalue, suffix: &[PathElem]) -> TagValue {
+    /// The tag that the pointer at `suffix` inside the value of `rvalue`, of type `ty`, has.
+    fn rvalue_subtag(&self, rvalue: &Rvalue, ty: Ty, suffix: &[PathElem]) -> TagValue {
         let unknown = TagValue::Const(UNKNOWN_TAG);
         match rvalue {
+            // A cast to a newtype around a single pointer, such as `NonNull`, keeps the
+            // provenance of the pointer it casts.
+            Rvalue::Cast(
+                CastKind::Transmute | CastKind::PtrToPtr | CastKind::Subtype,
+                operand,
+                _,
+            ) if self.flat_paths(ty).as_slice() == [suffix.to_vec()] => self.operand_tag(operand),
             Rvalue::Use(Operand::Copy(place) | Operand::Move(place), _) => {
                 self.key_tag(path_key(place).map(|(local, mut path)| {
                     path.extend_from_slice(suffix);
@@ -605,10 +756,21 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         inner
     }
 
-    /// The tag of the pointer an operand evaluates to.
+    /// The tag of the pointer an operand evaluates to: a pointer, or a newtype around one such
+    /// as `NonNull` or `Box`.
     fn operand_tag(&self, operand: &Operand) -> TagValue {
         match operand {
-            Operand::Copy(place) | Operand::Move(place) => self.key_tag(path_key(place)),
+            Operand::Copy(place) | Operand::Move(place) => {
+                self.key_tag(path_key(place).map(|(local, mut path)| {
+                    if let Ok(ty) = place.ty(&self.locals)
+                        && !is_pointer(ty)
+                        && let [inner] = self.flat_paths(ty).as_slice()
+                    {
+                        path.extend_from_slice(inner);
+                    }
+                    (local, path)
+                }))
+            }
             // A constant pointer points to a static or a promoted constant, whose only
             // tag is its root.
             Operand::Constant(_) => TagValue::Const(ROOT_TAG),
@@ -623,13 +785,23 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
 
     fn read(&self, body: &MutableBody, place: &Place, actions: &mut Vec<Action>) {
         if let Some(tag) = self.place_tag(body, place) {
-            actions.push(Action::Access { place: place.clone(), tag, is_write: false });
+            actions.push(Action::Access {
+                place: place.clone(),
+                tag,
+                is_write: false,
+                guard: vec![],
+            });
         }
     }
 
     fn write(&self, body: &MutableBody, place: &Place, actions: &mut Vec<Action>) {
         if let Some(tag) = self.place_tag(body, place) {
-            actions.push(Action::Access { place: place.clone(), tag, is_write: true });
+            actions.push(Action::Access {
+                place: place.clone(),
+                tag,
+                is_write: true,
+                guard: vec![],
+            });
         }
     }
 
@@ -639,8 +811,36 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// The instrumentation of a retag of the pointer at `ptr` (a reference, or the pointer inside
+    /// a `Box`), tagged `parent`, whose new tag goes to `dest`.
+    #[allow(clippy::too_many_arguments)]
+    fn retag(
+        &self,
+        body: &MutableBody,
+        ptr: &Place,
+        kind: RetagKind,
+        parent: TagValue,
+        dest: Local,
+        is_protected: bool,
+        guard: Guard,
+    ) -> Vec<Action> {
+        let mut referent = ptr.clone();
+        referent.projection.push(ProjectionElem::Deref);
+        self.reborrow(
+            body,
+            &referent,
+            parent,
+            Some(dest),
+            kind.is_shared,
+            is_protected,
+            !kind.is_box,
+            guard,
+        )
+    }
+
     /// The instrumentation of a reborrow of `place`, reached through a pointer tagged `parent`,
     /// whose tag goes to `dest`.
+    #[allow(clippy::too_many_arguments)]
     fn reborrow(
         &self,
         body: &MutableBody,
@@ -649,6 +849,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         dest: Option<Local>,
         is_shared: bool,
         is_protected: bool,
+        is_strong: bool,
+        guard: Guard,
     ) -> Vec<Action> {
         let ty = place.ty(body.locals()).unwrap();
         let mut actions = vec![];
@@ -669,11 +871,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         };
         // Creating a reference reads the referenced memory, except a shared reference's cells.
         if is_shared && cell_mask != 0 {
-            actions.push(Action::ReadOutsideCells { place: place.clone(), tag: parent, cell_mask });
+            actions.push(Action::ReadOutsideCells {
+                place: place.clone(),
+                tag: parent,
+                cell_mask,
+                guard: guard.clone(),
+            });
         } else {
             self.read(body, place, &mut actions);
-            if let Some(Action::Access { tag, .. }) = actions.last_mut() {
+            if let Some(Action::Access { tag, guard: access_guard, .. }) = actions.last_mut() {
                 *tag = parent;
+                *access_guard = guard.clone();
             }
         }
         if let Some(tag_local) = dest {
@@ -684,6 +892,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 cell_mask,
                 is_shared,
                 is_protected,
+                is_strong,
+                guard,
             });
         }
         actions
@@ -776,8 +986,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
-    fn statement_actions(&self, body: &MutableBody, kind: &StatementKind) -> Vec<Action> {
+    /// The instrumentation before and after a statement.
+    fn statement_actions(
+        &self,
+        body: &MutableBody,
+        kind: &StatementKind,
+    ) -> (Vec<Action>, Vec<Action>) {
         let mut actions = vec![];
+        let mut after = vec![];
         match kind {
             StatementKind::Assign(lhs, rvalue) => {
                 let dest = self.dest_tag(lhs);
@@ -787,12 +1003,25 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         let parent =
                             self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
                         let is_shared = matches!(borrow_kind, BorrowKind::Shared);
-                        if matches!(borrow_kind, BorrowKind::Fake(_)) {
-                            // Only used by the borrow checker: no reference is created.
+                        let ty = place.ty(body.locals()).unwrap();
+                        if matches!(borrow_kind, BorrowKind::Fake(_))
+                            || (!is_shared && !self.is_unpin(ty))
+                        {
+                            // A fake borrow is only used by the borrow checker, and Miri does not
+                            // retag a mutable reference to a type that is not `Unpin`: no new
+                            // tag.
                             new_tag = Some(parent);
                         } else {
-                            actions
-                                .extend(self.reborrow(body, place, parent, dest, is_shared, false));
+                            actions.extend(self.reborrow(
+                                body,
+                                place,
+                                parent,
+                                dest,
+                                is_shared,
+                                false,
+                                true,
+                                vec![],
+                            ));
                         }
                     }
                     Rvalue::AddressOf(_, place) => {
@@ -800,9 +1029,39 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG)),
                         );
                     }
-                    Rvalue::Use(operand, _) => {
+                    Rvalue::Use(operand, with_retag) => {
                         self.read_operand(body, operand, &mut actions);
                         new_tag = Some(self.operand_tag(operand));
+                        // Miri retags the references and `Box`es in a value copied with a
+                        // retag, once it is in its place.
+                        if matches!(with_retag, rustc_public::mir::WithRetag::Yes)
+                            && let Some((local, prefix)) = path_key(lhs)
+                        {
+                            let lhs_ty = lhs.ty(body.locals()).unwrap();
+                            for suffix in self.flat_paths(lhs_ty) {
+                                let mut full = prefix.clone();
+                                full.extend_from_slice(&suffix);
+                                let Some(&tag_local) = self.tags.get(&(local, full)) else {
+                                    continue;
+                                };
+                                let Some(kind) = self.retag_kind(lhs_ty, &suffix) else {
+                                    continue;
+                                };
+                                let Some((ptr, guard)) = self.path_place_from(lhs, lhs_ty, &suffix)
+                                else {
+                                    continue;
+                                };
+                                after.extend(self.retag(
+                                    body,
+                                    &ptr,
+                                    kind,
+                                    TagValue::Local(tag_local),
+                                    tag_local,
+                                    false,
+                                    guard,
+                                ));
+                            }
+                        }
                     }
                     Rvalue::Cast(cast_kind, operand, _) => {
                         self.read_operand(body, operand, &mut actions);
@@ -821,8 +1080,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             actions.push(Action::Expose { tag: self.operand_tag(operand) });
                         }
                         new_tag = Some(match cast_kind {
-                            // The pointer inside a `Box`, which owns its allocation.
-                            CastKind::BoxDerefTransmute => TagValue::Const(ROOT_TAG),
+                            // The pointer inside a `Box`.
+                            CastKind::BoxDerefTransmute => self.operand_tag(operand),
                             // Any exposed tag.
                             CastKind::PointerWithExposedProvenance => TagValue::Const(EXPOSED_TAG),
                             _ if keeps_provenance => self.operand_tag(operand),
@@ -871,7 +1130,10 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let assignments: Vec<_> = self
                     .inner_tags(lhs)
                     .into_iter()
-                    .map(|(suffix, tag_local)| (tag_local, self.rvalue_subtag(rvalue, &suffix)))
+                    .map(|(suffix, tag_local)| {
+                        let ty = lhs.ty(body.locals()).unwrap();
+                        (tag_local, self.rvalue_subtag(rvalue, ty, &suffix))
+                    })
                     .collect();
                 if !assignments.is_empty() {
                     actions.push(Action::SetTags { assignments });
@@ -892,7 +1154,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             | StatementKind::ConstEvalCounter
             | StatementKind::Nop => {}
         }
-        actions
+        (actions, after)
     }
 
     /// The instrumentation before and after a terminator.
@@ -920,6 +1182,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 {
                     before.push(Action::Dealloc {
                         ptr: raw_ptr_arg(&args[0], body.locals()),
+                        tag: self.operand_tag(&args[0]),
                         size: args[1].clone(),
                     });
                 }
@@ -1004,7 +1267,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 self.read(body, place, &mut before);
                 let ty = place.ty(body.locals()).unwrap();
                 let drop_glue = Instance::resolve_drop_in_place(ty);
-                let parent = self.place_tag(body, place).unwrap_or(TagValue::Const(UNKNOWN_TAG));
+                // A local whose address is not otherwise taken is only reached through this
+                // reference, a child of its allocation's root.
+                let parent = self.place_tag(body, place).unwrap_or(TagValue::Const(ROOT_TAG));
                 before.push(Action::DropRetag {
                     place: place.clone(),
                     parent,
@@ -1022,6 +1287,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     .take(MAX_RET_TAGS)
                     .map(|path| self.key_tag(Some((0, path))))
                     .collect();
+                for tag_local in &self.protector_tags {
+                    before.push(Action::EndProtector { tag_local: *tag_local });
+                }
                 if !tags.is_empty() || self.frame_count.is_some() {
                     before.push(Action::Return { tags });
                 }
@@ -1044,13 +1312,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     ) {
         let span = source.span(body.blocks());
         match action {
-            Action::Access { place, tag, is_write } => {
+            Action::Access { place, tag, is_write, guard } => {
                 let ty = place.ty(body.locals()).unwrap();
                 let model = if self.is_sized(ty) {
                     KaniModel::AliasingAccess
                 } else {
                     KaniModel::AliasingAccessUnsized
                 };
+                let enabled = self.guard_operand(body, &guard, source, position);
                 let ptr = body.insert_assignment(
                     Rvalue::AddressOf(RawPtrKind::Const, place),
                     source,
@@ -1059,6 +1328,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let access = self.model(model, vec![ty]);
                 let args = vec![
+                    enabled,
                     self.tag_operand(body, tag, span),
                     Operand::Move(Place::from(ptr)),
                     bool_operand(is_write, span),
@@ -1104,7 +1374,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let ret = unit_place(body, span);
                 body.insert_call(&expose, source, position, args, ret);
             }
-            Action::Dealloc { ptr, size } => {
+            Action::Dealloc { ptr, tag, size } => {
                 let ptr_ty = ptr.ty(body.locals()).unwrap();
                 let u8_ptr = Ty::new_ptr(Ty::unsigned_ty(UintTy::U8), Mutability::Not);
                 let ptr = if ptr_ty == u8_ptr {
@@ -1121,15 +1391,25 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 };
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let dealloc = self.model(KaniModel::AliasingDealloc, vec![]);
-                body.insert_call(&dealloc, source, position, vec![ptr, size], Place::from(code));
+                let args = vec![self.tag_operand(body, tag, span), ptr, size];
+                body.insert_call(&dealloc, source, position, args, Place::from(code));
+                // Deallocating writes through the pointer.
+                self.insert_access_checks(body, code, true, source, position);
                 self.insert_ne_check(
                     body,
                     code,
-                    ACCESS_PROTECTOR,
+                    ACCESS_PROTECTED_DEALLOC,
                     MSG_DEALLOC_PROTECTED,
                     source,
                     position,
                 );
+            }
+            Action::EndProtector { tag_local } => {
+                let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let end = self.model(KaniModel::AliasingEndProtector, vec![]);
+                let args = vec![Operand::Copy(Place::from(tag_local))];
+                body.insert_call(&end, source, position, args, Place::from(code));
+                self.insert_access_checks(body, code, true, source, position);
             }
             Action::Unsupported { msg } => {
                 body.insert_check(&self.pass.unsupported_check_type, source, position, None, &msg);
@@ -1168,30 +1448,46 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     );
                 }
             }
-            Action::NewBorrow { tag_local, place, parent, cell_mask, is_shared, is_protected } => {
+            Action::NewBorrow {
+                tag_local,
+                place,
+                parent,
+                cell_mask,
+                is_shared,
+                is_protected,
+                is_strong,
+                guard,
+            } => {
                 let ty = place.ty(body.locals()).unwrap();
                 let model = if self.is_sized(ty) {
                     KaniModel::AliasingNewBorrow
                 } else {
                     KaniModel::AliasingNewBorrowUnsized
                 };
+                let enabled = self.guard_operand(body, &guard, source, position);
                 let ptr = body.insert_assignment(
                     Rvalue::AddressOf(RawPtrKind::Const, place),
                     source,
                     position,
                 );
                 let new_borrow = self.model(model, vec![ty]);
-                let mut args =
-                    vec![self.tag_operand(body, parent, span), Operand::Move(Place::from(ptr))];
+                let mut args = vec![
+                    enabled,
+                    self.tag_operand(body, parent, span),
+                    Operand::Move(Place::from(ptr)),
+                ];
                 if model == KaniModel::AliasingNewBorrow {
                     args.push(body.new_uint_operand(cell_mask as u128, UintTy::U64, span));
                 }
+                args.push(bool_operand(self.is_freeze(ty), span));
                 args.push(bool_operand(is_shared, span));
                 args.push(bool_operand(is_protected, span));
+                args.push(bool_operand(is_strong, span));
                 body.insert_call(&new_borrow, source, position, args, Place::from(tag_local));
             }
-            Action::ReadOutsideCells { place, tag, cell_mask } => {
+            Action::ReadOutsideCells { place, tag, cell_mask, guard } => {
                 let ty = place.ty(body.locals()).unwrap();
+                let enabled = self.guard_operand(body, &guard, source, position);
                 let ptr = body.insert_assignment(
                     Rvalue::AddressOf(RawPtrKind::Const, place),
                     source,
@@ -1200,6 +1496,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let read = self.model(KaniModel::AliasingReadOutsideCells, vec![ty]);
                 let args = vec![
+                    enabled,
                     self.tag_operand(body, tag, span),
                     Operand::Move(Place::from(ptr)),
                     body.new_uint_operand(cell_mask as u128, UintTy::U64, span),
@@ -1218,6 +1515,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         cell_mask: 0,
                         is_shared: false,
                         is_protected: false,
+                        is_strong: true,
+                        guard: vec![],
                     },
                     source,
                     position,
@@ -1285,6 +1584,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     ) {
         self.insert_ne_check(body, code, ACCESS_INVALIDATED, MSG_INVALIDATED, source, position);
         self.insert_ne_check(body, code, ACCESS_NOT_EXPOSED, MSG_NOT_EXPOSED, source, position);
+        // A read can break a protector too: it disables a protected Active reference.
+        self.insert_ne_check(body, code, ACCESS_PROTECTOR, MSG_PROTECTOR, source, position);
         if is_write {
             self.insert_ne_check(
                 body,
@@ -1294,8 +1595,51 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 source,
                 position,
             );
-            self.insert_ne_check(body, code, ACCESS_PROTECTOR, MSG_PROTECTOR, source, position);
         }
+    }
+
+    /// A `bool` operand that is true if every place of `guard` has its variant.
+    fn guard_operand(
+        &self,
+        body: &mut MutableBody,
+        guard: &Guard,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) -> Operand {
+        let span = source.span(body.blocks());
+        let mut enabled: Option<Local> = None;
+        for (place, discr) in guard {
+            let value =
+                body.insert_assignment(Rvalue::Discriminant(place.clone()), source, position);
+            let value = body.insert_assignment(
+                Rvalue::Cast(
+                    CastKind::IntToInt,
+                    Operand::Copy(Place::from(value)),
+                    Ty::unsigned_ty(UintTy::U64),
+                ),
+                source,
+                position,
+            );
+            let expected = body.new_uint_operand(*discr as u64 as u128, UintTy::U64, span);
+            let is_variant = body.insert_binary_op(
+                BinOp::Eq,
+                Operand::Copy(Place::from(value)),
+                expected,
+                source,
+                position,
+            );
+            enabled = Some(match enabled {
+                None => is_variant,
+                Some(previous) => body.insert_binary_op(
+                    BinOp::BitAnd,
+                    Operand::Copy(Place::from(previous)),
+                    Operand::Copy(Place::from(is_variant)),
+                    source,
+                    position,
+                ),
+            });
+        }
+        enabled.map_or_else(|| bool_operand(true, span), |local| Operand::Copy(Place::from(local)))
     }
 
     /// Assert that the `u8` in `value` is not `bad`.
@@ -1335,6 +1679,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
 
     fn is_sized(&self, ty: Ty) -> bool {
         rustc_internal::internal(self.tcx, ty).is_sized(self.tcx, TypingEnv::fully_monomorphized())
+    }
+
+    fn is_unpin(&self, ty: Ty) -> bool {
+        let internal = rustc_internal::internal(self.tcx, ty);
+        let typing_env = TypingEnv::fully_monomorphized();
+        internal.is_unpin(self.tcx, typing_env) && internal.is_unsafe_unpin(self.tcx, typing_env)
     }
 
     fn is_freeze(&self, ty: Ty) -> bool {
