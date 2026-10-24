@@ -204,6 +204,10 @@ impl KaniSession {
                 args.push("--nondet-static-exclude".into());
                 args.push(tracker.as_str().into());
             }
+            for state in &assigns.checks_state {
+                args.push("--nondet-static-exclude".into());
+                args.push(state.as_str().into());
+            }
         }
 
         args.push(file.into());

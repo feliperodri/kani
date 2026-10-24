@@ -32,7 +32,15 @@ macro_rules! kani_aliasing {
         const MAX_ARG_TAGS: usize = 8;
         const MAX_RET_TAGS: usize = 4;
 
+        // The functions below that are not generic are exported as `__VERIFIER_kani_aliasing_*`,
+        // like the monitor's (see `kani_aliasing_monitor!`): CBMC's contract instrumentation does
+        // not instrument them, so a function contract's `modifies` check is not threaded through
+        // the instrumentation of every access. They only write the two statics below.
+
         /// The monitor's state for the tracked byte.
+        // Contracts' `modifies` checks must let the instrumentation write this state; the
+        // compiler finds it by this marker.
+        #[kanitool::fn_marker = "KaniAliasingState"]
         static mut ALIASING_STATE: MonitorState = monitor_new();
 
         /// Tags passed across calls. A caller records the tags of the pointers in the arguments
@@ -45,6 +53,7 @@ macro_rules! kani_aliasing {
             ret_tags: [u8; MAX_RET_TAGS],
         }
 
+        #[kanitool::fn_marker = "KaniAliasingCallState"]
         static mut CALL_STATE: CallState = CallState {
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
@@ -52,10 +61,12 @@ macro_rules! kani_aliasing {
             ret_tags: [UNKNOWN_TAG; MAX_RET_TAGS],
         };
 
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_state")]
         fn state() -> &'static mut MonitorState {
             unsafe { &mut *(&raw mut ALIASING_STATE) }
         }
 
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_calls")]
         fn calls() -> &'static mut CallState {
             unsafe { &mut *(&raw mut CALL_STATE) }
         }
@@ -63,6 +74,7 @@ macro_rules! kani_aliasing {
         /// Choose the tracked byte.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingInitializeModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_initialize")]
         fn aliasing_initialize() {
             monitor_initialize(state(), super::any(), super::any());
             calls().call_callee = 0;
@@ -73,6 +85,7 @@ macro_rules! kani_aliasing {
         /// `ACCESS_OK` or the rule the access breaks.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingAccessBytesModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_access_bytes")]
         fn aliasing_access_bytes(
             tag: u8,
             obj: usize,
@@ -96,6 +109,7 @@ macro_rules! kani_aliasing {
         }
 
         /// Report the results the checks cannot decide as unsupported.
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_report_unknown")]
         fn report_unknown(code: u8) {
             if code == ACCESS_UNKNOWN_TAG {
                 super::unsupported(
@@ -185,6 +199,7 @@ macro_rules! kani_aliasing {
 
         /// Whether the tracked byte is in the `size` bytes at `offset` of `obj` and inside an
         /// `UnsafeCell` of the referent: bit `i` of `cell_mask` is byte `i` of the referent.
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_in_cell")]
         fn in_cell(
             s: &MonitorState,
             obj: usize,
@@ -206,6 +221,7 @@ macro_rules! kani_aliasing {
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingNewBorrowBytesModel"]
         #[allow(clippy::too_many_arguments)]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_new_borrow_bytes")]
         fn aliasing_new_borrow_bytes(
             parent: u8,
             obj: usize,
@@ -297,6 +313,7 @@ macro_rules! kani_aliasing {
         /// Deallocate `size` bytes at `ptr`, tagged `tag`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingDeallocModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_dealloc")]
         fn aliasing_dealloc(tag: u8, ptr: *const u8, size: usize) -> u8 {
             let s = state();
             let obj = super::mem::pointer_object(ptr);
@@ -312,6 +329,7 @@ macro_rules! kani_aliasing {
         /// Record that the pointer tagged `tag` was exposed.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingExposeModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_expose")]
         fn aliasing_expose(tag: u8) {
             monitor_expose(state(), tag);
         }
@@ -321,6 +339,7 @@ macro_rules! kani_aliasing {
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingPushCallModel"]
         #[allow(clippy::too_many_arguments)]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_push_call")]
         fn aliasing_push_call(
             callee: u64,
             tag0: u8,
@@ -341,6 +360,7 @@ macro_rules! kani_aliasing {
         /// a direct call to `callee`; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingArgTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_arg_tag")]
         fn aliasing_arg_tag(callee: u64, index: usize) -> u8 {
             let c = calls();
             if c.call_callee == callee && index < MAX_ARG_TAGS {
@@ -353,6 +373,7 @@ macro_rules! kani_aliasing {
         /// Called once a function has read its argument tags.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingEndArgsModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_args")]
         fn aliasing_end_args() {
             calls().call_callee = 0;
         }
@@ -360,6 +381,7 @@ macro_rules! kani_aliasing {
         /// The number of tags in use when a function starts, for `aliasing_return`.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingFrameEnterModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_frame_enter")]
         fn aliasing_frame_enter() -> u8 {
             state().count
         }
@@ -373,6 +395,7 @@ macro_rules! kani_aliasing {
         /// may need the tags created before them as ancestors.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingReturnModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_return")]
         fn aliasing_return(callee: u64, frame_count: u8, tag0: u8, tag1: u8, tag2: u8, tag3: u8) {
             let c = calls();
             c.ret_callee = callee;
@@ -383,6 +406,7 @@ macro_rules! kani_aliasing {
         /// The protector of the argument tagged `tag` ends, before the function returns.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingEndProtectorModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_protector")]
         fn aliasing_end_protector(tag: u8) -> u8 {
             let code = monitor_end_protector(state(), tag);
             report_unknown(code);
@@ -393,6 +417,7 @@ macro_rules! kani_aliasing {
         /// returned produced, if `callee` recorded it; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingRetTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_ret_tag")]
         fn aliasing_ret_tag(callee: u64, index: usize) -> u8 {
             let c = calls();
             if c.ret_callee == callee && index < MAX_RET_TAGS {
@@ -405,6 +430,7 @@ macro_rules! kani_aliasing {
         /// Called once a caller has read the tags of a returned value.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingEndRetModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_ret")]
         fn aliasing_end_ret() {
             calls().ret_callee = 0;
         }
