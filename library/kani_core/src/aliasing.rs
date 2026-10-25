@@ -225,10 +225,12 @@ macro_rules! kani_aliasing {
         }
 
         /// Record `tag` as the tag of the pointer just stored at `slot`, if `enabled` (the
-        /// pointer is in the active variant of its enums).
+        /// pointer is in the active variant of its enums). If the memory may outlive the current
+        /// function (`outlives_frame`), the tag outlives it too; a local of the function dies
+        /// with it, and every load from it before then happens while its tags are alive.
         #[kanitool::fn_marker = "AliasingStoreTagModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_store_tag")]
-        fn aliasing_store_tag(enabled: bool, slot: *const u8, tag: u8) {
+        fn aliasing_store_tag(enabled: bool, slot: *const u8, tag: u8, outlives_frame: bool) {
             if !enabled {
                 return;
             }
@@ -243,7 +245,9 @@ macro_rules! kani_aliasing {
             shadow_set(slot, FIELD_TAG_INV, !stored);
             shadow_set(slot, FIELD_EPOCH_AT, epoch);
             shadow_set(slot, FIELD_EPOCH_AT_INV, !epoch);
-            monitor_store(state(), tag);
+            if outlives_frame {
+                monitor_store(state(), tag);
+            }
         }
 
         /// The tag of the pointer stored at `slot`.
