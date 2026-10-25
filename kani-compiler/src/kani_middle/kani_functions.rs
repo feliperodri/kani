@@ -71,6 +71,8 @@ pub enum KaniModel {
     AliasingAccessUnsized,
     #[strum(serialize = "AliasingArgTagModel")]
     AliasingArgTag,
+    #[strum(serialize = "AliasingClearTagsModel")]
+    AliasingClearTags,
     #[strum(serialize = "AliasingDeallocModel")]
     AliasingDealloc,
     #[strum(serialize = "AliasingEndArgsModel")]
@@ -81,10 +83,16 @@ pub enum KaniModel {
     AliasingEndRet,
     #[strum(serialize = "AliasingExposeModel")]
     AliasingExpose,
+    #[strum(serialize = "AliasingForgetAllModel")]
+    AliasingForgetAll,
+    #[strum(serialize = "AliasingForgetTagsModel")]
+    AliasingForgetTags,
     #[strum(serialize = "AliasingFrameEnterModel")]
     AliasingFrameEnter,
     #[strum(serialize = "AliasingInitializeModel")]
     AliasingInitialize,
+    #[strum(serialize = "AliasingLoadTagModel")]
+    AliasingLoadTag,
     #[strum(serialize = "AliasingNewBorrowModel")]
     AliasingNewBorrow,
     #[strum(serialize = "AliasingNewBorrowBytesModel")]
@@ -99,6 +107,8 @@ pub enum KaniModel {
     AliasingRetTag,
     #[strum(serialize = "AliasingReturnModel")]
     AliasingReturn,
+    #[strum(serialize = "AliasingStoreTagModel")]
+    AliasingStoreTag,
     #[strum(serialize = "AlignOfDynObjectModel")]
     AlignOfDynObject,
     #[strum(serialize = "NondetFn0Model")]
@@ -260,6 +270,12 @@ pub enum KaniHook {
     IsAllocated,
     #[strum(serialize = "PanicHook")]
     Panic,
+    #[strum(serialize = "AliasingShadowDeclHook")]
+    AliasingShadowDecl,
+    #[strum(serialize = "AliasingShadowGetHook")]
+    AliasingShadowGet,
+    #[strum(serialize = "AliasingShadowSetHook")]
+    AliasingShadowSet,
     #[strum(serialize = "PointerObjectHook")]
     PointerObject,
     #[strum(serialize = "PointerOffsetHook")]

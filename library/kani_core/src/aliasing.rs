@@ -51,6 +51,9 @@ macro_rules! kani_aliasing {
             call_tags: [u8; MAX_ARG_TAGS],
             ret_callee: u64,
             ret_tags: [u8; MAX_RET_TAGS],
+            /// Incremented when memory may have been written without instrumentation: it is
+            /// part of every object's epoch.
+            generation: u8,
         }
 
         #[kanitool::fn_marker = "KaniAliasingCallState"]
@@ -59,6 +62,7 @@ macro_rules! kani_aliasing {
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
             ret_callee: 0,
             ret_tags: [UNKNOWN_TAG; MAX_RET_TAGS],
+            generation: 0,
         };
 
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_state")]
@@ -76,9 +80,11 @@ macro_rules! kani_aliasing {
         #[kanitool::fn_marker = "AliasingInitializeModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_initialize")]
         fn aliasing_initialize() {
+            shadow_decl();
             monitor_initialize(state(), super::any(), super::any());
             calls().call_callee = 0;
             calls().ret_callee = 0;
+            calls().generation = 0;
         }
 
         /// Access `size` bytes at offset `offset` of object `obj` through `tag`. Return
@@ -104,29 +110,166 @@ macro_rules! kani_aliasing {
             } else {
                 ACCESS_UNKNOWN_TAG
             };
-            report_unknown(code);
             code
         }
 
-        /// Report the results the checks cannot decide as unsupported.
-        #[unsafe(export_name = "__VERIFIER_kani_aliasing_report_unknown")]
-        fn report_unknown(code: u8) {
-            if code == ACCESS_UNKNOWN_TAG {
-                super::unsupported(
-                    "Kani's aliasing checks do not know which reference this pointer was \
-                     derived from, so they cannot check this access",
-                );
-            } else if code == ACCESS_UNKNOWN_EXPOSED {
-                super::unsupported(
-                    "Kani's aliasing checks cannot check an access through a pointer created \
-                     from an integer once a pointer whose tag they do not know was exposed",
-                );
-            } else if code == ACCESS_UNKNOWN_WILDCARD {
-                super::unsupported(
-                    "Kani's aliasing checks cannot check this access through pointers created \
-                     from integers: its result depends on the order in which Tree Borrows \
-                     visits the exposed pointers",
-                );
+        // Tags of pointers stored in memory live in CBMC's shadow memory, through the hooks
+        // below, which the compiler lowers to `__CPROVER_field_decl_*`, `__CPROVER_set_field`
+        // (on every byte of a word) and `__CPROVER_get_field` (the maximum over its bytes).
+        // Fields are 8 bits per byte. A store records, on every byte of the pointer's first word,
+        // its tag plus one and the epoch of the object that holds it, each with its complement,
+        // so that a load sees whether all bytes hold the same ones (the maximum of a value and
+        // the maximum of its complement only agree then). Every other write to memory sets the
+        // tag's complement to all ones on the words it overlaps, which no load accepts. Copy
+        // intrinsics, and writes of large values, bump the epoch of the object they write, kept
+        // on its first word. A load accepts the tag only if all of this checks out; otherwise the
+        // tag is unknown.
+        //
+        // This relies on every write to memory being instrumented. Loop contracts (whose
+        // assigns CBMC havocs) and C functions write memory without instrumentation: the
+        // compiler calls `aliasing_forget_all` where they may, which increments a generation
+        // that is part of every object's epoch.
+        //
+        // The models have `__VERIFIER` names so that CBMC's contract instrumentation leaves the
+        // shadow-memory built-ins in them alone.
+
+        const FIELD_TAG: u8 = 0;
+        const FIELD_TAG_INV: u8 = 1;
+        const FIELD_EPOCH_AT: u8 = 2;
+        const FIELD_EPOCH_AT_INV: u8 = 3;
+        const FIELD_EPOCH: u8 = 4;
+
+        /// Words of memory: the shadow memory of a pointer is that of its first word.
+        type Word = *const *const u8;
+        const WORD: usize = size_of::<Word>();
+
+        /// Writes of values larger than this many words bump the epoch of the object instead
+        /// (`aliasing_clear_tags` clears at most this many words plus one).
+        const MAX_CLEARED_WORDS: usize = 8;
+
+        #[kanitool::fn_marker = "AliasingShadowDeclHook"]
+        #[inline(never)]
+        fn shadow_decl() {}
+
+        /// Set shadow-memory field `field` (a constant) of every byte of the word at `ptr` to
+        /// `value`, if the word is inside its object (of the first word of the object for
+        /// `FIELD_EPOCH`).
+        #[kanitool::fn_marker = "AliasingShadowSetHook"]
+        #[inline(never)]
+        fn shadow_set(_ptr: *const Word, _field: u8, _value: u8) {}
+
+        /// The maximum of shadow-memory field `field` (a constant) over the bytes of the word at
+        /// `ptr`, or 0 if the word is not inside its object.
+        #[kanitool::fn_marker = "AliasingShadowGetHook"]
+        #[inline(never)]
+        fn shadow_get(_ptr: *const Word, _field: u8) -> u8 {
+            0
+        }
+
+        /// The last epoch: an object that reaches it keeps no tags.
+        const SATURATED_EPOCH: u8 = u8::MAX;
+
+        /// The epoch of the object that holds `slot`: its own epoch plus the generation. Both
+        /// only increase, so the sum changes whenever either does, until it saturates.
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_epoch_of")]
+        fn epoch_of(slot: *const Word) -> u8 {
+            let epoch = shadow_get(slot, FIELD_EPOCH) as u16 + calls().generation as u16;
+            if epoch >= SATURATED_EPOCH as u16 { SATURATED_EPOCH } else { epoch as u8 }
+        }
+
+        /// Memory may have been written without instrumentation: forget every stored tag.
+        #[kanitool::fn_marker = "AliasingForgetAllModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_forget_all")]
+        fn aliasing_forget_all() {
+            let generation = calls().generation;
+            if generation < SATURATED_EPOCH {
+                calls().generation = generation + 1;
+            }
+        }
+
+        /// Forget the tags stored in the words that the `size` bytes at `slot`, just written,
+        /// overlap.
+        #[kanitool::fn_marker = "AliasingClearTagsModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_clear_tags")]
+        fn aliasing_clear_tags(slot: *const u8, size: usize) {
+            if size == 0 {
+                return;
+            }
+            if size > MAX_CLEARED_WORDS * WORD {
+                aliasing_forget_tags(slot);
+                return;
+            }
+            // Written out rather than a loop: the offset may be symbolic, and a loop here would
+            // be subject to the harness's unwinding bound.
+            let in_word = super::mem::pointer_offset(slot) % WORD;
+            let first = slot.wrapping_sub(in_word);
+            let end = in_word.wrapping_add(size);
+            clear_word(first, 0, end);
+            clear_word(first, 1, end);
+            clear_word(first, 2, end);
+            clear_word(first, 3, end);
+            clear_word(first, 4, end);
+            clear_word(first, 5, end);
+            clear_word(first, 6, end);
+            clear_word(first, 7, end);
+            clear_word(first, 8, end);
+        }
+
+        /// Forget the tag in word `index` from `first`, if it starts before `end` bytes from
+        /// `first`.
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_clear_word")]
+        fn clear_word(first: *const u8, index: usize, end: usize) {
+            if index * WORD < end {
+                shadow_set(first.wrapping_add(index * WORD) as *const Word, FIELD_TAG_INV, u8::MAX);
+            }
+        }
+
+        /// Record `tag` as the tag of the pointer just stored at `slot`, if `enabled` (the
+        /// pointer is in the active variant of its enums).
+        #[kanitool::fn_marker = "AliasingStoreTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_store_tag")]
+        fn aliasing_store_tag(enabled: bool, slot: *const u8, tag: u8) {
+            if !enabled {
+                return;
+            }
+            let slot = slot as *const Word;
+            let epoch = epoch_of(slot);
+            if tag == UNKNOWN_TAG || epoch == SATURATED_EPOCH {
+                shadow_set(slot, FIELD_TAG_INV, u8::MAX);
+                return;
+            }
+            let stored = tag.wrapping_add(1);
+            shadow_set(slot, FIELD_TAG, stored);
+            shadow_set(slot, FIELD_TAG_INV, !stored);
+            shadow_set(slot, FIELD_EPOCH_AT, epoch);
+            shadow_set(slot, FIELD_EPOCH_AT_INV, !epoch);
+            monitor_store(state(), tag);
+        }
+
+        /// The tag of the pointer stored at `slot`.
+        #[kanitool::fn_marker = "AliasingLoadTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_load_tag")]
+        fn aliasing_load_tag(slot: *const u8) -> u8 {
+            let slot = slot as *const Word;
+            let stored = shadow_get(slot, FIELD_TAG);
+            if stored == 0 || stored != !shadow_get(slot, FIELD_TAG_INV) {
+                return UNKNOWN_TAG;
+            }
+            let epoch = shadow_get(slot, FIELD_EPOCH_AT);
+            if epoch != !shadow_get(slot, FIELD_EPOCH_AT_INV) || epoch != epoch_of(slot) {
+                return UNKNOWN_TAG;
+            }
+            stored.wrapping_sub(1)
+        }
+
+        /// The bytes of the object `ptr` points into were written without their tags (by a copy
+        /// intrinsic, or a write of a large value): forget the tags stored in it.
+        #[kanitool::fn_marker = "AliasingForgetTagsModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_forget_tags")]
+        fn aliasing_forget_tags(ptr: *const u8) {
+            let epoch = shadow_get(ptr as *const Word, FIELD_EPOCH);
+            if epoch < SATURATED_EPOCH {
+                shadow_set(ptr as *const Word, FIELD_EPOCH, epoch.wrapping_add(1));
             }
         }
 
@@ -324,7 +467,6 @@ macro_rules! kani_aliasing {
                 return ACCESS_OK;
             }
             let code = monitor_dealloc(s, tag);
-            report_unknown(code);
             code
         }
 
@@ -411,7 +553,6 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_protector")]
         fn aliasing_end_protector(tag: u8) -> u8 {
             let code = monitor_end_protector(state(), tag);
-            report_unknown(code);
             code
         }
 
