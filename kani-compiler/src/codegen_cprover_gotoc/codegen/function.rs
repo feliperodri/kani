@@ -51,6 +51,9 @@ impl GotocCtx<'_, '_> {
         let ldecls = body.local_decls();
         let num_args = body.arg_locals().len();
         let shadowed = self.aliasing_shadowed_locals(body);
+        // With the aliasing checks, CBMC gives visible variables shadow memory, which it cannot
+        // initialize for some zero-sized types (`[(); usize::MAX]`); they hold no pointers.
+        let aliasing_checks = self.queries.args().ub_check.contains(&ExtraChecks::Aliasing);
         for (lc, ldata) in ldecls {
             if Some(lc) == body.spread_arg() {
                 // We have already added this local in the function prelude, so
@@ -75,7 +78,10 @@ impl GotocCtx<'_, '_> {
                 var_type,
                 self.codegen_span_stable(ldata.span),
             )
-            .with_is_hidden(!self.is_user_variable(&lc) && !shadowed.contains(&lc))
+            .with_is_hidden(
+                (!self.is_user_variable(&lc) && !shadowed.contains(&lc))
+                    || (aliasing_checks && self.is_zst_stable(ldata.ty)),
+            )
             .with_is_parameter((lc > 0 && lc <= num_args) && !self.is_zst_stable(ldata.ty));
             let sym_e = sym.to_expr();
             self.symbol_table.insert(sym);

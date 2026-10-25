@@ -45,7 +45,7 @@ use crate::kani_middle::transform::{TransformPass, TransformationType};
 use crate::kani_queries::QueryDb;
 use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
 use rustc_public::CrateDef;
-use rustc_public::abi::FieldsShape;
+use rustc_public::abi::{FieldsShape, Scalar, TagEncoding, VariantsShape};
 use rustc_public::mir::mono::{Instance, InstanceKind};
 use rustc_public::mir::{
     AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability,
@@ -53,6 +53,7 @@ use rustc_public::mir::{
     StatementKind, TerminatorKind,
 };
 use rustc_public::rustc_internal;
+use rustc_public::target::MachineInfo;
 use rustc_public::ty::{
     AdtKind, FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy,
 };
@@ -198,6 +199,9 @@ enum Action {
     /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
     /// intrinsics do.
     AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
+    /// Check and record an access to the `size` bytes at offset `offset` of `place` through
+    /// `tag`: the tag of an enum, which reading or setting its discriminant accesses.
+    AccessBytes { place: Place, offset: u64, size: u64, tag: TagValue, is_write: bool },
     /// Record that the pointer tagged `tag` was exposed.
     Expose { tag: TagValue },
     /// Deallocate `size` bytes at `ptr`, tagged `tag`.
@@ -230,8 +234,9 @@ enum Action {
     /// The value at `place` in memory was just written: forget the tags stored in its bytes.
     ClearTags { place: Place },
     /// The pointer at `place` in memory was just written: store its tag, if every place of
-    /// `guard` has its variant.
-    StoreTag { place: Place, tag: TagValue, guard: Guard },
+    /// `guard` has its variant. `outlives_frame` if the memory may outlive the function, so that
+    /// the tag must outlive it too.
+    StoreTag { place: Place, tag: TagValue, guard: Guard, outlives_frame: bool },
     /// Memory at `ptr` is written without tags: forget every tag stored in its object.
     ForgetTags { ptr: Operand },
     /// Memory may be written without instrumentation: forget every stored tag.
@@ -1216,7 +1221,10 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 continue;
             }
             if let Some((ptr, guard)) = self.path_place_from(place, ty, &suffix) {
-                after.push(Action::StoreTag { place: ptr, tag, guard });
+                // A local of this function dies with it, and so may the tags stored in it.
+                let outlives_frame =
+                    ptr.projection.iter().any(|elem| matches!(elem, ProjectionElem::Deref));
+                after.push(Action::StoreTag { place: ptr, tag, guard, outlives_frame });
             }
         }
     }
@@ -1341,7 +1349,19 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         new_tag = Some(self.operand_tag(&Operand::Copy(place.clone())));
                     }
                     Rvalue::Discriminant(place) => {
-                        self.read(body, place, &mut actions);
+                        // Reading the discriminant reads the tag, not the whole value.
+                        let ty = place.ty(body.locals()).unwrap();
+                        if let Some(tag) = self.place_tag(body, place)
+                            && let Some((offset, size, _)) = enum_tag_bytes(ty)
+                        {
+                            actions.push(Action::AccessBytes {
+                                place: place.clone(),
+                                offset,
+                                size,
+                                tag,
+                                is_write: false,
+                            });
+                        }
                     }
                     Rvalue::BinaryOp(bin_op, lhs_op, rhs_op)
                     | Rvalue::CheckedBinaryOp(bin_op, lhs_op, rhs_op) => {
@@ -1411,7 +1431,23 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     self.store_tags(lhs, lhs_ty, tags, &mut after);
                 }
             }
-            StatementKind::SetDiscriminant { place, .. } => self.write(body, place, &mut actions),
+            StatementKind::SetDiscriminant { place, variant_index } => {
+                // Setting the discriminant writes the tag, unless the variant is the one a niche
+                // does not encode.
+                let ty = place.ty(body.locals()).unwrap();
+                if let Some(tag) = self.place_tag(body, place)
+                    && let Some((offset, size, untagged)) = enum_tag_bytes(ty)
+                    && untagged != Some(*variant_index)
+                {
+                    actions.push(Action::AccessBytes {
+                        place: place.clone(),
+                        offset,
+                        size,
+                        tag,
+                        is_write: true,
+                    });
+                }
+            }
             StatementKind::Intrinsic(NonDivergingIntrinsic::CopyNonOverlapping(copy)) => {
                 self.access_count(body, &copy.src, Some(&copy.count), false, &mut actions);
                 self.access_count(body, &copy.dst, Some(&copy.count), true, &mut actions);
@@ -1701,6 +1737,22 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 body.insert_call(&access, source, position, args, Place::from(code));
                 self.insert_access_checks(body, code, is_write, source, position);
             }
+            Action::AccessBytes { place, offset, size, tag, is_write } => {
+                let base = self.byte_address(body, place, source, position);
+                let offset = body.new_uint_operand(offset as u128, UintTy::Usize, span);
+                let ptr = body.insert_binary_op(BinOp::Offset, base, offset, source, position);
+                let elem = Ty::unsigned_ty(UintTy::U8);
+                let code = body.new_local(elem, span, Mutability::Not);
+                let access = self.model(KaniModel::AliasingAccessCount, vec![elem]);
+                let args = vec![
+                    self.tag_operand(body, tag, source, position),
+                    Operand::Move(Place::from(ptr)),
+                    body.new_uint_operand(size as u128, UintTy::Usize, span),
+                    bool_operand(is_write, span),
+                ];
+                body.insert_call(&access, source, position, args, Place::from(code));
+                self.insert_access_checks(body, code, is_write, source, position);
+            }
             Action::Expose { tag } => {
                 let expose = self.model(KaniModel::AliasingExpose, vec![]);
                 let args = vec![self.tag_operand(body, tag, source, position)];
@@ -1746,13 +1798,13 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let args = vec![slot, body.new_uint_operand(size as u128, UintTy::Usize, span)];
                 body.insert_call(&clear, source, position, args, ret);
             }
-            Action::StoreTag { place, tag, guard } => {
+            Action::StoreTag { place, tag, guard, outlives_frame } => {
                 let enabled = self.guard_operand(body, &guard, source, position);
                 let tag = self.tag_operand(body, tag, source, position);
                 let slot = self.byte_address(body, place, source, position);
                 let store = self.model(KaniModel::AliasingStoreTag, vec![]);
                 let ret = unit_place(body, span);
-                let args = vec![enabled, slot, tag];
+                let args = vec![enabled, slot, tag, bool_operand(outlives_frame, span)];
                 body.insert_call(&store, source, position, args, ret);
             }
             Action::ForgetTags { ptr } => {
@@ -2166,6 +2218,26 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     fn is_freeze(&self, ty: Ty) -> bool {
         rustc_internal::internal(self.tcx, ty).is_freeze(self.tcx, TypingEnv::fully_monomorphized())
     }
+}
+
+/// The offset and size of the tag of an enum of type `ty`, and its untagged variant if a niche
+/// encodes the tag; `None` if values of `ty` store no tag.
+fn enum_tag_bytes(ty: Ty) -> Option<(u64, u64, Option<rustc_public::ty::VariantIdx>)> {
+    let shape = ty.layout().ok()?.shape();
+    let VariantsShape::Multiple { tag, tag_encoding, tag_field, .. } = &shape.variants else {
+        return None;
+    };
+    let FieldsShape::Arbitrary { offsets } = &shape.fields else { return None };
+    let offset = offsets.get(*tag_field)?.bytes() as u64;
+    let primitive = match tag {
+        Scalar::Initialized { value, .. } | Scalar::Union { value } => *value,
+    };
+    let size = primitive.size(&MachineInfo::target()).bytes() as u64;
+    let untagged = match tag_encoding {
+        TagEncoding::Direct => None,
+        TagEncoding::Niche { untagged_variant, .. } => Some(*untagged_variant),
+    };
+    Some((offset, size, untagged))
 }
 
 /// The path key of `place`, if it is a local or a field of one, reached without dereferencing.
