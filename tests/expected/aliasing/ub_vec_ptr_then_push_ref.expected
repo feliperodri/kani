@@ -1,2 +1,2 @@
-Failed Checks: Kani's aliasing checks do not know which reference this pointer was derived from, so they cannot check this access
+Failed Checks: Undefined Behavior: memory accessed through a reference or pointer whose borrow was invalidated by a conflicting access (aliasing checks)
 VERIFICATION:- FAILED

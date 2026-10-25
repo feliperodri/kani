@@ -18,7 +18,7 @@ With Verus 0.2026.10.18:
 verus library/kani_core/verus/aliasing_monitor.rs
 ```
 
-Expected: `verification results:: 116 verified, 0 errors`. The proof uses no `assume`, `admit` or
+Expected: `verification results:: 118 verified, 0 errors`. The proof uses no `assume`, `admit` or
 `external_body`.
 
 ## What is proved
@@ -48,6 +48,7 @@ compute the sets that Miri's rules give.
 | `monitor_dealloc` | `dealloc_refines`: a write through the pointer, then `ProtectedDealloc` for strong protectors | 10 |
 | `monitor_end_protector` | `end_protector_refines`: Miri's `perform_protector_end_access`, skipping the wildcard trees that may hang below the tag (`min_exposed_child`) | 9 |
 | `monitor_expose` | `expose_spec`: the tag accesses act through becomes exposed | 11 |
+| `monitor_store` | `store_spec`: the tag of a pointer stored in memory is recorded, so that the frame that created it keeps it | 11 |
 | `monitor_return` | `return_spec`: protectors end; unexposed tags of the frame that are not returned are dropped | 9 |
 
 All of them also preserve `monitor_wf`. Results the checks cannot decide
@@ -69,6 +70,7 @@ proof must reject each of them.
   `UnsafeCell` byte masks, passing tags across calls) and the compiler instrumentation in
   `kani-compiler/src/kani_middle/transform/check_aliasing.rs`.
 - That dropping the tags of a returning function is sound: it relies on the instrumentation
-  giving pointers read from memory the unknown tag.
+  recording, with `monitor_store`, every tag it stores in shadow memory, and giving the other
+  pointers read from memory the unknown tag.
 - Verus, its Z3 back end, and the arithmetic semantics they assume for the monitor's `u64`/`u8`
   operations, which Kani executes through CBMC.
