@@ -12,7 +12,7 @@ use crate::metadata::collect_and_link_function_pointer_restrictions;
 use crate::project::Project;
 use crate::session::KaniSession;
 use crate::util::alter_extension;
-use kani_metadata::{ArtifactType, HarnessMetadata};
+use kani_metadata::{ArtifactType, HarnessMetadata, UnstableFeature};
 
 impl KaniSession {
     /// Instrument and optimize a goto binary in-place.
@@ -114,11 +114,19 @@ impl KaniSession {
     /// functions as unused and remove them, and also as used and so would
     /// generate "assert false". So it's essential to do this afterwards.)
     fn undefined_functions(&self, file: &Path) -> Result<()> {
+        // The aliasing checks declare CBMC shadow-memory fields with calls to built-ins that
+        // symbolic execution reads but does not intercept: they must stay without a body.
+        let functions =
+            if self.args.common_args.unstable_features.contains(UnstableFeature::AliasingChecks) {
+                "(?!__CPROVER_field_decl_).*"
+            } else {
+                ".*"
+            };
         let args: Vec<OsString> = vec![
             "--generate-function-body-options".into(),
             "assert-false-assume-false".into(),
             "--generate-function-body".into(),
-            ".*".into(),
+            functions.into(),
             "--drop-unused-functions".into(),
             file.to_owned().into_os_string(), // input
             file.to_owned().into_os_string(), // output
