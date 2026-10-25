@@ -3,6 +3,7 @@
 
 //! This file contains functions related to codegenning MIR functions into gotoc
 
+use crate::args::ExtraChecks;
 use crate::codegen_cprover_gotoc::GotocCtx;
 use crate::codegen_cprover_gotoc::codegen::block::{loop_heads, reverse_postorder};
 use crate::kani_middle::attributes::KaniAttributes;
@@ -12,9 +13,11 @@ use cbmc::InternedString;
 use cbmc::goto_program::{Expr, Stmt, Symbol};
 use rustc_public::CrateDef;
 use rustc_public::mir::mono::Instance;
-use rustc_public::mir::{BasicBlockIdx, Body, Local, TerminatorKind};
+use rustc_public::mir::{
+    BasicBlockIdx, Body, Local, ProjectionElem, Rvalue, StatementKind, TerminatorKind,
+};
 use rustc_public::ty::{RigidTy, TyKind};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use tracing::{debug, debug_span};
 
 /// Codegen MIR functions into gotoc
@@ -47,6 +50,7 @@ impl GotocCtx<'_, '_> {
     fn codegen_declare_variables(&mut self, body: &Body, function_name: InternedString) {
         let ldecls = body.local_decls();
         let num_args = body.arg_locals().len();
+        let shadowed = self.aliasing_shadowed_locals(body);
         for (lc, ldata) in ldecls {
             if Some(lc) == body.spread_arg() {
                 // We have already added this local in the function prelude, so
@@ -71,7 +75,7 @@ impl GotocCtx<'_, '_> {
                 var_type,
                 self.codegen_span_stable(ldata.span),
             )
-            .with_is_hidden(!self.is_user_variable(&lc))
+            .with_is_hidden(!self.is_user_variable(&lc) && !shadowed.contains(&lc))
             .with_is_parameter((lc > 0 && lc <= num_args) && !self.is_zst_stable(ldata.ty));
             let sym_e = sym.to_expr();
             self.symbol_table.insert(sym);
@@ -89,6 +93,28 @@ impl GotocCtx<'_, '_> {
                 self.current_fn_mut().push_onto_block(Stmt::decl(sym_e, init, loc));
             }
         }
+    }
+
+    /// The locals whose address is taken, when the aliasing checks are on: they may hold
+    /// pointers whose tags are in CBMC's shadow memory, which CBMC does not give to hidden
+    /// (auxiliary) variables.
+    fn aliasing_shadowed_locals(&self, body: &Body) -> HashSet<Local> {
+        if !self.queries.args().ub_check.contains(&ExtraChecks::Aliasing) {
+            return HashSet::new();
+        }
+        body.blocks
+            .iter()
+            .flat_map(|block| &block.statements)
+            .filter_map(|stmt| match &stmt.kind {
+                StatementKind::Assign(
+                    _,
+                    Rvalue::Ref(_, _, place) | Rvalue::AddressOf(_, place),
+                ) if !place.projection.iter().any(|elem| matches!(elem, ProjectionElem::Deref)) => {
+                    Some(place.local)
+                }
+                _ => None,
+            })
+            .collect()
     }
 
     pub fn codegen_function(&mut self, instance: Instance) {

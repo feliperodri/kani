@@ -35,6 +35,7 @@
 //   nearest ancestor that is not one of these.
 // - `exposed`, `unknown_exposed`: tags whose pointer was exposed, and whether a pointer with an
 //   unknown tag was.
+// - `stored`: tags of pointers stored in memory, which outlive the function that created them.
 
 #[macro_export]
 macro_rules! kani_aliasing_monitor {
@@ -94,6 +95,7 @@ macro_rules! kani_aliasing_monitor {
             pub alias: [u8; 64],
             pub exposed: u64,
             pub unknown_exposed: bool,
+            pub stored: u64,
         }
 
         /// The state before the harness chooses the tracked byte.
@@ -117,6 +119,7 @@ macro_rules! kani_aliasing_monitor {
                 alias: [0; 64],
                 exposed: 0,
                 unknown_exposed: false,
+                stored: 0,
             }
         }
 
@@ -145,6 +148,7 @@ macro_rules! kani_aliasing_monitor {
             s.alias[0] = 0;
             s.exposed = 0;
             s.unknown_exposed = false;
+            s.stored = 0;
             #[cfg(verus_keep_ghost)]
             proof! { lemma_initialize(*s); }
         }
@@ -1352,6 +1356,7 @@ macro_rules! kani_aliasing_monitor {
             s.active = s.active & !bit;
             s.conflicted = s.conflicted & !bit;
             s.exposed = s.exposed & !bit;
+            s.stored = s.stored & !bit;
             s.alias[tag as usize] = if is_cell {
                 if s.cell & (1u64 << parent) != 0 { s.alias[parent as usize] } else { parent }
             } else {
@@ -1437,6 +1442,28 @@ macro_rules! kani_aliasing_monitor {
             }
         }
 
+        /// Record that a pointer tagged `tag` was stored in memory: the tag outlives the function
+        /// that created it.
+        #[cfg_attr(verus_keep_ghost, verus_verify)]
+        #[cfg_attr(verus_keep_ghost, verus_spec(
+            requires monitor_wf(&*old(s)),
+            ensures
+                monitor_wf(&*final(s)),
+                store_spec(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat),
+                final(s).tracked_object_id == old(s).tracked_object_id,
+                final(s).tracked_offset == old(s).tracked_offset,
+        ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_store"))]
+        pub fn monitor_store(s: &mut MonitorState, tag: u8) {
+            if tag < s.count {
+                #[cfg(verus_keep_ghost)]
+                proof_decl! { let ghost s0 = *s; }
+                s.stored = s.stored | (1u64 << tag);
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_store(s0, *s, tag); }
+            }
+        }
+
         /// The protector of `tag`, an argument of the returning function, ends: if its
         /// permission at the tracked byte is initialized, Miri performs an access through it, a
         /// write if it is Active and a read otherwise, that its descendants do not see.
@@ -1499,8 +1526,8 @@ macro_rules! kani_aliasing_monitor {
         /// A function that started with `frame_count` tags returns the tags in `kept`: its
         /// reference arguments stop being protected (after `monitor_end_protector`), and the
         /// tags it created are dropped, except the returned ones and the tags created before
-        /// them. If one of the dropped tags was exposed, nothing is dropped: a pointer created
-        /// from an integer may still use it.
+        /// them. If one of the dropped tags was exposed or stored in memory, nothing is dropped: a
+        /// pointer created from an integer, or read from memory, may still use it.
         #[cfg_attr(verus_keep_ghost, verus_verify)]
         #[cfg_attr(verus_keep_ghost, verus_spec(
             requires monitor_wf(&*old(s)), frame_count >= 1,
@@ -1542,7 +1569,7 @@ macro_rules! kani_aliasing_monitor {
                 #[cfg(verus_keep_ghost)]
                 proof! { lemma_shift_pos(count as u64); }
                 let below = (1u64 << count) - 1;
-                if s.exposed & !below != 0 {
+                if (s.exposed | s.stored) & !below != 0 {
                     #[cfg(verus_keep_ghost)]
                     proof! { lemma_return(s0, s1, *s, frame_count, kept, count); }
                     return;
@@ -1561,6 +1588,7 @@ macro_rules! kani_aliasing_monitor {
                 s.initialized = s.initialized & below;
                 s.cell = s.cell & below;
                 s.exposed = s.exposed & below;
+                s.stored = s.stored & below;
             }
             #[cfg(verus_keep_ghost)]
             proof! { lemma_return(s0, s1, *s, frame_count, kept, count); }

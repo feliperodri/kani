@@ -16,19 +16,26 @@
 //!   the access and update the state, and asserts that the access breaks no rule.
 //! - Direct calls pass the tags of up to four pointer arguments, and of a returned pointer,
 //!   through a small buffer in the library, keyed by an identifier of the callee.
+//! - A pointer written to memory (through a dereference, or to a local whose address is taken or
+//!   that holds pointers in an array) has its tag stored in CBMC's shadow memory, and a pointer
+//!   read from memory gets the tag stored there. Every other write to memory forgets the tags in
+//!   the words it overwrites; memory intrinsics, which copy bytes without their tags, forget the
+//!   tags of the object they write.
+//!
+//! Loop contracts and C functions write memory without instrumentation: where they may, every
+//! stored tag is forgotten.
 //!
 //! Pointers whose provenance this pass does not follow get the *unknown* tag: pointers read from
-//! memory (other than through a `Box`), pointers returned by indirect calls, places with several
-//! dereferences, integer to pointer casts, and pointer locals whose own address is taken. An
-//! access through an unknown tag to the tracked byte fails as an unsupported construct, so that
-//! a harness never verifies because of what the checks could not see.
+//! memory where no tag was stored, pointers returned by indirect calls, and integer to pointer
+//! casts.
+//! An access through an unknown tag to the tracked byte fails as an unsupported construct, so
+//! that a harness never verifies because of what the checks could not see.
 //!
-//! Not modelled yet: protectors (function-entry retags), two-phase borrows beyond what the
-//! reserved state allows, `UnsafeCell` (references to types that are not `Freeze` keep their
-//! parent's tag), accesses to unsized places, deallocation, and memory accessed by intrinsics such
-//! as `copy_nonoverlapping`.
+//! Not modelled yet: `UnsafeCell` in unsized types, and the tags of pointers that memory
+//! intrinsics copy.
 
 use crate::args::ExtraChecks;
+use crate::kani_middle::attributes::KaniAttributes;
 use crate::kani_middle::kani_functions::{KaniFunction, KaniModel};
 use crate::kani_middle::transform::body::{
     CheckType, InsertPosition, MutableBody, SourceInstruction,
@@ -37,6 +44,7 @@ use crate::kani_middle::transform::check_uninit::{is_harness, raw_ptr_arg};
 use crate::kani_middle::transform::{TransformPass, TransformationType};
 use crate::kani_queries::QueryDb;
 use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
+use rustc_public::CrateDef;
 use rustc_public::abi::FieldsShape;
 use rustc_public::mir::mono::{Instance, InstanceKind};
 use rustc_public::mir::{
@@ -49,6 +57,7 @@ use rustc_public::ty::{
     AdtKind, FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy,
 };
 use rustc_public_bridge::IndexedVal;
+use rustc_span::Symbol;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
@@ -62,6 +71,9 @@ const ACCESS_INVALIDATED: u8 = 1;
 const ACCESS_WRITE_FROZEN: u8 = 2;
 const ACCESS_PROTECTOR: u8 = 3;
 const ACCESS_NOT_EXPOSED: u8 = 4;
+const ACCESS_UNKNOWN_TAG: u8 = 5;
+const ACCESS_UNKNOWN_EXPOSED: u8 = 6;
+const ACCESS_UNKNOWN_WILDCARD: u8 = 7;
 const ACCESS_PROTECTED_DEALLOC: u8 = 8;
 const MAX_ARG_TAGS: usize = 8;
 const MAX_RET_TAGS: usize = 4;
@@ -75,6 +87,25 @@ const MSG_DEALLOC_PROTECTED: &str = "Undefined Behavior: memory deallocated whil
     to a running function points to it (aliasing checks)";
 const MSG_NOT_EXPOSED: &str = "Undefined Behavior: memory accessed through a pointer created from an \
     integer, but no exposed pointer allows this access (aliasing checks)";
+/// The results the checks cannot decide, reported as unsupported at the access.
+const UNKNOWN_RESULTS: [(u8, &str); 3] = [
+    (
+        ACCESS_UNKNOWN_TAG,
+        "Kani's aliasing checks do not know which reference this pointer was derived from, so \
+         they cannot check this access",
+    ),
+    (
+        ACCESS_UNKNOWN_EXPOSED,
+        "Kani's aliasing checks cannot check an access through a pointer created from an \
+         integer once a pointer whose tag they do not know was exposed",
+    ),
+    (
+        ACCESS_UNKNOWN_WILDCARD,
+        "Kani's aliasing checks cannot check this access through pointers created from \
+         integers: its result depends on the order in which Tree Borrows visits the exposed \
+         pointers",
+    ),
+];
 const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a pointer with only \
     read permission, derived from a shared reference or from a mutable reference frozen by a \
     later read through another pointer (aliasing checks)";
@@ -84,6 +115,9 @@ const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a poi
 pub struct AliasingPass {
     pub check_type: CheckType,
     pub unsupported_check_type: CheckType,
+    /// The check that an access's result is decided: it fails, and stops the execution, at an
+    /// access the checks cannot decide.
+    pub unknown_check_type: CheckType,
     pub kani_functions: HashMap<KaniFunction, FnDef>,
 }
 
@@ -122,6 +156,8 @@ impl TransformPass for AliasingPass {
 enum PathElem {
     Field(usize),
     Downcast(usize),
+    /// An element of an array; the pointers in arrays are only tracked in shadow memory.
+    Index(usize),
 }
 
 /// A pointer-typed place that has its own tag local: a local, or a field of a local, reached
@@ -141,10 +177,12 @@ struct RetagKind {
 }
 
 /// Where the tag of a pointer comes from.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum TagValue {
     Const(u8),
     Local(Local),
+    /// The tag stored in shadow memory for the pointer at this place in memory.
+    Load(Place),
 }
 
 /// The enum variants a pointer inside an aggregate is in: an action on it only happens if each
@@ -189,6 +227,15 @@ enum Action {
     EndProtector { tag_local: Local },
     /// Reborrow the dropped place and pass the new tag to the drop glue `callee`.
     DropRetag { place: Place, parent: TagValue, callee: u64 },
+    /// The value at `place` in memory was just written: forget the tags stored in its bytes.
+    ClearTags { place: Place },
+    /// The pointer at `place` in memory was just written: store its tag, if every place of
+    /// `guard` has its variant.
+    StoreTag { place: Place, tag: TagValue, guard: Guard },
+    /// Memory at `ptr` is written without tags: forget every tag stored in its object.
+    ForgetTags { ptr: Operand },
+    /// Memory may be written without instrumentation: forget every stored tag.
+    ForgetAll,
     /// Record the argument tags of a direct call.
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
@@ -206,6 +253,9 @@ struct Instrumenter<'a, 'tcx> {
     tags: HashMap<PathKey, Local>,
     /// Locals whose address is taken, so that direct accesses to them go through the root tag.
     address_taken: HashSet<Local>,
+    /// Locals whose pointers have their tags in shadow memory rather than in tag locals: those
+    /// whose address is taken, and those holding pointers in arrays.
+    in_memory: HashSet<Local>,
     /// Identifier of the instrumented function, for passing tags across calls.
     own_id: u64,
     /// Ghost local holding the number of tags in use when the function started, if the
@@ -241,6 +291,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             tcx,
             pass,
             tags: HashMap::new(),
+            in_memory: address_taken.clone(),
             address_taken,
             own_id: instance_id(instance),
             frame_count: None,
@@ -260,19 +311,40 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             }
             let mut local_paths = vec![];
             self.pointer_paths(decl.ty, vec![], MAX_PATH_DEPTH, &mut local_paths);
+            if local_paths.iter().flatten().any(|elem| matches!(elem, PathElem::Index(_))) {
+                self.in_memory.insert(local);
+                continue;
+            }
             paths.extend(local_paths.into_iter().map(|path| (local, path)));
         }
         for key in paths {
             let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
             self.tags.insert(key, tag_local);
         }
+        // The pointers in arguments whose address is taken get their tags in locals at entry,
+        // which are then stored in shadow memory.
+        let mut entry_tags: HashMap<PathKey, Local> = HashMap::new();
+        for local in 1..=body.arg_count() {
+            if !self.in_memory.contains(&local) || !self.is_sized(body.locals()[local].ty) {
+                continue;
+            }
+            for path in self.flat_paths(body.locals()[local].ty) {
+                let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
+                entry_tags.insert((local, path), tag_local);
+            }
+        }
+        let arg_tag_local = |tags: &HashMap<PathKey, Local>, key: &PathKey| {
+            tags.get(key).or_else(|| entry_tags.get(key)).copied()
+        };
         // The pointers in the arguments that are retagged with a protector when the function
         // starts: references and `Box`es, inside aggregates too.
         let mut entry_retags = vec![];
         for local in 1..=body.arg_count() {
             let ty = body.locals()[local].ty;
             for path in self.flat_paths(ty) {
-                let Some(&tag_local) = self.tags.get(&(local, path.clone())) else { continue };
+                let Some(tag_local) = arg_tag_local(&self.tags, &(local, path.clone())) else {
+                    continue;
+                };
                 let Some(kind) = self.retag_kind(ty, &path) else { continue };
                 let Some((place, guard)) = self.path_place(local, ty, &path) else { continue };
                 let protector = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
@@ -297,7 +369,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         // instruction to the first so that earlier positions stay valid.
         body.split_entry_block();
         let mut work = vec![];
-        for (bb, block) in body.blocks().iter().enumerate() {
+        let blocks = body.blocks().to_vec();
+        for (bb, block) in blocks.iter().enumerate() {
             for (idx, stmt) in block.statements.iter().enumerate() {
                 let (before, after) = self.statement_actions(body, &stmt.kind);
                 if !before.is_empty() || !after.is_empty() {
@@ -348,7 +421,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     continue;
                 }
                 has_pointer_args = true;
-                let Some(&tag_local) = self.tags.get(&(local, path)) else { continue };
+                let Some(tag_local) = arg_tag_local(&self.tags, &(local, path)) else { continue };
                 let arg_tag = self.model(KaniModel::AliasingArgTag, vec![]);
                 let args = vec![
                     body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
@@ -384,6 +457,24 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 InsertPosition::Before,
             );
         }
+        // The tags of the arguments whose address is taken go to shadow memory.
+        let mut entry_tags: Vec<(PathKey, Local)> = entry_tags.into_iter().collect();
+        entry_tags.sort();
+        for local in 1..=body.arg_count() {
+            let tags: Vec<_> = entry_tags
+                .iter()
+                .filter(|((key_local, _), _)| *key_local == local)
+                .map(|((_, path), tag_local)| (path.clone(), TagValue::Local(*tag_local)))
+                .collect();
+            if tags.is_empty() {
+                continue;
+            }
+            let mut actions = vec![];
+            self.store_tags(&Place::from(local), body.locals()[local].ty, tags, &mut actions);
+            for action in actions {
+                self.insert(body, action, &mut source, InsertPosition::Before);
+            }
+        }
         let mut keys: Vec<(PathKey, Local)> =
             self.tags.iter().map(|(key, tag)| (key.clone(), *tag)).collect();
         keys.sort();
@@ -402,33 +493,53 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     /// The tag to use for an access to `place`, if the access is checked: the tag of the pointer
     /// it goes through, or the root tag for a local whose address is taken.
     fn place_tag(&self, body: &MutableBody, place: &Place) -> Option<TagValue> {
-        let Some(first_deref) =
-            place.projection.iter().position(|elem| matches!(elem, ProjectionElem::Deref))
+        // The last dereference: before it, the place goes through pointers read from memory.
+        let Some(last_deref) =
+            place.projection.iter().rposition(|elem| matches!(elem, ProjectionElem::Deref))
         else {
             // No pointer is involved: only a local whose address is taken can be aliased.
             return self.address_taken.contains(&place.local).then_some(TagValue::Const(ROOT_TAG));
         };
-        let derefs = place.projection.iter().filter(|e| matches!(e, ProjectionElem::Deref)).count();
-        if derefs > 1 {
-            // The place goes through a pointer read from memory.
-            return Some(TagValue::Const(UNKNOWN_TAG));
-        }
         let pointer =
-            Place { local: place.local, projection: place.projection[..first_deref].to_vec() };
+            Place { local: place.local, projection: place.projection[..last_deref].to_vec() };
         let pointer_ty = pointer.ty(body.locals()).unwrap();
-        Some(self.key_tag(path_key(&pointer).map(|(local, mut path)| {
-            // The pointer inside a `Box`, which is where its tag is.
-            if !is_pointer(pointer_ty) {
-                path.extend(self.flat_paths(pointer_ty).into_iter().next().unwrap_or_default());
-            }
-            (local, path)
-        })))
+        // The pointer inside a `Box`, which is where its tag is.
+        let suffix = if is_pointer(pointer_ty) {
+            vec![]
+        } else {
+            self.flat_paths(pointer_ty).into_iter().next().unwrap_or_default()
+        };
+        Some(self.place_ptr_tag(&pointer, &suffix))
     }
 
     /// The tag of the pointer at `key`, if it has a tag local.
     fn key_tag(&self, key: Option<PathKey>) -> TagValue {
         key.and_then(|key| self.tags.get(&key))
             .map_or(TagValue::Const(UNKNOWN_TAG), |tag| TagValue::Local(*tag))
+    }
+
+    /// Whether `place` is in memory, where the tags of the pointers it holds are in shadow
+    /// memory: it goes through a dereference, or its local's address is taken.
+    fn is_memory(&self, place: &Place) -> bool {
+        path_key(place).is_none() || self.in_memory.contains(&place.local)
+    }
+
+    /// The tag of the pointer at `suffix` inside `place`: its tag local, or what shadow memory
+    /// holds for it.
+    fn place_ptr_tag(&self, place: &Place, suffix: &[PathElem]) -> TagValue {
+        if !self.is_memory(place) {
+            return self.key_tag(path_key(place).map(|(local, mut path)| {
+                path.extend_from_slice(suffix);
+                (local, path)
+            }));
+        }
+        let Ok(ty) = place.ty(&self.locals) else { return TagValue::Const(UNKNOWN_TAG) };
+        match self.path_place_from(place, ty, suffix) {
+            // The pointer is only read if it is in the active variants of its enums: the program
+            // reads it.
+            Some((ptr, _)) => TagValue::Load(ptr),
+            None => TagValue::Const(UNKNOWN_TAG),
+        }
     }
 
     /// The paths to the pointers inside a value of type `ty`, appended to `prefix`.
@@ -485,6 +596,13 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             // A pattern type such as `NonNull`'s `*const T is !null`: its field 0 is the value.
             rustc_middle::ty::TyKind::Pat(inner, _) => {
                 push(vec![PathElem::Field(0)], normalize(Unnormalized::new(*inner)));
+            }
+            rustc_middle::ty::TyKind::Array(elem, len) => {
+                let elem = normalize(Unnormalized::new(*elem));
+                let len = len.try_to_target_usize(self.tcx).unwrap_or(0);
+                for index in 0..len.min(MAX_PATHS_PER_LOCAL as u64) {
+                    push(vec![PathElem::Index(index as usize)], elem);
+                }
             }
             _ => {}
         }
@@ -548,6 +666,16 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     ty = self.field_ty(ty, variant.take(), *index)?;
                     projection.push(ProjectionElem::Field(*index, ty));
                 }
+                PathElem::Index(index) => {
+                    let RigidTy::Array(elem, len) = ty.kind().rigid()?.clone() else { return None };
+                    let min_length = len.eval_target_usize().ok()?;
+                    projection.push(ProjectionElem::ConstantIndex {
+                        offset: *index as u64,
+                        min_length,
+                        from_end: false,
+                    });
+                    ty = elem;
+                }
             }
         }
         Some((Place { local, projection }, guard))
@@ -566,6 +694,13 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 PathElem::Field(index) => {
                     let next = self.field_ty(*tys.last().unwrap(), variant.take(), *index)?;
                     tys.push(next);
+                }
+                PathElem::Index(_) => {
+                    let RigidTy::Array(elem, _) = tys.last().unwrap().kind().rigid()?.clone()
+                    else {
+                        return None;
+                    };
+                    tys.push(elem);
                 }
             }
         }
@@ -687,12 +822,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             return self.operand_tag(operand);
         }
         match operand {
-            Operand::Copy(place) | Operand::Move(place) => {
-                self.key_tag(path_key(place).map(|(local, mut prefix)| {
-                    prefix.extend_from_slice(path);
-                    (local, prefix)
-                }))
-            }
+            Operand::Copy(place) | Operand::Move(place) => self.place_ptr_tag(place, path),
             Operand::Constant(_) | Operand::RuntimeChecks(_) => TagValue::Const(UNKNOWN_TAG),
         }
     }
@@ -702,17 +832,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         let unknown = TagValue::Const(UNKNOWN_TAG);
         match rvalue {
             // A cast to a newtype around a single pointer, such as `NonNull`, keeps the
-            // provenance of the pointer it casts.
+            // provenance of the pointer it casts; so does unsizing a `Box`.
             Rvalue::Cast(
-                CastKind::Transmute | CastKind::PtrToPtr | CastKind::Subtype,
+                CastKind::Transmute
+                | CastKind::PtrToPtr
+                | CastKind::Subtype
+                | CastKind::PointerCoercion(PointerCoercion::Unsize),
                 operand,
                 _,
             ) if self.flat_paths(ty).as_slice() == [suffix.to_vec()] => self.operand_tag(operand),
             Rvalue::Use(Operand::Copy(place) | Operand::Move(place), _) => {
-                self.key_tag(path_key(place).map(|(local, mut path)| {
-                    path.extend_from_slice(suffix);
-                    (local, path)
-                }))
+                self.place_ptr_tag(place, suffix)
             }
             Rvalue::Aggregate(kind, operands) => {
                 let rest = match (kind, suffix) {
@@ -723,20 +853,29 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     }
                     (AggregateKind::Adt(def, ..), rest) if def.kind() == AdtKind::Struct => rest,
                     (AggregateKind::Tuple | AggregateKind::Closure(..), rest) => rest,
+                    (AggregateKind::Array(_), [PathElem::Index(index), rest @ ..]) => {
+                        return match &operands[*index] {
+                            operand if rest.is_empty() => self.operand_tag(operand),
+                            Operand::Copy(place) | Operand::Move(place) => {
+                                self.place_ptr_tag(place, rest)
+                            }
+                            Operand::Constant(_) | Operand::RuntimeChecks(_) => unknown,
+                        };
+                    }
                     _ => return unknown,
                 };
                 let [PathElem::Field(index), rest @ ..] = rest else { return unknown };
                 match &operands[*index] {
                     operand if rest.is_empty() => self.operand_tag(operand),
-                    Operand::Copy(place) | Operand::Move(place) => {
-                        self.key_tag(path_key(place).map(|(local, mut path)| {
-                            path.extend_from_slice(rest);
-                            (local, path)
-                        }))
-                    }
+                    Operand::Copy(place) | Operand::Move(place) => self.place_ptr_tag(place, rest),
                     Operand::Constant(_) | Operand::RuntimeChecks(_) => unknown,
                 }
             }
+            Rvalue::Repeat(operand, _) => match suffix {
+                [PathElem::Index(_)] => self.operand_tag(operand),
+                [PathElem::Index(_), rest @ ..] => self.operand_subtag(operand, rest),
+                _ => unknown,
+            },
             _ => unknown,
         }
     }
@@ -761,15 +900,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     fn operand_tag(&self, operand: &Operand) -> TagValue {
         match operand {
             Operand::Copy(place) | Operand::Move(place) => {
-                self.key_tag(path_key(place).map(|(local, mut path)| {
-                    if let Ok(ty) = place.ty(&self.locals)
-                        && !is_pointer(ty)
-                        && let [inner] = self.flat_paths(ty).as_slice()
-                    {
-                        path.extend_from_slice(inner);
-                    }
-                    (local, path)
-                }))
+                let mut suffix = vec![];
+                if let Ok(ty) = place.ty(&self.locals)
+                    && !is_pointer(ty)
+                    && let [inner] = self.flat_paths(ty).as_slice()
+                {
+                    suffix.extend_from_slice(inner);
+                }
+                self.place_ptr_tag(place, &suffix)
             }
             // A constant pointer points to a static or a promoted constant, whose only
             // tag is its root.
@@ -873,14 +1011,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         if is_shared && cell_mask != 0 {
             actions.push(Action::ReadOutsideCells {
                 place: place.clone(),
-                tag: parent,
+                tag: parent.clone(),
                 cell_mask,
                 guard: guard.clone(),
             });
         } else {
             self.read(body, place, &mut actions);
             if let Some(Action::Access { tag, guard: access_guard, .. }) = actions.last_mut() {
-                *tag = parent;
+                *tag = parent.clone();
                 *access_guard = guard.clone();
             }
         }
@@ -932,6 +1070,66 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
         let tag = self.operand_tag(ptr);
         actions.push(Action::AccessCount { ptr: ptr.clone(), tag, count, elem, is_write });
+        if is_write {
+            // The intrinsic writes memory without shadow memory.
+            actions.push(Action::ForgetTags { ptr: ptr.clone() });
+        }
+    }
+
+    /// A memory intrinsic that copies one value of a sized type from each `src` to its `dst`
+    /// (`count` is one or absent) moves the tags of the pointers in it, as copying bytes keeps
+    /// their provenance: instead of forgetting the tags of the objects it writes, read the tags
+    /// at each `src` before the call and store them at each `dst` after it.
+    fn transfer_tags(
+        &self,
+        body: &mut MutableBody,
+        pairs: &[(&Operand, &Operand)],
+        count: Option<&Operand>,
+        before: &mut Vec<Action>,
+        after: &mut Vec<Action>,
+    ) {
+        if let Some(count) = count {
+            let Operand::Constant(constant) = count else { return };
+            if constant.const_.eval_target_usize() != Ok(1) {
+                return;
+            }
+        }
+        let referent = |operand: &Operand| -> Option<(Place, Ty)> {
+            let (Operand::Copy(place) | Operand::Move(place)) = operand else { return None };
+            let ty = place.ty(body.locals()).ok()?;
+            let pointee = ty.kind().builtin_deref(true)?.ty;
+            let mut referent = place.clone();
+            referent.projection.push(ProjectionElem::Deref);
+            Some((referent, pointee))
+        };
+        let mut moves = vec![];
+        for (src, dst) in pairs {
+            let (Some((src_place, ty)), Some((dst_place, _))) = (referent(src), referent(dst))
+            else {
+                return;
+            };
+            if !self.is_sized(ty) {
+                return;
+            }
+            moves.push((src_place, dst_place, ty, *dst));
+        }
+        // Read every tag before the call, which may overwrite them.
+        let mut stores = vec![];
+        for (src_place, dst_place, ty, dst) in moves {
+            let mut tags = vec![];
+            for suffix in self.flat_paths(ty) {
+                let tag = match self.path_place_from(&src_place, ty, &suffix) {
+                    Some((ptr, _)) => TagValue::Load(ptr),
+                    None => TagValue::Const(UNKNOWN_TAG),
+                };
+                tags.push((suffix, self.read_tag_before(body, tag, before)));
+            }
+            stores.push((dst_place, ty, tags, dst.clone()));
+        }
+        for (dst_place, ty, tags, dst) in stores {
+            before.retain(|action| !matches!(action, Action::ForgetTags { ptr } if *ptr == dst));
+            self.store_tags(&dst_place, ty, tags, after);
+        }
     }
 
     /// The memory accesses of a call to the intrinsic `name`.
@@ -986,17 +1184,62 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// A tag that does not depend on memory written later: a tag loaded from shadow memory is
+    /// read into a new local by `actions`.
+    fn read_tag_before(
+        &self,
+        body: &mut MutableBody,
+        tag: TagValue,
+        actions: &mut Vec<Action>,
+    ) -> TagValue {
+        if !matches!(tag, TagValue::Load(_)) {
+            return tag;
+        }
+        let span = body.blocks()[0].terminator.source_info.span;
+        let tag_local = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
+        actions.push(Action::SetTag { tag_local, value: tag });
+        TagValue::Local(tag_local)
+    }
+
+    /// The instrumentation after a write of a value of type `ty` to `place` in memory: forget the
+    /// tags in its bytes, then store the tags of the pointers it holds (`tags`, by path).
+    fn store_tags(
+        &self,
+        place: &Place,
+        ty: Ty,
+        tags: Vec<(Vec<PathElem>, TagValue)>,
+        after: &mut Vec<Action>,
+    ) {
+        after.push(Action::ClearTags { place: place.clone() });
+        for (suffix, tag) in tags {
+            if matches!(tag, TagValue::Const(UNKNOWN_TAG)) {
+                continue;
+            }
+            if let Some((ptr, guard)) = self.path_place_from(place, ty, &suffix) {
+                after.push(Action::StoreTag { place: ptr, tag, guard });
+            }
+        }
+    }
+
     /// The instrumentation before and after a statement.
     fn statement_actions(
         &self,
-        body: &MutableBody,
+        body: &mut MutableBody,
         kind: &StatementKind,
     ) -> (Vec<Action>, Vec<Action>) {
         let mut actions = vec![];
         let mut after = vec![];
         match kind {
             StatementKind::Assign(lhs, rvalue) => {
-                let dest = self.dest_tag(lhs);
+                let lhs_ty = lhs.ty(body.locals()).unwrap();
+                // A write to memory stores the tags of the pointers it writes in shadow memory.
+                let stores_tags = self.is_memory(lhs) && self.is_sized(lhs_ty);
+                let span = body.blocks()[0].terminator.source_info.span;
+                let dest = if stores_tags && is_pointer(lhs_ty) {
+                    Some(body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut))
+                } else {
+                    self.dest_tag(lhs)
+                };
                 let mut new_tag = None;
                 match rvalue {
                     Rvalue::Ref(_, borrow_kind, place) => {
@@ -1093,7 +1336,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         self.read(body, place, &mut actions);
                         new_tag = Some(self.operand_tag(&Operand::Copy(place.clone())));
                     }
-                    Rvalue::CopyForDeref(place) | Rvalue::Discriminant(place) => {
+                    Rvalue::CopyForDeref(place) => {
+                        self.read(body, place, &mut actions);
+                        new_tag = Some(self.operand_tag(&Operand::Copy(place.clone())));
+                    }
+                    Rvalue::Discriminant(place) => {
                         self.read(body, place, &mut actions);
                     }
                     Rvalue::BinaryOp(bin_op, lhs_op, rhs_op)
@@ -1138,11 +1385,43 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 if !assignments.is_empty() {
                     actions.push(Action::SetTags { assignments });
                 }
+                if stores_tags {
+                    // The tags are read before the write, which may overwrite where they are.
+                    let mut tags = vec![];
+                    for suffix in self.flat_paths(lhs_ty) {
+                        let tag = if suffix.is_empty() {
+                            TagValue::Local(dest.unwrap())
+                        } else {
+                            self.rvalue_subtag(rvalue, lhs_ty, &suffix)
+                        };
+                        let mut tag = self.read_tag_before(body, tag, &mut actions);
+                        // Miri retags the references and `Box`es in a value copied with a retag:
+                        // the new tag is the one stored.
+                        if matches!(rvalue, Rvalue::Use(_, rustc_public::mir::WithRetag::Yes))
+                            && let Some(kind) = self.retag_kind(lhs_ty, &suffix)
+                            && let Some((ptr, guard)) = self.path_place_from(lhs, lhs_ty, &suffix)
+                        {
+                            let new_tag =
+                                body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Mut);
+                            after.extend(self.retag(body, &ptr, kind, tag, new_tag, false, guard));
+                            tag = TagValue::Local(new_tag);
+                        }
+                        tags.push((suffix, tag));
+                    }
+                    self.store_tags(lhs, lhs_ty, tags, &mut after);
+                }
             }
             StatementKind::SetDiscriminant { place, .. } => self.write(body, place, &mut actions),
             StatementKind::Intrinsic(NonDivergingIntrinsic::CopyNonOverlapping(copy)) => {
                 self.access_count(body, &copy.src, Some(&copy.count), false, &mut actions);
                 self.access_count(body, &copy.dst, Some(&copy.count), true, &mut actions);
+                self.transfer_tags(
+                    body,
+                    &[(&copy.src, &copy.dst)],
+                    Some(&copy.count),
+                    &mut actions,
+                    &mut after,
+                );
             }
             StatementKind::FakeRead(..)
             | StatementKind::StorageLive(_)
@@ -1160,7 +1439,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     /// The instrumentation before and after a terminator.
     fn terminator_actions(
         &self,
-        body: &MutableBody,
+        body: &mut MutableBody,
         kind: &TerminatorKind,
     ) -> (Vec<Action>, Vec<Action>) {
         let mut before = vec![];
@@ -1172,6 +1451,39 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
                 if let Some(name) = intrinsic_name(body, func) {
                     self.intrinsic_accesses(body, &name, args, &mut before);
+                    match name.as_str() {
+                        "copy" | "copy_nonoverlapping" => self.transfer_tags(
+                            body,
+                            &[(&args[0], &args[1])],
+                            Some(&args[2]),
+                            &mut before,
+                            &mut after,
+                        ),
+                        "typed_swap_nonoverlapping" => self.transfer_tags(
+                            body,
+                            &[(&args[0], &args[1]), (&args[1], &args[0])],
+                            None,
+                            &mut before,
+                            &mut after,
+                        ),
+                        _ => {}
+                    }
+                }
+                // CBMC havocs what a loop contract assigns when the loop starts, after its head
+                // registers the contract; a C function may write any memory.
+                let writes_uninstrumented =
+                    fn_def(body, func).is_some_and(|(def, _)| {
+                        KaniAttributes::for_def_id(self.tcx, def.def_id()).fn_marker()
+                            == Some(Symbol::intern("kani_register_loop_contract"))
+                    }) || direct_callee(body, func).is_some_and(|instance| {
+                        instance.is_foreign_item()
+                            && !instance.name().starts_with("alloc::alloc::__rust_")
+                    });
+                if writes_uninstrumented {
+                    before.push(Action::ForgetAll);
+                    if target.is_some() {
+                        after.push(Action::ForgetAll);
+                    }
                 }
                 if let Some(instance) = direct_callee(body, func)
                     && instance.is_foreign_item()
@@ -1258,7 +1570,37 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             after.push(Action::SetTags { assignments });
                         }
                     }
+                    // A destination in memory gets the returned tags in shadow memory.
+                    let dest_in_memory = self.is_memory(destination) && self.is_sized(dest_ty);
+                    let mut ret_tags = vec![];
+                    if dest_in_memory {
+                        let span = body.blocks()[0].terminator.source_info.span;
+                        let paths = self.flat_paths(dest_ty);
+                        if is_pointer(dest_ty) && is_allocator {
+                            ret_tags.push((vec![], TagValue::Const(ROOT_TAG)));
+                        } else if is_pointer(dest_ty) && provenance_intrinsic(body, func) {
+                            let tag = self.operand_tag(&args[0]);
+                            ret_tags.push((vec![], self.read_tag_before(body, tag, &mut before)));
+                        } else if let Some(callee) = callee {
+                            let mut targets = vec![];
+                            for (index, path) in paths.into_iter().enumerate().take(MAX_RET_TAGS) {
+                                let tag_local = body.new_local(
+                                    Ty::unsigned_ty(UintTy::U8),
+                                    span,
+                                    Mutability::Mut,
+                                );
+                                targets.push((index, tag_local));
+                                ret_tags.push((path, TagValue::Local(tag_local)));
+                            }
+                            if !targets.is_empty() {
+                                after.push(Action::TakeRets { callee, targets });
+                            }
+                        }
+                    }
                     self.write(body, destination, &mut after);
+                    if dest_in_memory {
+                        self.store_tags(destination, dest_ty, ret_tags, &mut after);
+                    }
                 }
             }
             TerminatorKind::Drop { place, .. } => {
@@ -1270,6 +1612,20 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 // A local whose address is not otherwise taken is only reached through this
                 // reference, a child of its allocation's root.
                 let parent = self.place_tag(body, place).unwrap_or(TagValue::Const(ROOT_TAG));
+                // The drop glue reads the pointers of a local with tag locals from memory.
+                if !self.is_memory(place) && self.is_sized(ty) {
+                    let tags: Vec<_> = self
+                        .flat_paths(ty)
+                        .into_iter()
+                        .map(|suffix| {
+                            let tag = self.place_ptr_tag(place, &suffix);
+                            (suffix, tag)
+                        })
+                        .collect();
+                    if !tags.is_empty() {
+                        self.store_tags(place, ty, tags, &mut before);
+                    }
+                }
                 before.push(Action::DropRetag {
                     place: place.clone(),
                     parent,
@@ -1285,7 +1641,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     .flat_paths(body.locals()[0].ty)
                     .into_iter()
                     .take(MAX_RET_TAGS)
-                    .map(|path| self.key_tag(Some((0, path))))
+                    .map(|path| self.place_ptr_tag(&Place::from(0), &path))
                     .collect();
                 for tag_local in &self.protector_tags {
                     before.push(Action::EndProtector { tag_local: *tag_local });
@@ -1320,16 +1676,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     KaniModel::AliasingAccessUnsized
                 };
                 let enabled = self.guard_operand(body, &guard, source, position);
-                let ptr = body.insert_assignment(
-                    Rvalue::AddressOf(RawPtrKind::Const, place),
-                    source,
-                    position,
-                );
+                let ptr = self.address_of(body, place, source, position);
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let access = self.model(model, vec![ty]);
                 let args = vec![
                     enabled,
-                    self.tag_operand(body, tag, span),
+                    self.tag_operand(body, tag, source, position),
                     Operand::Move(Place::from(ptr)),
                     bool_operand(is_write, span),
                 ];
@@ -1337,30 +1689,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 self.insert_access_checks(body, code, is_write, source, position);
             }
             Action::AccessCount { ptr, tag, count, elem, is_write } => {
-                let ptr_ty = ptr.ty(body.locals()).unwrap();
-                let ptr = if ptr_ty == Ty::new_ptr(elem, Mutability::Not) {
-                    ptr
-                } else if ptr_ty.kind().is_raw_ptr() {
-                    let cast = body.insert_ptr_cast(ptr, elem, Mutability::Not, source, position);
-                    Operand::Move(Place::from(cast))
-                } else {
-                    // A reference: take the address of its referent.
-                    let (Operand::Copy(place) | Operand::Move(place)) = ptr else {
-                        unreachable!("constant reference passed to a memory intrinsic")
-                    };
-                    let mut referent = place;
-                    referent.projection.push(ProjectionElem::Deref);
-                    let raw = body.insert_assignment(
-                        Rvalue::AddressOf(RawPtrKind::Const, referent),
-                        source,
-                        position,
-                    );
-                    Operand::Move(Place::from(raw))
-                };
+                let ptr = self.raw_ptr_operand(body, ptr, elem, source, position);
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let access = self.model(KaniModel::AliasingAccessCount, vec![elem]);
                 let args = vec![
-                    self.tag_operand(body, tag, span),
+                    self.tag_operand(body, tag, source, position),
                     ptr,
                     count,
                     bool_operand(is_write, span),
@@ -1370,7 +1703,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             }
             Action::Expose { tag } => {
                 let expose = self.model(KaniModel::AliasingExpose, vec![]);
-                let args = vec![self.tag_operand(body, tag, span)];
+                let args = vec![self.tag_operand(body, tag, source, position)];
                 let ret = unit_place(body, span);
                 body.insert_call(&expose, source, position, args, ret);
             }
@@ -1391,7 +1724,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 };
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let dealloc = self.model(KaniModel::AliasingDealloc, vec![]);
-                let args = vec![self.tag_operand(body, tag, span), ptr, size];
+                let args = vec![self.tag_operand(body, tag, source, position), ptr, size];
                 body.insert_call(&dealloc, source, position, args, Place::from(code));
                 // Deallocating writes through the pointer.
                 self.insert_access_checks(body, code, true, source, position);
@@ -1404,6 +1737,36 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     position,
                 );
             }
+            Action::ClearTags { place } => {
+                let ty = place.ty(body.locals()).unwrap();
+                let size = ty.layout().unwrap().shape().size.bytes();
+                let slot = self.byte_address(body, place, source, position);
+                let clear = self.model(KaniModel::AliasingClearTags, vec![]);
+                let ret = unit_place(body, span);
+                let args = vec![slot, body.new_uint_operand(size as u128, UintTy::Usize, span)];
+                body.insert_call(&clear, source, position, args, ret);
+            }
+            Action::StoreTag { place, tag, guard } => {
+                let enabled = self.guard_operand(body, &guard, source, position);
+                let tag = self.tag_operand(body, tag, source, position);
+                let slot = self.byte_address(body, place, source, position);
+                let store = self.model(KaniModel::AliasingStoreTag, vec![]);
+                let ret = unit_place(body, span);
+                let args = vec![enabled, slot, tag];
+                body.insert_call(&store, source, position, args, ret);
+            }
+            Action::ForgetTags { ptr } => {
+                let ptr =
+                    self.raw_ptr_operand(body, ptr, Ty::unsigned_ty(UintTy::U8), source, position);
+                let forget = self.model(KaniModel::AliasingForgetTags, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(&forget, source, position, vec![ptr], ret);
+            }
+            Action::ForgetAll => {
+                let forget = self.model(KaniModel::AliasingForgetAll, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(&forget, source, position, vec![], ret);
+            }
             Action::EndProtector { tag_local } => {
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let end = self.model(KaniModel::AliasingEndProtector, vec![]);
@@ -1415,7 +1778,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 body.insert_check(&self.pass.unsupported_check_type, source, position, None, &msg);
             }
             Action::SetTag { tag_local, value } => {
-                let operand = self.tag_operand(body, value, span);
+                let operand = self.tag_operand(body, value, source, position);
                 body.assign_to(
                     Place::from(tag_local),
                     Rvalue::Use(operand, rustc_public::mir::WithRetag::No),
@@ -1428,7 +1791,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let temps: Vec<_> = assignments
                     .iter()
                     .map(|(_, value)| {
-                        let operand = self.tag_operand(body, *value, span);
+                        let operand = self.tag_operand(body, value.clone(), source, position);
                         body.insert_assignment(
                             Rvalue::Use(operand, rustc_public::mir::WithRetag::No),
                             source,
@@ -1465,15 +1828,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     KaniModel::AliasingNewBorrowUnsized
                 };
                 let enabled = self.guard_operand(body, &guard, source, position);
-                let ptr = body.insert_assignment(
-                    Rvalue::AddressOf(RawPtrKind::Const, place),
-                    source,
-                    position,
-                );
+                let ptr = self.address_of(body, place, source, position);
                 let new_borrow = self.model(model, vec![ty]);
                 let mut args = vec![
                     enabled,
-                    self.tag_operand(body, parent, span),
+                    self.tag_operand(body, parent, source, position),
                     Operand::Move(Place::from(ptr)),
                 ];
                 if model == KaniModel::AliasingNewBorrow {
@@ -1488,16 +1847,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             Action::ReadOutsideCells { place, tag, cell_mask, guard } => {
                 let ty = place.ty(body.locals()).unwrap();
                 let enabled = self.guard_operand(body, &guard, source, position);
-                let ptr = body.insert_assignment(
-                    Rvalue::AddressOf(RawPtrKind::Const, place),
-                    source,
-                    position,
-                );
+                let ptr = self.address_of(body, place, source, position);
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let read = self.model(KaniModel::AliasingReadOutsideCells, vec![ty]);
                 let args = vec![
                     enabled,
-                    self.tag_operand(body, tag, span),
+                    self.tag_operand(body, tag, source, position),
                     Operand::Move(Place::from(ptr)),
                     body.new_uint_operand(cell_mask as u128, UintTy::U64, span),
                 ];
@@ -1532,8 +1887,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let push = self.model(KaniModel::AliasingPushCall, vec![]);
                 let mut args = vec![body.new_uint_operand(callee as u128, UintTy::U64, span)];
                 for index in 0..MAX_ARG_TAGS {
-                    let tag = tags.get(index).copied().unwrap_or(TagValue::Const(UNKNOWN_TAG));
-                    args.push(self.tag_operand(body, tag, span));
+                    let tag = tags.get(index).cloned().unwrap_or(TagValue::Const(UNKNOWN_TAG));
+                    args.push(self.tag_operand(body, tag, source, position));
                 }
                 let ret = unit_place(body, span);
                 body.insert_call(&push, source, position, args, ret);
@@ -1551,8 +1906,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     frame_count,
                 ];
                 for index in 0..MAX_RET_TAGS {
-                    let tag = tags.get(index).copied().unwrap_or(TagValue::Const(UNKNOWN_TAG));
-                    args.push(self.tag_operand(body, tag, span));
+                    let tag = tags.get(index).cloned().unwrap_or(TagValue::Const(UNKNOWN_TAG));
+                    args.push(self.tag_operand(body, tag, source, position));
                 }
                 let ret = unit_place(body, span);
                 body.insert_call(&ret_model, source, position, args, ret);
@@ -1595,6 +1950,18 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 source,
                 position,
             );
+        }
+        let span = source.span(body.blocks());
+        for (unknown, msg) in UNKNOWN_RESULTS {
+            let unknown = body.new_uint_operand(unknown as u128, UintTy::U8, span);
+            let decided = body.insert_binary_op(
+                BinOp::Ne,
+                Operand::Copy(Place::from(code)),
+                unknown,
+                source,
+                position,
+            );
+            body.insert_check(&self.pass.unknown_check_type, source, position, Some(decided), msg);
         }
     }
 
@@ -1664,10 +2031,119 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         body.insert_check(&self.pass.check_type, source, position, Some(ok), msg);
     }
 
-    fn tag_operand(&self, body: &mut MutableBody, tag: TagValue, span: Span) -> Operand {
+    fn tag_operand(
+        &self,
+        body: &mut MutableBody,
+        tag: TagValue,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) -> Operand {
+        let span = source.span(body.blocks());
         match tag {
             TagValue::Const(value) => body.new_uint_operand(value as u128, UintTy::U8, span),
             TagValue::Local(local) => Operand::Copy(Place::from(local)),
+            TagValue::Load(place) => {
+                let slot = self.byte_address(body, place, source, position);
+                let tag = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
+                let load = self.model(KaniModel::AliasingLoadTag, vec![]);
+                let args = vec![slot];
+                body.insert_call(&load, source, position, args, Place::from(tag));
+                Operand::Copy(Place::from(tag))
+            }
+        }
+    }
+
+    /// A local holding `&raw const place`. The address of `*p`, for a reference or raw pointer
+    /// `p`, is `p` itself: computing it without a dereference avoids the validity checks that a
+    /// dereference gets, which fail for pointers in inactive enum variants that guarded actions
+    /// skip.
+    fn address_of(
+        &self,
+        body: &mut MutableBody,
+        place: Place,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) -> Local {
+        if let Some((ProjectionElem::Deref, prefix)) = place.projection.split_last() {
+            let pointer = Place { local: place.local, projection: prefix.to_vec() };
+            let pointer_ty = pointer.ty(body.locals()).unwrap();
+            if is_pointer(pointer_ty) {
+                let pointee = pointer_ty.kind().builtin_deref(true).unwrap().ty;
+                return body.insert_assignment(
+                    Rvalue::Cast(
+                        CastKind::Transmute,
+                        Operand::Copy(pointer),
+                        Ty::new_ptr(pointee, Mutability::Not),
+                    ),
+                    source,
+                    position,
+                );
+            }
+        }
+        body.insert_assignment(Rvalue::AddressOf(RawPtrKind::Const, place), source, position)
+    }
+
+    /// A `*const u8` with the address of `place`.
+    fn byte_address(
+        &self,
+        body: &mut MutableBody,
+        place: Place,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) -> Operand {
+        let ptr =
+            body.insert_assignment(Rvalue::AddressOf(RawPtrKind::Const, place), source, position);
+        let cast = body.insert_ptr_cast(
+            Operand::Move(Place::from(ptr)),
+            Ty::unsigned_ty(UintTy::U8),
+            Mutability::Not,
+            source,
+            position,
+        );
+        Operand::Move(Place::from(cast))
+    }
+
+    /// A raw pointer to `elem` with the address of the pointer or reference `ptr`.
+    fn raw_ptr_operand(
+        &self,
+        body: &mut MutableBody,
+        ptr: Operand,
+        elem: Ty,
+        source: &mut SourceInstruction,
+        position: InsertPosition,
+    ) -> Operand {
+        let ptr_ty = ptr.ty(body.locals()).unwrap();
+        if ptr_ty == Ty::new_ptr(elem, Mutability::Not) {
+            ptr
+        } else if ptr_ty.kind().is_raw_ptr() {
+            let cast = body.insert_ptr_cast(ptr, elem, Mutability::Not, source, position);
+            Operand::Move(Place::from(cast))
+        } else {
+            // A reference: take the address of its referent.
+            let (Operand::Copy(place) | Operand::Move(place)) = ptr else {
+                unreachable!("constant reference passed to a memory intrinsic")
+            };
+            let mut referent = place;
+            referent.projection.push(ProjectionElem::Deref);
+            let raw = body.insert_assignment(
+                Rvalue::AddressOf(RawPtrKind::Const, referent),
+                source,
+                position,
+            );
+            let raw_ty =
+                Ty::new_ptr(ptr_ty.kind().builtin_deref(true).unwrap().ty, Mutability::Not);
+            if raw_ty == Ty::new_ptr(elem, Mutability::Not) {
+                Operand::Move(Place::from(raw))
+            } else {
+                let cast = body.insert_ptr_cast(
+                    Operand::Move(Place::from(raw)),
+                    elem,
+                    Mutability::Not,
+                    source,
+                    position,
+                );
+                Operand::Move(Place::from(cast))
+            }
         }
     }
 

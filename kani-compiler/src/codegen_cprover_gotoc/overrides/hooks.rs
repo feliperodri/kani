@@ -582,6 +582,162 @@ impl GotocHook for PointerObject {
     }
 }
 
+/// The fields of CBMC's shadow memory that the aliasing checks use for the tags of pointers stored
+/// in memory, in the order of the field indices of `kani_core::kani_aliasing` (CBMC allows at most
+/// 8 bits per byte). The last one is per object: it lives on the object's first word.
+const ALIASING_SHADOW_FIELDS: [&str; 5] = [
+    "kani_alias_tag",
+    "kani_alias_tag_inv",
+    "kani_alias_epoch_at",
+    "kani_alias_epoch_at_inv",
+    "kani_alias_epoch",
+];
+const ALIASING_SHADOW_OBJECT_FIELD: usize = 4;
+
+/// A CBMC shadow-memory built-in, declared in the symbol table so that `goto-cc` finds it.
+fn shadow_builtin(gcx: &mut GotocCtx, name: &str, ret: Type, loc: Location) -> Expr {
+    let typ = Type::variadic_code_with_unnamed_parameters(vec![], ret);
+    gcx.ensure(name, |_, _| {
+        GotoSymbol::function(name, typ.clone(), None, name, loc).with_is_extern(true)
+    });
+    Expr::symbol_expression(name, typ)
+}
+
+/// Declares the aliasing checks' shadow-memory fields, for every object
+/// (`__CPROVER_field_decl_global` and `__CPROVER_field_decl_local`), initialized to 0.
+struct AliasingShadowDecl;
+impl GotocHook for AliasingShadowDecl {
+    fn hook_applies(
+        &self,
+        _tcx: TyCtxt,
+        _instance: Instance,
+        _instance_name: &str,
+        _kani_tool_attr: Option<&String>,
+    ) -> bool {
+        unreachable!("{UNEXPECTED_CALL}")
+    }
+
+    fn handle(
+        &self,
+        gcx: &mut GotocCtx,
+        _instance: Instance,
+        fargs: Vec<Expr>,
+        _assign_to: &Place,
+        target: Option<BasicBlockIdx>,
+        span: Span,
+    ) -> Stmt {
+        assert!(fargs.is_empty());
+        let loc = gcx.codegen_caller_span_stable(span);
+        // CBMC reads the declarations from the program, without executing them; executing a
+        // call to a function without a body fails an unwinding assertion. They go on a branch
+        // that no execution reaches.
+        let mut stmts = vec![Stmt::assume(Expr::bool_false(), loc)];
+        for scope in ["__CPROVER_field_decl_global", "__CPROVER_field_decl_local"] {
+            for name in ALIASING_SHADOW_FIELDS {
+                let decl = shadow_builtin(gcx, scope, Type::empty(), loc);
+                let args =
+                    vec![Expr::string_constant(name), Expr::int_constant(0, Type::unsigned_int(8))];
+                stmts.push(Stmt::function_call(None, decl, args, loc));
+            }
+        }
+        let decls = Stmt::if_then_else(Type::bool().nondet(), Stmt::block(stmts, loc), None, loc);
+        Stmt::block(vec![decls, Stmt::goto(bb_label(target.unwrap()), loc)], loc)
+    }
+}
+
+/// `__CPROVER_set_field(ptr, field, value)` or `__CPROVER_get_field(ptr, field)` on one of the
+/// aliasing checks' shadow-memory fields, given by a constant index, for the word `ptr` points
+/// to (the first word of its object for the per-object field), if that word is inside the
+/// object. CBMC sets every byte of the word, or reads the maximum over them.
+///
+/// CBMC only finds the shadow memory of an object through a pointer whose type it considers
+/// compatible with the object's: a pointer to a pointer to a non-pointer does not reach a heap
+/// object (a byte array), and a pointer to a non-pointer does not reach an object of pointer
+/// type; where it finds none, it uses the shadow memory of another object the pointer may point
+/// to. `ptr` is a pointer to a pointer to a pointer, which reaches every object.
+struct AliasingShadowField {
+    is_set: bool,
+}
+impl GotocHook for AliasingShadowField {
+    fn hook_applies(
+        &self,
+        _tcx: TyCtxt,
+        _instance: Instance,
+        _instance_name: &str,
+        _kani_tool_attr: Option<&String>,
+    ) -> bool {
+        unreachable!("{UNEXPECTED_CALL}")
+    }
+
+    fn handle(
+        &self,
+        gcx: &mut GotocCtx,
+        _instance: Instance,
+        mut fargs: Vec<Expr>,
+        assign_to: &Place,
+        target: Option<BasicBlockIdx>,
+        span: Span,
+    ) -> Stmt {
+        let loc = gcx.codegen_caller_span_stable(span);
+        let field_type = Type::unsigned_int(8);
+        let value = if self.is_set { fargs.pop() } else { None };
+        assert_eq!(fargs.len(), 2);
+        let field: usize = fargs
+            .pop()
+            .unwrap()
+            .int_constant_value()
+            .and_then(|value| value.try_into().ok())
+            .expect("the shadow-memory field of the aliasing checks must be a constant");
+        let name = Expr::string_constant(ALIASING_SHADOW_FIELDS[field]);
+        let ptr = fargs.pop().unwrap();
+        let word_type = ptr.typ().clone();
+        let byte_ptr = ptr.clone().cast_to(Type::unsigned_int(8).to_pointer());
+        let word_size = Expr::int_constant(8, Type::size_t());
+        let mut targets = vec![];
+        if field == ALIASING_SHADOW_OBJECT_FIELD {
+            let offset = byte_ptr.clone().pointer_offset().cast_to(Type::ssize_t());
+            let base = byte_ptr.clone().sub(offset).cast_to(word_type);
+            let holds_word = byte_ptr.object_size().ge(word_size);
+            targets.push((base, holds_word));
+        } else {
+            let offset = byte_ptr.clone().pointer_offset().cast_to(Type::size_t());
+            let inside = offset.plus(word_size).le(byte_ptr.object_size());
+            targets.push((ptr, inside));
+        }
+        let mut stmts = vec![];
+        if let Some(value) = value {
+            let set = shadow_builtin(gcx, "__CPROVER_set_field", Type::empty(), loc);
+            for (view, guard) in targets {
+                let args = vec![view, name.clone(), value.clone().cast_to(field_type.clone())];
+                let call = Stmt::function_call(None, set.clone(), args, loc);
+                stmts.push(Stmt::if_then_else(guard, call, None, loc));
+            }
+        } else {
+            assert!(targets.len() <= 1);
+            let ret_place = unwrap_or_return_codegen_unimplemented_stmt!(
+                gcx,
+                gcx.codegen_place_stable(assign_to, loc)
+            );
+            let ret_type = ret_place.goto_expr.typ().clone();
+            let get = shadow_builtin(gcx, "__CPROVER_get_field", field_type.clone(), loc);
+            let (value, decl) = gcx.decl_temp_variable(
+                field_type.clone(),
+                Some(Expr::int_constant(0, field_type)),
+                loc,
+            );
+            stmts.push(decl);
+            if let Some((view, guard)) = targets.pop() {
+                let call =
+                    Stmt::function_call(Some(value.clone()), get, vec![view, name.clone()], loc);
+                stmts.push(Stmt::if_then_else(guard, call, None, loc));
+            }
+            stmts.push(ret_place.goto_expr.assign(value.cast_to(ret_type), loc));
+        }
+        stmts.push(Stmt::goto(bb_label(target.unwrap()), loc));
+        Stmt::block(stmts, loc)
+    }
+}
+
 /// Encodes __CPROVER_pointer_offset(ptr)
 struct PointerOffset;
 impl GotocHook for PointerOffset {
@@ -1480,6 +1636,9 @@ pub fn fn_hooks() -> GotocHooks {
         (KaniHook::SafetyCheck, Rc::new(SafetyCheck)),
         (KaniHook::SafetyCheckNoAssume, Rc::new(SafetyCheckNoAssume)),
         (KaniHook::IsAllocated, Rc::new(IsAllocated)),
+        (KaniHook::AliasingShadowDecl, Rc::new(AliasingShadowDecl)),
+        (KaniHook::AliasingShadowGet, Rc::new(AliasingShadowField { is_set: false })),
+        (KaniHook::AliasingShadowSet, Rc::new(AliasingShadowField { is_set: true })),
         (KaniHook::PointerObject, Rc::new(PointerObject)),
         (KaniHook::PointerOffset, Rc::new(PointerOffset)),
         (KaniHook::UnsupportedCheck, Rc::new(UnsupportedCheck)),

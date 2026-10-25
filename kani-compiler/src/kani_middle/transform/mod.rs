@@ -142,6 +142,7 @@ impl BodyTransformation {
             AliasingPass {
                 check_type: CheckType::new_safety_check_assert_no_assume(queries),
                 unsupported_check_type: unsupported_check_type.clone(),
+                unknown_check_type: CheckType::new_safety_check_assert_assume(queries),
                 kani_functions: queries.kani_functions().clone(),
             },
         );

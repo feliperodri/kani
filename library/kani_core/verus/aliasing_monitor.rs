@@ -276,6 +276,8 @@ pub struct Node {
     pub cell: bool,
     pub alias: nat,
     pub exposed: bool,
+    /// A pointer with this tag was stored in memory.
+    pub stored: bool,
 }
 
 pub struct AbsState {
@@ -312,6 +314,7 @@ pub open spec fn node_of(s: &MonitorState, t: u64) -> Node {
         cell: bit(s.cell, t),
         alias: s.alias[t as int] as nat,
         exposed: bit(s.exposed, t),
+        stored: bit(s.stored, t),
     }
 }
 
@@ -334,6 +337,7 @@ pub open spec fn node_eq(x: Node, y: Node) -> bool {
     &&& x.cell == y.cell
     &&& x.alias == y.alias
     &&& x.exposed == y.exposed
+    &&& x.stored == y.stored
 }
 
 /// `b` has the tags of `a`, unchanged.
@@ -354,6 +358,7 @@ pub open spec fn initial_spec(a: AbsState) -> bool {
     &&& a.nodes[0].initialized
     &&& !a.nodes[0].cell
     &&& !a.nodes[0].exposed
+    &&& !a.nodes[0].stored
     &&& !a.unknown_exposed
 }
 
@@ -417,6 +422,7 @@ pub open spec fn monitor_wf(s: &MonitorState) -> bool {
     &&& clean_above(s.initialized, s.count as u64)
     &&& clean_above(s.cell, s.count as u64)
     &&& clean_above(s.exposed, s.count as u64)
+    &&& clean_above(s.stored, s.count as u64)
 }
 
 /// A tag on the path of a tag is a tag.
@@ -515,6 +521,7 @@ pub open spec fn apply_post(s0: &MonitorState, s: &MonitorState, l: u64, f: u64,
     &&& s.protected == s0.protected
     &&& s.strong == s0.strong
     &&& s.exposed == s0.exposed
+    &&& s.stored == s0.stored
     &&& s.unknown_exposed == s0.unknown_exposed
     &&& s.tracked_object_id == s0.tracked_object_id
     &&& s.tracked_offset == s0.tracked_offset
@@ -780,6 +787,7 @@ pub proof fn lemma_initialize(s: MonitorState)
         s.cell == 0u64,
         s.alias[0] == 0u8,
         s.exposed == 0u64,
+        s.stored == 0u64,
         !s.unknown_exposed,
     ensures monitor_wf(&s), initial_spec(abstraction(&s)),
 {
@@ -1647,6 +1655,7 @@ pub open spec fn retag_node(a: AbsState, parent: nat, n: nat, covers: bool, in_c
         cell: is_cell,
         alias: if is_cell { eff(a, parent) } else { n },
         exposed: false,
+        stored: false,
     }
 }
 
@@ -1697,6 +1706,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
             &&& s.active == s0.active & !b
             &&& s.conflicted == s0.conflicted & !b
             &&& s.exposed == s0.exposed & !b
+            &&& s.stored == s0.stored & !b
             &&& s.alias@ == s0.alias@.update(t as int, if is_cell {
                     if s0.cell & (1u64 << parent) != 0 { s0.alias[parent as int] } else { parent }
                 } else {
@@ -1735,6 +1745,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
         &&& bit(s.active, i) == (i != t && bit(s0.active, i))
         &&& bit(s.conflicted, i) == (i != t && bit(s0.conflicted, i))
         &&& bit(s.exposed, i) == (i != t && bit(s0.exposed, i))
+        &&& bit(s.stored, i) == (i != t && bit(s0.stored, i))
         &&& bit(s.main, i) == if i == t { in_main } else { bit(s0.main, i) }
         &&& bit(s.cell, i) == if i == t { is_cell } else { bit(s0.cell, i) }
         &&& bit(s.interior, i) == if i == t { is_interior } else { bit(s0.interior, i) }
@@ -1747,6 +1758,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
         lemma_bit_set(s0.active, t, i);
         lemma_bit_set(s0.conflicted, t, i);
         lemma_bit_set(s0.exposed, t, i);
+        lemma_bit_set(s0.stored, t, i);
         lemma_bit_set(s0.main, t, i);
         lemma_bit_set(s0.cell, t, i);
         lemma_bit_set(s0.interior, t, i);
@@ -1878,7 +1890,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
     assert forall|i: u64| t + 1 <= i < 64 implies !bit(s.valid, i) && !bit(s.active, i)
         && !bit(s.frozen, i) && !bit(s.conflicted, i) && !bit(s.interior, i)
         && !bit(s.protected, i) && !bit(s.strong, i) && !bit(s.initialized, i)
-        && !bit(s.cell, i) && !bit(s.exposed, i) && !bit(s.main, i) by {}
+        && !bit(s.cell, i) && !bit(s.exposed, i) && !bit(s.main, i) && !bit(s.stored, i) by {}
     // The refinement.
     let a = abstraction(&s0);
     let b = abstraction(&s);
@@ -2270,7 +2282,8 @@ pub open spec fn unprotect(n: Node) -> Node {
 /// are dropped.
 pub open spec fn return_spec(a: AbsState, b: AbsState, frame: nat, kept: Seq<u8>) -> bool {
     let c = kept_count(a.count, frame, kept);
-    let keep_all = exists|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed;
+    let keep_all = exists|t: nat| c <= t < a.count
+        && ((#[trigger] a.nodes[t]).exposed || a.nodes[t].stored);
     &&& b.count == if keep_all { a.count } else { c }
     &&& b.unknown_exposed == a.unknown_exposed
     &&& forall|t: nat| t < b.count ==> node_eq(#[trigger] b.nodes[t],
@@ -2298,7 +2311,7 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
             step(step(step(step(frame as nat, kept[0]), kept[1]), kept[2]), kept[3])
         },
         // Unreachable tags are dropped, unless one was exposed.
-        s == if count < s1.count && s1.exposed & !(((1u64 << count) - 1u64) as u64) == 0 {
+        s == if count < s1.count && (s1.exposed | s1.stored) & !(((1u64 << count) - 1u64) as u64) == 0 {
             let below = ((1u64 << count) - 1u64) as u64;
             MonitorState {
                 count: count,
@@ -2313,6 +2326,7 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
                 initialized: s1.initialized & below,
                 cell: s1.cell & below,
                 exposed: s1.exposed & below,
+                stored: s1.stored & below,
                 ..s1
             }
         } else {
@@ -2337,23 +2351,30 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
     }
     let a = abstraction(&s0);
     let c = kept_count(a.count, frame as nat, kept@);
-    let drop = count < s1.count && s1.exposed & !(((1u64 << count) - 1u64) as u64) == 0;
+    let drop = count < s1.count && (s1.exposed | s1.stored) & !(((1u64 << count) - 1u64) as u64) == 0;
     // Whether a dropped tag was exposed.
     if count < s1.count {
         let below = ((1u64 << count) - 1u64) as u64;
         assert(count >= 1);
-        lemma_and_nonzero(s1.exposed, !below);
-        assert((s1.exposed & !below != 0) == exists|t: nat| c <= t < a.count
-            && (#[trigger] a.nodes[t]).exposed) by {
+        let es = s1.exposed | s1.stored;
+        lemma_and_nonzero(es, !below);
+        assert((es & !below != 0) == exists|t: nat| c <= t < a.count
+            && ((#[trigger] a.nodes[t]).exposed || a.nodes[t].stored)) by {
             assert(c == count as nat);
-            if s1.exposed & !below != 0 {
-                let t = choose|t: u64| t < 64 && bit(s1.exposed, t) && bit(!below, t);
+            if es & !below != 0 {
+                let t = choose|t: u64| t < 64 && bit(es, t) && bit(!below, t);
+                lemma_bit_or(s1.exposed, s1.stored, t);
                 lemma_bit_not(below, t);
                 lemma_bit_below(count as u64, t);
-                assert(t < s0.count) by { if t >= s0.count { assert(!bit(s0.exposed, t)); } }
-                assert(a.nodes[t as nat].exposed);
-            } else if exists|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed {
-                let t = choose|t: nat| c <= t < a.count && (#[trigger] a.nodes[t]).exposed;
+                assert(t < s0.count) by {
+                    if t >= s0.count { assert(!bit(s0.exposed, t) && !bit(s0.stored, t)); }
+                }
+                assert(a.nodes[t as nat].exposed || a.nodes[t as nat].stored);
+            } else if exists|t: nat| c <= t < a.count
+                && ((#[trigger] a.nodes[t]).exposed || a.nodes[t].stored) {
+                let t = choose|t: nat| c <= t < a.count
+                    && ((#[trigger] a.nodes[t]).exposed || a.nodes[t].stored);
+                lemma_bit_or(s1.exposed, s1.stored, t as u64);
                 lemma_bit_not(below, t as u64);
                 lemma_bit_below(count as u64, t as u64);
             }
@@ -2374,6 +2395,7 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
         &&& bit(s.initialized, i) == (bit(s1.initialized, i) && i < n)
         &&& bit(s.cell, i) == (bit(s1.cell, i) && i < n)
         &&& bit(s.exposed, i) == (bit(s1.exposed, i) && i < n)
+        &&& bit(s.stored, i) == (bit(s1.stored, i) && i < n)
     } by {
         if drop {
             let below = ((1u64 << count) - 1u64) as u64;
@@ -2389,12 +2411,13 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
             lemma_bit_and(s1.initialized, below, i);
             lemma_bit_and(s1.cell, below, i);
             lemma_bit_and(s1.exposed, below, i);
+            lemma_bit_and(s1.stored, below, i);
         } else {
             if i >= n {
                 assert(!bit(s0.main, i) && !bit(s0.valid, i) && !bit(s0.active, i)
                     && !bit(s0.frozen, i) && !bit(s0.conflicted, i) && !bit(s0.interior, i)
                     && !bit(s0.protected, i) && !bit(s0.strong, i) && !bit(s0.initialized, i)
-                    && !bit(s0.cell, i) && !bit(s0.exposed, i));
+                    && !bit(s0.cell, i) && !bit(s0.exposed, i) && !bit(s0.stored, i));
             }
         }
     }
@@ -2441,6 +2464,38 @@ proof fn lemma_paths_skip(s: MonitorState, cands: u64, c: nat, all: u64, any: u6
 {
     lemma_and_max(all);
     lemma_or_zero(any);
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Pointers stored in memory
+// ---------------------------------------------------------------------------------------------
+
+/// Storing a pointer tagged `tag` in memory marks the tag stored; nothing else changes.
+pub open spec fn store_spec(a: AbsState, b: AbsState, tag: nat) -> bool {
+    &&& b.count == a.count
+    &&& b.unknown_exposed == a.unknown_exposed
+    &&& if tag < a.count {
+        &&& same_nodes_except(a, b, iset![tag])
+        &&& node_eq(b.nodes[tag], Node { stored: true, ..a.nodes[tag] })
+    } else {
+        same_nodes_except(a, b, ISet::empty())
+    }
+}
+
+proof fn lemma_store(s0: MonitorState, s: MonitorState, tag: u8)
+    requires
+        monitor_wf(&s0), tag < s0.count,
+        s == (MonitorState { stored: s0.stored | (1u64 << tag), ..s0 }),
+    ensures monitor_wf(&s), store_spec(abstraction(&s0), abstraction(&s), tag as nat),
+{
+    assert forall|i: u64| i < 64 implies bit(s.stored, i) == (i == tag || bit(s0.stored, i)) by {
+        lemma_bit_set(s0.stored, tag as u64, i);
+    }
+    let a = abstraction(&s0);
+    let b = abstraction(&s);
+    assert forall|t: nat| t < a.count && !iset![tag as nat].contains(t) implies
+        node_eq(#[trigger] b.nodes[t], a.nodes[t]) by {}
 }
 fn main() {}
 } // verus!
