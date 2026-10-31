@@ -1154,7 +1154,6 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     /// unsupported.
     fn foreign_accesses(
         &self,
-        body: &MutableBody,
         instance: Instance,
         args: &[Operand],
         destination: &Place,
@@ -1164,19 +1163,18 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         let name = instance.name();
         let name = name.rsplit("::").next().unwrap_or(&name).to_string();
         let bytes = Ty::unsigned_ty(UintTy::U8);
-        let mut access =
-            |ptr: &Operand, count: &Operand, is_write: bool, actions: &mut Vec<Action>| {
-                actions.push(Action::AccessCount {
-                    ptr: ptr.clone(),
-                    tag: self.operand_tag(ptr),
-                    count: count.clone(),
-                    elem: bytes,
-                    is_write,
-                });
-                if is_write {
-                    actions.push(Action::ForgetTags { ptr: ptr.clone() });
-                }
-            };
+        let access = |ptr: &Operand, count: &Operand, is_write: bool, actions: &mut Vec<Action>| {
+            actions.push(Action::AccessCount {
+                ptr: ptr.clone(),
+                tag: self.operand_tag(ptr),
+                count: count.clone(),
+                elem: bytes,
+                is_write,
+            });
+            if is_write {
+                actions.push(Action::ForgetTags { ptr: ptr.clone() });
+            }
+        };
         match (name.as_str(), args) {
             ("memset", [dst, _, count]) => access(dst, count, true, before),
             ("memcpy" | "memmove", [dst, src, count]) => {
@@ -1589,14 +1587,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     && instance.is_foreign_item()
                     && !instance.name().starts_with("alloc::alloc::__rust_")
                 {
-                    self.foreign_accesses(
-                        body,
-                        instance,
-                        args,
-                        destination,
-                        &mut before,
-                        &mut after,
-                    );
+                    self.foreign_accesses(instance, args, destination, &mut before, &mut after);
                 }
                 if let Some(instance) = direct_callee(body, func)
                     && instance.is_foreign_item()
