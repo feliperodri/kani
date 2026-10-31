@@ -199,6 +199,9 @@ enum Action {
     /// Check and record an access to `count` values of type `elem` at `ptr`, as memory
     /// intrinsics do.
     AccessCount { ptr: Operand, tag: TagValue, count: Operand, elem: Ty, is_write: bool },
+    /// Check and record an access to the bytes at `ptr`, as many as the value of `count` plus
+    /// one: what `strlen` reads, once it returned.
+    AccessStrlen { ptr: Operand, tag: TagValue, count: Place },
     /// Check and record an access to the `size` bytes at offset `offset` of `place` through
     /// `tag`: the tag of an enum, which reading or setting its discriminant accesses.
     AccessBytes { place: Place, offset: u64, size: u64, tag: TagValue, is_write: bool },
@@ -363,11 +366,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         self.protector_tags = entry_retags.iter().map(|(.., protector)| *protector).collect();
         let may_create_tags = !entry_retags.is_empty()
             || body.blocks().iter().any(|block| {
-                matches!(block.terminator.kind, TerminatorKind::Call { .. })
-                    || block
-                        .statements
-                        .iter()
-                        .any(|stmt| matches!(stmt.kind, StatementKind::Assign(_, Rvalue::Ref(..))))
+                // A drop creates the tag of the reference it passes to the drop glue.
+                matches!(
+                    block.terminator.kind,
+                    TerminatorKind::Call { .. } | TerminatorKind::Drop { .. }
+                ) || block
+                    .statements
+                    .iter()
+                    .any(|stmt| matches!(stmt.kind, StatementKind::Assign(_, Rvalue::Ref(..))))
             });
         if may_create_tags {
             self.frame_count =
@@ -1142,6 +1148,59 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// The memory accesses of a call to a foreign function, which has no MIR to instrument. CBMC
+    /// models a few C library functions; their accesses are checked here. Any other foreign
+    /// function could access memory in ways the checks cannot see: reaching such a call fails as
+    /// unsupported.
+    fn foreign_accesses(
+        &self,
+        body: &MutableBody,
+        instance: Instance,
+        args: &[Operand],
+        destination: &Place,
+        before: &mut Vec<Action>,
+        after: &mut Vec<Action>,
+    ) {
+        let name = instance.name();
+        let name = name.rsplit("::").next().unwrap_or(&name).to_string();
+        let bytes = Ty::unsigned_ty(UintTy::U8);
+        let mut access =
+            |ptr: &Operand, count: &Operand, is_write: bool, actions: &mut Vec<Action>| {
+                actions.push(Action::AccessCount {
+                    ptr: ptr.clone(),
+                    tag: self.operand_tag(ptr),
+                    count: count.clone(),
+                    elem: bytes,
+                    is_write,
+                });
+                if is_write {
+                    actions.push(Action::ForgetTags { ptr: ptr.clone() });
+                }
+            };
+        match (name.as_str(), args) {
+            ("memset", [dst, _, count]) => access(dst, count, true, before),
+            ("memcpy" | "memmove", [dst, src, count]) => {
+                access(src, count, false, before);
+                access(dst, count, true, before);
+            }
+            ("memcmp" | "bcmp", [a, b, count]) => {
+                access(a, count, false, before);
+                access(b, count, false, before);
+            }
+            ("strlen", [s]) => after.push(Action::AccessStrlen {
+                ptr: s.clone(),
+                tag: self.operand_tag(s),
+                count: destination.clone(),
+            }),
+            _ => before.push(Action::Unsupported {
+                msg: format!(
+                    "Kani's aliasing checks cannot check the memory accesses of the foreign \
+                     function `{name}`"
+                ),
+            }),
+        }
+    }
+
     /// The memory accesses of a call to the intrinsic `name`.
     fn intrinsic_accesses(
         &self,
@@ -1528,6 +1587,19 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
                 if let Some(instance) = direct_callee(body, func)
                     && instance.is_foreign_item()
+                    && !instance.name().starts_with("alloc::alloc::__rust_")
+                {
+                    self.foreign_accesses(
+                        body,
+                        instance,
+                        args,
+                        destination,
+                        &mut before,
+                        &mut after,
+                    );
+                }
+                if let Some(instance) = direct_callee(body, func)
+                    && instance.is_foreign_item()
                     && matches!(
                         instance.name().as_str(),
                         "alloc::alloc::__rust_dealloc" | "alloc::alloc::__rust_realloc"
@@ -1750,6 +1822,28 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 ];
                 body.insert_call(&access, source, position, args, Place::from(code));
                 self.insert_access_checks(body, code, is_write, source, position);
+            }
+            Action::AccessStrlen { ptr, tag, count } => {
+                let elem = Ty::unsigned_ty(UintTy::U8);
+                let ptr = self.raw_ptr_operand(body, ptr, elem, source, position);
+                let one = body.new_uint_operand(1, UintTy::Usize, span);
+                let count = body.insert_binary_op(
+                    BinOp::AddUnchecked,
+                    Operand::Copy(count),
+                    one,
+                    source,
+                    position,
+                );
+                let code = body.new_local(elem, span, Mutability::Not);
+                let access = self.model(KaniModel::AliasingAccessCount, vec![elem]);
+                let args = vec![
+                    self.tag_operand(body, tag, source, position),
+                    ptr,
+                    Operand::Move(Place::from(count)),
+                    bool_operand(false, span),
+                ];
+                body.insert_call(&access, source, position, args, Place::from(code));
+                self.insert_access_checks(body, code, false, source, position);
             }
             Action::AccessBytes { place, offset, size, tag, is_write } => {
                 let base = self.byte_address(body, place, source, position);
