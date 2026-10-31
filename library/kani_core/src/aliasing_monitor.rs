@@ -23,6 +23,8 @@
 //   reference created from a pointer with exposed provenance starts a tree of its own (a
 //   *wildcard tree*, as in Miri): it has no known parent.
 // - `main`: the tags of the allocation's own tree, rooted at tag 0.
+// - `wildcard`: a wildcard tree may exist. Without one, every tag is in `main`; the flag keeps
+//   that test concrete when program paths that created different numbers of tags merge.
 // - `valid`, `active`, `frozen`, `conflicted`, `interior`: Tree Borrows' permission of each tag at
 //   the tracked byte, as bits. Not valid is Disabled; valid and frozen is Frozen; valid, active
 //   and not frozen is Active; otherwise Reserved, conflicted or interior-mutable per its bits.
@@ -96,6 +98,7 @@ macro_rules! kani_aliasing_monitor {
             pub exposed: u64,
             pub unknown_exposed: bool,
             pub stored: u64,
+            pub wildcard: bool,
         }
 
         /// The state before the harness chooses the tracked byte.
@@ -120,6 +123,7 @@ macro_rules! kani_aliasing_monitor {
                 exposed: 0,
                 unknown_exposed: false,
                 stored: 0,
+                wildcard: false,
             }
         }
 
@@ -136,6 +140,7 @@ macro_rules! kani_aliasing_monitor {
             s.count = 1;
             s.ancestors[0] = 1;
             s.main = 1;
+            s.wildcard = false;
             s.valid = 1;
             s.active = 1;
             s.frozen = 0;
@@ -1208,7 +1213,7 @@ macro_rules! kani_aliasing_monitor {
             }
             // Checking first that there is no wildcard tree keeps this branch concrete for
             // symbolic execution when `e` is not (it depends on the tracked byte through `cell`).
-            if s.main == monitor_live(s) || s.main & (1u64 << e) != 0 {
+            if !s.wildcard || s.main & (1u64 << e) != 0 {
                 // Every tag of a wildcard tree sees a foreign access from the main tree.
                 let code = monitor_apply(s, local, !ancestors & !s.cell, is_write);
                 #[cfg(verus_keep_ghost)]
@@ -1348,6 +1353,7 @@ macro_rules! kani_aliasing_monitor {
             if parent == EXPOSED_TAG {
                 s.ancestors[tag as usize] = bit;
                 s.main = s.main & !bit;
+                s.wildcard = true;
             } else {
                 s.ancestors[tag as usize] = s.ancestors[parent as usize] | bit;
                 s.main = if s.main & (1u64 << parent) != 0 { s.main | bit } else { s.main & !bit };

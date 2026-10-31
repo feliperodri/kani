@@ -410,6 +410,8 @@ pub open spec fn monitor_wf(s: &MonitorState) -> bool {
         &&& (bit(s.interior, t) ==> !bit(s.protected, t))
         &&& (bit(s.strong, t) ==> bit(s.protected, t))
     }
+    // Without a wildcard tree, every tag is in the main tree.
+    &&& (!s.wildcard ==> s.main == live_mask(s.count as u64))
     // Nothing is recorded for tags that do not exist.
     &&& clean_above(s.main, s.count as u64)
     &&& clean_above(s.valid, s.count as u64)
@@ -522,6 +524,7 @@ pub open spec fn apply_post(s0: &MonitorState, s: &MonitorState, l: u64, f: u64,
     &&& s.strong == s0.strong
     &&& s.exposed == s0.exposed
     &&& s.stored == s0.stored
+    &&& s.wildcard == s0.wildcard
     &&& s.unknown_exposed == s0.unknown_exposed
     &&& s.tracked_object_id == s0.tracked_object_id
     &&& s.tracked_offset == s0.tracked_offset
@@ -745,6 +748,33 @@ pub open spec fn live_mask(c: u64) -> u64 {
     if c >= 64 { u64::MAX } else { ((1u64 << c) - 1u64) as u64 }
 }
 
+/// Adding tag `c` to the live tags `0..c` gives `0..c + 1`.
+pub proof fn lemma_live_extend(c: u64)
+    requires c < 64,
+    ensures (live_mask(c) | (1u64 << c)) == live_mask((c + 1) as u64),
+{
+    if c == 63 {
+        assert((((1u64 << 63u64) - 1u64) as u64 | (1u64 << 63u64)) == u64::MAX) by (bit_vector);
+    } else {
+        assert((((1u64 << c) - 1u64) as u64 | (1u64 << c)) == ((1u64 << ((c + 1) as u64)) - 1u64)
+            as u64) by (bit_vector) requires c < 63;
+    }
+}
+
+/// Keeping the live tags `0..d` of the live tags `0..c`, for `d <= c`, gives `0..d`.
+pub proof fn lemma_live_shrink(c: u64, d: u64)
+    requires d <= c <= 64, d < 64,
+    ensures (live_mask(c) & (((1u64 << d) - 1u64) as u64)) == live_mask(d),
+{
+    if c >= 64 {
+        assert((u64::MAX & (((1u64 << d) - 1u64) as u64)) == ((1u64 << d) - 1u64) as u64)
+            by (bit_vector) requires d < 64;
+    } else {
+        assert(((((1u64 << c) - 1u64) as u64) & (((1u64 << d) - 1u64) as u64))
+            == ((1u64 << d) - 1u64) as u64) by (bit_vector) requires d <= c, c < 64;
+    }
+}
+
 /// The exec test `m & (1 << t) != 0` is bit `t` of `m`.
 pub proof fn lemma_test_bit(m: u64, t: u64)
     requires t < 64,
@@ -789,8 +819,10 @@ pub proof fn lemma_initialize(s: MonitorState)
         s.exposed == 0u64,
         s.stored == 0u64,
         !s.unknown_exposed,
+        !s.wildcard,
     ensures monitor_wf(&s), initial_spec(abstraction(&s)),
 {
+    assert(((1u64 << 1u64) - 1u64) as u64 == 1u64) by (bit_vector);
     assert forall|i: u64| i < 64 implies bit(1u64, i) == (i == 0) && !bit(0u64, i) by {
         lemma_bit_one(i);
         lemma_bit_zero(i);
@@ -1698,6 +1730,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
             &&& s.tracked_object_id == s0.tracked_object_id
             &&& s.tracked_offset == s0.tracked_offset
             &&& s.unknown_exposed == s0.unknown_exposed
+            &&& s.wildcard == (s0.wildcard || wild)
             &&& s.ancestors@ == s0.ancestors@.update(t as int, if wild { b } else {
                     s0.ancestors[parent as int] | b })
             &&& s.main == if !wild && s0.main & (1u64 << parent) != 0 { s0.main | b } else {
@@ -1728,6 +1761,13 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
         retag_spec(abstraction(&s0), abstraction(&s), parent as nat, covers, in_cell, freeze,
             is_shared, is_protected, is_strong, s0.count as nat),
 {
+    if !s.wildcard {
+        let c = s0.count as u64;
+        lemma_bit_live(c, parent as u64);
+        lemma_test_bit(s0.main, parent as u64);
+        lemma_live_extend(c);
+        assert(s.main == live_mask(s.count as u64));
+    }
     let t = s0.count as u64;
     let p = parent as u64;
     let wild = parent == EXPOSED_TAG;
@@ -2290,6 +2330,7 @@ pub open spec fn return_spec(a: AbsState, b: AbsState, frame: nat, kept: Seq<u8>
             if frame < 64 && t >= frame { unprotect(a.nodes[t]) } else { a.nodes[t] })
 }
 
+#[verifier::rlimit(100)]
 proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame: u8, kept: [u8; 4],
     count: u8)
     requires
@@ -2336,6 +2377,10 @@ proof fn lemma_return(s0: MonitorState, s1: MonitorState, s: MonitorState, frame
         monitor_wf(&s),
         return_spec(abstraction(&s0), abstraction(&s), frame as nat, kept@),
 {
+    if !s.wildcard && s.count < s1.count {
+        lemma_live_shrink(s0.count as u64, count as u64);
+        assert(s.main == live_mask(s.count as u64));
+    }
     // Bits below the frame.
     assert forall|i: u64| i < 64 implies {
         &&& bit(s1.protected, i) == (bit(s0.protected, i) && (frame >= 64 || i < frame))
