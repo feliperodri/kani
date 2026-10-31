@@ -18,7 +18,7 @@ With Verus 0.2026.10.18:
 verus library/kani_core/verus/aliasing_monitor.rs
 ```
 
-Expected: `verification results:: 118 verified, 0 errors`. The proof uses no `assume`, `admit` or
+Expected: `verification results:: 125 verified, 0 errors`. The proof uses no `assume`, `admit` or
 `external_body`.
 
 ## What is proved
