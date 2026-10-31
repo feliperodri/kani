@@ -50,6 +50,8 @@ macro_rules! kani_aliasing {
             call_callee: u64,
             call_tags: [u8; MAX_ARG_TAGS],
             ret_callee: u64,
+            /// The trait method the function that returned implements, for calls through `dyn`.
+            ret_method: u64,
             ret_tags: [u8; MAX_RET_TAGS],
             /// Incremented when memory may have been written without instrumentation: it is
             /// part of every object's epoch.
@@ -61,6 +63,7 @@ macro_rules! kani_aliasing {
             call_callee: 0,
             call_tags: [UNKNOWN_TAG; MAX_ARG_TAGS],
             ret_callee: 0,
+            ret_method: 0,
             ret_tags: [UNKNOWN_TAG; MAX_RET_TAGS],
             generation: 0,
         };
@@ -505,13 +508,15 @@ macro_rules! kani_aliasing {
         }
 
         /// The tag of the `index`-th pointer in the arguments of `callee`, if the pending call is
-        /// a direct call to `callee`; the unknown tag otherwise.
+        /// a direct call to `callee`, or a call through `dyn` to the trait method `method` that
+        /// `callee` implements (0 if none); the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingArgTagModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_arg_tag")]
-        fn aliasing_arg_tag(callee: u64, index: usize) -> u8 {
+        fn aliasing_arg_tag(callee: u64, method: u64, index: usize) -> u8 {
             let c = calls();
-            if c.call_callee == callee && index < MAX_ARG_TAGS {
+            let pending = c.call_callee;
+            if pending != 0 && (pending == callee || pending == method) && index < MAX_ARG_TAGS {
                 c.call_tags[index]
             } else {
                 UNKNOWN_TAG
@@ -537,16 +542,25 @@ macro_rules! kani_aliasing {
         /// Record the tags of the pointers in the value `callee` returns, and drop the tags
         /// `callee` created that nothing can reach anymore.
         ///
-        /// Tags only flow through locals, the arguments of direct calls, and returned values; a
-        /// pointer read from memory gets the unknown tag. So once a function returns, the tags
-        /// it created (`frame_count..count`) are unreachable, except the ones it returns, which
-        /// may need the tags created before them as ancestors.
+        /// Tags flow through locals, call arguments, returned values, and shadow memory, where
+        /// `monitor_store` records the ones that may outlive the function. So once a function
+        /// returns, the tags it created (`frame_count..count`) are unreachable, except the ones it
+        /// returns or stored, which may need the tags created before them as ancestors.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingReturnModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_return")]
-        fn aliasing_return(callee: u64, frame_count: u8, tag0: u8, tag1: u8, tag2: u8, tag3: u8) {
+        fn aliasing_return(
+            callee: u64,
+            method: u64,
+            frame_count: u8,
+            tag0: u8,
+            tag1: u8,
+            tag2: u8,
+            tag3: u8,
+        ) {
             let c = calls();
             c.ret_callee = callee;
+            c.ret_method = method;
             c.ret_tags = [tag0, tag1, tag2, tag3];
             monitor_return(state(), frame_count, [tag0, tag1, tag2, tag3]);
         }
@@ -560,14 +574,18 @@ macro_rules! kani_aliasing {
             code
         }
 
-        /// The tag of the `index`-th pointer in the value the call to `callee` that just
-        /// returned produced, if `callee` recorded it; the unknown tag otherwise.
+        /// The tag of the `index`-th pointer in the value the call to `callee` (a function, or a
+        /// trait method called through `dyn`) that just returned produced, if the function that
+        /// returned recorded it; the unknown tag otherwise.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingRetTagModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_ret_tag")]
         fn aliasing_ret_tag(callee: u64, index: usize) -> u8 {
             let c = calls();
-            if c.ret_callee == callee && index < MAX_RET_TAGS {
+            if callee != 0
+                && (c.ret_callee == callee || c.ret_method == callee)
+                && index < MAX_RET_TAGS
+            {
                 c.ret_tags[index]
             } else {
                 UNKNOWN_TAG
@@ -580,6 +598,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_ret")]
         fn aliasing_end_ret() {
             calls().ret_callee = 0;
+            calls().ret_method = 0;
         }
     };
 }
