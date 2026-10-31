@@ -263,6 +263,9 @@ struct Instrumenter<'a, 'tcx> {
     in_memory: HashSet<Local>,
     /// Identifier of the instrumented function, for passing tags across calls.
     own_id: u64,
+    /// Identifier of the trait method the instrumented function implements, if any, for calls
+    /// through `dyn` (0 otherwise).
+    own_method: u64,
     /// Ghost local holding the number of tags in use when the function started, if the
     /// function may create tags (it creates references or calls functions).
     frame_count: Option<Local>,
@@ -299,6 +302,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             in_memory: address_taken.clone(),
             address_taken,
             own_id: instance_id(instance),
+            own_method: implemented_method_id(tcx, instance).unwrap_or(0),
             frame_count: None,
             protector_tags: vec![],
             locals: body.locals().to_vec(),
@@ -430,6 +434,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let arg_tag = self.model(KaniModel::AliasingArgTag, vec![]);
                 let args = vec![
                     body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
+                    body.new_uint_operand(self.own_method as u128, UintTy::U64, span),
                     body.new_uint_operand(index as u128, UintTy::Usize, span),
                 ];
                 body.insert_call(
@@ -1534,7 +1539,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         size: args[1].clone(),
                     });
                 }
-                let callee = direct_callee(body, func).map(instance_id);
+                // Tags go through the call buffer keyed by the callee, or by the trait method for a
+                // call through `dyn`. A call through a function pointer passes none, and clears the
+                // buffer so that its callee cannot read tags pushed for an earlier call.
+                let callee = direct_callee(body, func)
+                    .map(instance_id)
+                    .or_else(|| virtual_method_id(self.tcx, body, func));
                 let tags: Vec<_> = args
                     .iter()
                     .flat_map(|arg| {
@@ -1544,10 +1554,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     })
                     .take(MAX_ARG_TAGS)
                     .collect();
-                if let Some(callee) = callee
-                    && !tags.is_empty()
-                {
-                    before.push(Action::PushCall { callee, tags });
+                if !tags.is_empty() {
+                    match callee {
+                        Some(callee) => before.push(Action::PushCall { callee, tags }),
+                        None if fn_def(body, func).is_none() => {
+                            before.push(Action::PushCall { callee: 0, tags: vec![] })
+                        }
+                        None => {}
+                    }
                 }
                 if target.is_some() {
                     let is_allocator = direct_callee(body, func).is_some_and(|instance| {
@@ -1955,6 +1969,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 };
                 let mut args = vec![
                     body.new_uint_operand(self.own_id as u128, UintTy::U64, span),
+                    body.new_uint_operand(self.own_method as u128, UintTy::U64, span),
                     frame_count,
                 ];
                 for index in 0..MAX_RET_TAGS {
@@ -2309,6 +2324,33 @@ fn fn_def(body: &MutableBody, func: &Operand) -> Option<(FnDef, GenericArgs)> {
         return None;
     };
     Some((def, args))
+}
+
+/// The identifier of the trait method that `instance` implements (or is, for a default method), for
+/// matching calls through `dyn` with their callees. Vtable shims of the method have it too, since
+/// a vtable may point to them.
+fn implemented_method_id(tcx: TyCtxt, instance: Instance) -> Option<u64> {
+    let def_id = rustc_internal::internal(tcx, instance.def.def_id());
+    let method =
+        tcx.trait_item_of(def_id).or_else(|| tcx.trait_of_assoc(def_id).map(|_| def_id))?;
+    Some(method_id(tcx, method))
+}
+
+/// The identifier of the trait method a call through `dyn` calls, if `func` is one.
+fn virtual_method_id(tcx: TyCtxt, body: &MutableBody, func: &Operand) -> Option<u64> {
+    let (def, args) = fn_def(body, func)?;
+    let instance = Instance::resolve(def, &args).ok()?;
+    if !matches!(instance.kind, InstanceKind::Virtual { .. }) {
+        return None;
+    }
+    Some(method_id(tcx, rustc_internal::internal(tcx, def.def_id())))
+}
+
+fn method_id(tcx: TyCtxt, method: rustc_hir::def_id::DefId) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    "dyn method".hash(&mut hasher);
+    tcx.def_path_str(method).hash(&mut hasher);
+    hasher.finish().max(1)
 }
 
 /// A stable identifier of a function instance, for matching callers with callees.
