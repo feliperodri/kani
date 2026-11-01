@@ -75,6 +75,8 @@ pub enum KaniModel {
     AliasingClearTags,
     #[strum(serialize = "AliasingDeallocModel")]
     AliasingDealloc,
+    #[strum(serialize = "AliasingDropTagModel")]
+    AliasingDropTag,
     #[strum(serialize = "AliasingEndArgsModel")]
     AliasingEndArgs,
     #[strum(serialize = "AliasingEndProtectorModel")]

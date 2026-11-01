@@ -565,6 +565,20 @@ macro_rules! kani_aliasing {
             monitor_return(state(), frame_count, [tag0, tag1, tag2, tag3]);
         }
 
+        /// A reference tagged `tag`, created only to be passed to a call that just returned, is
+        /// unreachable unless the callee returned, stored or exposed it. If it is the last tag,
+        /// drop it as a returning function drops its own: `monitor_return` keeps it if it is
+        /// stored, exposed, or among the tags just returned.
+        #[kanitool::disable_checks(pointer)]
+        #[kanitool::fn_marker = "AliasingDropTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_drop_tag")]
+        fn aliasing_drop_tag(tag: u8) {
+            let s = state();
+            if (1..MAX_TAGS).contains(&tag) && tag + 1 == s.count {
+                monitor_return(s, tag, calls().ret_tags);
+            }
+        }
+
         /// The protector of the argument tagged `tag` ends, before the function returns.
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingEndProtectorModel"]

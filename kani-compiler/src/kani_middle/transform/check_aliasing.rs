@@ -47,10 +47,11 @@ use rustc_middle::ty::{TyCtxt, TypingEnv, Unnormalized};
 use rustc_public::CrateDef;
 use rustc_public::abi::{FieldsShape, Scalar, TagEncoding, VariantsShape};
 use rustc_public::mir::mono::{Instance, InstanceKind};
+use rustc_public::mir::visit::{Location, MirVisitor, PlaceContext};
 use rustc_public::mir::{
     AggregateKind, BinOp, Body, BorrowKind, CastKind, ConstOperand, Local, Mutability,
     NonDivergingIntrinsic, Operand, Place, PointerCoercion, ProjectionElem, RawPtrKind, Rvalue,
-    StatementKind, TerminatorKind,
+    StatementKind, TerminatorKind, VarDebugInfoContents,
 };
 use rustc_public::rustc_internal;
 use rustc_public::target::MachineInfo;
@@ -145,8 +146,10 @@ impl TransformPass for AliasingPass {
         if KaniFunction::try_from(instance).is_ok() || is_aliasing_model(instance) {
             return (false, body);
         }
+        let dead_after_call = dead_after_call_temps(&body);
         let mut body = MutableBody::from(body);
-        let instrumenter = Instrumenter::new(tcx, &body, instance, self);
+        let mut instrumenter = Instrumenter::new(tcx, &body, instance, self);
+        instrumenter.dead_after_call = dead_after_call;
         instrumenter.run(&mut body, is_harness(instance, tcx));
         (true, body.into())
     }
@@ -248,6 +251,9 @@ enum Action {
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
     Return { tags: Vec<TagValue> },
+    /// The reference tagged `tag_local`, which a call just consumed, is unreachable unless the
+    /// callee kept it: drop it if it is the last tag.
+    DropTag { tag_local: Local },
     /// Retrieve the tag of the pointer returned by a direct call.
     /// `targets` lists, for each tag local, which pointer of the returned value it receives.
     TakeRets { callee: u64, targets: Vec<(usize, Local)> },
@@ -274,6 +280,9 @@ struct Instrumenter<'a, 'tcx> {
     frame_count: Option<Local>,
     /// Ghost locals holding the tags of the protected retags of the arguments, in order.
     protector_tags: Vec<Local>,
+    /// Compiler temporaries assigned a reference once and moved into a call once, and used nowhere
+    /// else: their tag cannot be reached through them after the call.
+    dead_after_call: HashSet<Local>,
     /// The locals of the original body, for the types of the places it uses.
     locals: Vec<rustc_public::mir::LocalDecl>,
 }
@@ -308,6 +317,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             own_method: implemented_method_id(tcx, instance).unwrap_or(0),
             frame_count: None,
             protector_tags: vec![],
+            dead_after_call: HashSet::new(),
             locals: body.locals().to_vec(),
         }
     }
@@ -379,6 +389,22 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             self.frame_count =
                 Some(body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not));
         }
+
+        // Only a reference that gets a tag of its own can be dropped after the call.
+        let fresh: HashSet<Local> = body
+            .blocks()
+            .iter()
+            .flat_map(|block| &block.statements)
+            .filter_map(|stmt| match &stmt.kind {
+                StatementKind::Assign(lhs, Rvalue::Ref(_, kind, place))
+                    if lhs.projection.is_empty() && self.ref_creates_tag(body, kind, place) =>
+                {
+                    Some(lhs.local)
+                }
+                _ => None,
+            })
+            .collect();
+        self.dead_after_call.retain(|local| fresh.contains(local));
 
         // Collect the instrumentation of the original instructions, then insert it from the last
         // instruction to the first so that earlier positions stay valid.
@@ -504,6 +530,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 );
             }
         }
+    }
+
+    /// Whether `&place` (or `&mut place`) creates a tag of its own, as `statement_actions` and
+    /// `reborrow` instrument it, rather than reusing its parent's or the unknown tag.
+    fn ref_creates_tag(&self, body: &MutableBody, kind: &BorrowKind, place: &Place) -> bool {
+        let ty = place.ty(body.locals()).unwrap();
+        let is_shared = matches!(kind, BorrowKind::Shared);
+        if matches!(kind, BorrowKind::Fake(_)) || (!is_shared && !self.is_unpin(ty)) {
+            return false;
+        }
+        !is_shared || self.is_freeze(ty) || (self.is_sized(ty) && self.cell_mask(ty).is_some())
     }
 
     /// The tag to use for an access to `place`, if the access is checked: the tag of the pointer
@@ -1714,6 +1751,24 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     if dest_in_memory {
                         self.store_tags(destination, dest_ty, ret_tags, &mut after);
                     }
+                    // References created only to be passed to this call: once it returns, nothing
+                    // reaches them unless the callee returned, stored or exposed them, which the
+                    // library checks. Last created first, since only the last tag can be dropped.
+                    let mut temps: Vec<Local> = args
+                        .iter()
+                        .filter_map(|arg| match arg {
+                            Operand::Move(place) if place.projection.is_empty() => {
+                                Some(place.local)
+                            }
+                            _ => None,
+                        })
+                        .filter(|local| self.dead_after_call.contains(local))
+                        .filter_map(|local| self.tags.get(&(local, vec![])).copied())
+                        .collect();
+                    temps.reverse();
+                    for tag_local in temps {
+                        after.push(Action::DropTag { tag_local });
+                    }
                 }
             }
             TerminatorKind::Drop { place, .. } => {
@@ -1912,6 +1967,12 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let forget = self.model(KaniModel::AliasingForgetTags, vec![]);
                 let ret = unit_place(body, span);
                 body.insert_call(&forget, source, position, vec![ptr], ret);
+            }
+            Action::DropTag { tag_local } => {
+                let drop_tag = self.model(KaniModel::AliasingDropTag, vec![]);
+                let ret = unit_place(body, span);
+                let args = vec![Operand::Copy(Place::from(tag_local))];
+                body.insert_call(&drop_tag, source, position, args, ret);
             }
             Action::ForgetAll => {
                 let forget = self.model(KaniModel::AliasingForgetAll, vec![]);
@@ -2409,6 +2470,63 @@ fn fn_def(body: &MutableBody, func: &Operand) -> Option<(FnDef, GenericArgs)> {
         return None;
     };
     Some((def, args))
+}
+
+/// The compiler temporaries whose only uses are one assignment of a reference and one move into a
+/// call's arguments.
+fn dead_after_call_temps(body: &Body) -> HashSet<Local> {
+    struct Uses(Vec<usize>);
+    impl MirVisitor for Uses {
+        fn visit_statement(&mut self, stmt: &rustc_public::mir::Statement, location: Location) {
+            // Storage markers are not uses.
+            if !matches!(stmt.kind, StatementKind::StorageLive(_) | StatementKind::StorageDead(_)) {
+                self.super_statement(stmt, location);
+            }
+        }
+        fn visit_local(&mut self, local: &Local, _: PlaceContext, _: Location) {
+            self.0[*local] += 1;
+        }
+    }
+    let mut uses = Uses(vec![0; body.locals().len()]);
+    uses.visit_body(body);
+    let user: HashSet<Local> = body
+        .var_debug_info
+        .iter()
+        .filter_map(|info| match &info.value {
+            VarDebugInfoContents::Place(place) => Some(place.local),
+            VarDebugInfoContents::Const(_) => None,
+        })
+        .collect();
+    let mut refs = HashMap::new();
+    let mut moves = HashMap::new();
+    for block in body.blocks.iter() {
+        for stmt in &block.statements {
+            if let StatementKind::Assign(place, Rvalue::Ref(..)) = &stmt.kind
+                && place.projection.is_empty()
+            {
+                *refs.entry(place.local).or_insert(0) += 1;
+            }
+        }
+        if let TerminatorKind::Call { args, .. } = &block.terminator.kind {
+            for arg in args {
+                if let Operand::Move(place) = arg
+                    && place.projection.is_empty()
+                {
+                    *moves.entry(place.local).or_insert(0) += 1;
+                }
+            }
+        }
+    }
+    refs.into_iter()
+        .filter(|(local, n)| {
+            *n == 1
+                && moves.get(local) == Some(&1)
+                && uses.0[*local] == 2
+                && *local > body.arg_locals().len()
+                && !user.contains(local)
+        })
+        .map(|(local, _)| local)
+        .collect()
 }
 
 /// The identifier of the trait method that `instance` implements (or is, for a default method), for
