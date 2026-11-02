@@ -247,6 +247,8 @@ enum Action {
     ForgetTags { ptr: Operand },
     /// Memory may be written without instrumentation: forget every stored tag.
     ForgetAll,
+    /// A pointer tagged with the exposed tag is created.
+    NoteExposed,
     /// Record the argument tags of a direct call.
     PushCall { callee: u64, tags: Vec<TagValue> },
     /// Record the tag of the returned pointer, and drop the tags of this call.
@@ -1433,7 +1435,10 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             // The pointer inside a `Box`.
                             CastKind::BoxDerefTransmute => self.operand_tag(operand),
                             // Any exposed tag.
-                            CastKind::PointerWithExposedProvenance => TagValue::Const(EXPOSED_TAG),
+                            CastKind::PointerWithExposedProvenance => {
+                                actions.push(Action::NoteExposed);
+                                TagValue::Const(EXPOSED_TAG)
+                            }
                             _ if keeps_provenance => self.operand_tag(operand),
                             _ => TagValue::Const(UNKNOWN_TAG),
                         });
@@ -1973,6 +1978,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let ret = unit_place(body, span);
                 let args = vec![Operand::Copy(Place::from(tag_local))];
                 body.insert_call(&drop_tag, source, position, args, ret);
+            }
+            Action::NoteExposed => {
+                let note = self.model(KaniModel::AliasingNoteExposed, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(&note, source, position, vec![], ret);
             }
             Action::ForgetAll => {
                 let forget = self.model(KaniModel::AliasingForgetAll, vec![]);

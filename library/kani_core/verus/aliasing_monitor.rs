@@ -524,6 +524,7 @@ pub open spec fn apply_post(s0: &MonitorState, s: &MonitorState, l: u64, f: u64,
     &&& s.strong == s0.strong
     &&& s.exposed == s0.exposed
     &&& s.stored == s0.stored
+    &&& s.exposed_values == s0.exposed_values
     &&& s.wildcard == s0.wildcard
     &&& s.unknown_exposed == s0.unknown_exposed
     &&& s.tracked_object_id == s0.tracked_object_id
@@ -1691,16 +1692,20 @@ pub open spec fn retag_node(a: AbsState, parent: nat, n: nat, covers: bool, in_c
     }
 }
 
+/// `exposed_values`: a pointer tagged `EXPOSED_TAG` may exist; otherwise `parent` cannot be
+/// that tag, and the reference gets the unknown tag if it is.
 pub open spec fn retag_spec(a: AbsState, b: AbsState, parent: nat, covers: bool, in_cell: bool,
-    freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool, r: nat) -> bool
+    freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool, r: nat,
+    exposed_values: bool) -> bool
 {
     let cellish = if covers { in_cell } else { !freeze };
     let is_cell = is_shared && cellish;
-    if parent >= a.count && parent != EXPOSED_TAG as nat {
-        r == parent && same_state(a, b)
+    let wild = exposed_values && parent == EXPOSED_TAG as nat;
+    if parent >= a.count && !wild {
+        r == UNKNOWN_TAG as nat && same_state(a, b)
     } else if a.count == 64 {
         r == UNKNOWN_TAG as nat && same_state(a, b)
-    } else if is_cell && parent == EXPOSED_TAG as nat {
+    } else if is_cell && wild {
         r == UNKNOWN_TAG as nat && same_state(a, b)
     } else {
         &&& r == a.count
@@ -1717,7 +1722,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
     in_cell: bool, freeze: bool, is_shared: bool, is_protected: bool, is_strong: bool)
     requires
         monitor_wf(&s0),
-        parent < s0.count || parent == EXPOSED_TAG,
+        parent < s0.count || (parent == EXPOSED_TAG && s0.exposed_values),
         s0.count < 64,
         ({
             let t = s0.count as u64;
@@ -1731,6 +1736,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
             &&& s.tracked_offset == s0.tracked_offset
             &&& s.unknown_exposed == s0.unknown_exposed
             &&& s.wildcard == (s0.wildcard || wild)
+            &&& s.exposed_values == s0.exposed_values
             &&& s.ancestors@ == s0.ancestors@.update(t as int, if wild { b } else {
                     s0.ancestors[parent as int] | b })
             &&& s.main == if !wild && s0.main & (1u64 << parent) != 0 { s0.main | b } else {
@@ -1759,7 +1765,7 @@ proof fn lemma_new_borrow(s0: MonitorState, s: MonitorState, parent: u8, covers:
     ensures
         monitor_wf(&s),
         retag_spec(abstraction(&s0), abstraction(&s), parent as nat, covers, in_cell, freeze,
-            is_shared, is_protected, is_strong, s0.count as nat),
+            is_shared, is_protected, is_strong, s0.count as nat, s0.exposed_values),
 {
     if !s.wildcard {
         let c = s0.count as u64;
@@ -2002,16 +2008,17 @@ pub open spec fn strong_ub(m: AbsState) -> bool {
 /// Deallocating through `tag`: a write access through it (a wildcard one for a pointer created
 /// from an integer), then undefined behavior if a strongly protected tag has an initialized
 /// permission.
-pub open spec fn dealloc_refines(a: AbsState, b: AbsState, tag: nat, code: u8) -> bool {
-    exists|m: AbsState, c1: u8| #[trigger] dealloc_witness(a, b, tag, code, m, c1)
+pub open spec fn dealloc_refines(a: AbsState, b: AbsState, tag: nat, code: u8,
+    exposed_values: bool) -> bool {
+    exists|m: AbsState, c1: u8| #[trigger] dealloc_witness(a, b, tag, code, m, c1, exposed_values)
 }
 
 /// The state `m` after the write access, whose result is `c1`.
-pub open spec fn dealloc_witness(a: AbsState, b: AbsState, tag: nat, code: u8, m: AbsState, c1: u8)
-    -> bool
+pub open spec fn dealloc_witness(a: AbsState, b: AbsState, tag: nat, code: u8, m: AbsState, c1: u8,
+    exposed_values: bool) -> bool
 {
     {
-        &&& if tag == EXPOSED_TAG as nat {
+        &&& if exposed_values && tag == EXPOSED_TAG as nat {
             wildcard_refines(a, m, true, c1)
         } else if tag < a.count {
             access_refines(a, m, tag, true, c1)
@@ -2035,15 +2042,18 @@ proof fn lemma_same_state_refl(a: AbsState)
 proof fn lemma_dealloc(s0: MonitorState, s: MonitorState, tag: u8, code: u8)
     requires
         monitor_wf(&s0), monitor_wf(&s),
-        tag == EXPOSED_TAG ==> wildcard_refines(abstraction(&s0), abstraction(&s), true, code),
-        tag != EXPOSED_TAG && tag < s0.count ==> access_refines(abstraction(&s0), abstraction(&s),
-            tag as nat, true, code),
-        tag != EXPOSED_TAG && tag >= s0.count ==> code == ACCESS_UNKNOWN_TAG && s == s0,
+        s0.exposed_values && tag == EXPOSED_TAG ==> wildcard_refines(abstraction(&s0),
+            abstraction(&s), true, code),
+        !(s0.exposed_values && tag == EXPOSED_TAG) && tag < s0.count ==> access_refines(
+            abstraction(&s0), abstraction(&s), tag as nat, true, code),
+        !(s0.exposed_values && tag == EXPOSED_TAG) && tag >= s0.count ==> code
+            == ACCESS_UNKNOWN_TAG && s == s0,
     ensures
-        code != ACCESS_OK ==> dealloc_refines(abstraction(&s0), abstraction(&s), tag as nat, code),
+        code != ACCESS_OK ==> dealloc_refines(abstraction(&s0), abstraction(&s), tag as nat, code,
+            s0.exposed_values),
         code == ACCESS_OK ==> dealloc_refines(abstraction(&s0), abstraction(&s), tag as nat,
             if s.protected & s.strong & s.initialized & !s.cell != 0 { ACCESS_PROTECTED_DEALLOC }
-            else { ACCESS_OK }),
+            else { ACCESS_OK }, s0.exposed_values),
 {
     let a = abstraction(&s0);
     let m = abstraction(&s);
@@ -2073,10 +2083,10 @@ proof fn lemma_dealloc(s0: MonitorState, s: MonitorState, tag: u8, code: u8)
         }
     }
     if code != ACCESS_OK {
-        assert(dealloc_witness(a, m, tag as nat, code, m, code));
+        assert(dealloc_witness(a, m, tag as nat, code, m, code, s0.exposed_values));
     } else {
         assert(dealloc_witness(a, m, tag as nat, if x != 0 { ACCESS_PROTECTED_DEALLOC }
-            else { ACCESS_OK }, m, code));
+            else { ACCESS_OK }, m, code, s0.exposed_values));
     }
 }
 
