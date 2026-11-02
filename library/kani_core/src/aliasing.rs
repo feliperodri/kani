@@ -572,9 +572,11 @@ macro_rules! kani_aliasing {
         #[kanitool::disable_checks(pointer)]
         #[kanitool::fn_marker = "AliasingDropTagModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_drop_tag")]
+        // Plain comparisons: `Range::contains` is instrumented, and calls this function.
+        #[allow(clippy::manual_range_contains)]
         fn aliasing_drop_tag(tag: u8) {
             let s = state();
-            if (1..MAX_TAGS).contains(&tag) && tag + 1 == s.count {
+            if tag >= 1 && tag < MAX_TAGS && tag + 1 == s.count {
                 monitor_return(s, tag, calls().ret_tags);
             }
         }
