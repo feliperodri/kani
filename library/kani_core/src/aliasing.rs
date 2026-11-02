@@ -106,7 +106,7 @@ macro_rules! kani_aliasing {
             if !monitor_covers(s, obj, offset, size) {
                 return ACCESS_OK;
             }
-            let code = if tag == EXPOSED_TAG {
+            let code = if s.exposed_values && tag == EXPOSED_TAG {
                 monitor_wildcard_access(s, is_write)
             } else if tag < s.count {
                 monitor_access(s, tag, is_write)
@@ -579,6 +579,13 @@ macro_rules! kani_aliasing {
             if tag >= 1 && tag < MAX_TAGS && tag + 1 == s.count {
                 monitor_return(s, tag, calls().ret_tags);
             }
+        }
+
+        /// A pointer created from an integer, tagged `EXPOSED_TAG`, now exists.
+        #[kanitool::fn_marker = "AliasingNoteExposedModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_note_exposed")]
+        fn aliasing_note_exposed() {
+            monitor_note_exposed(state());
         }
 
         /// The protector of the argument tagged `tag` ends, before the function returns.

@@ -23,6 +23,9 @@
 //   reference created from a pointer with exposed provenance starts a tree of its own (a
 //   *wildcard tree*, as in Miri): it has no known parent.
 // - `main`: the tags of the allocation's own tree, rooted at tag 0.
+// - `exposed_values`: a pointer created from an integer (tagged `EXPOSED_TAG`) may exist. Tests
+//   of a tag against `EXPOSED_TAG` are made only when it is set, so that they stay concrete
+//   when tags are symbolic (after program paths that created different numbers of tags merge).
 // - `wildcard`: a wildcard tree may exist. Without one, every tag is in `main`; the flag keeps
 //   that test concrete when program paths that created different numbers of tags merge.
 // - `valid`, `active`, `frozen`, `conflicted`, `interior`: Tree Borrows' permission of each tag at
@@ -99,6 +102,7 @@ macro_rules! kani_aliasing_monitor {
             pub unknown_exposed: bool,
             pub stored: u64,
             pub wildcard: bool,
+            pub exposed_values: bool,
         }
 
         /// The state before the harness chooses the tracked byte.
@@ -124,6 +128,7 @@ macro_rules! kani_aliasing_monitor {
                 unknown_exposed: false,
                 stored: 0,
                 wildcard: false,
+                exposed_values: false,
             }
         }
 
@@ -141,6 +146,7 @@ macro_rules! kani_aliasing_monitor {
             s.ancestors[0] = 1;
             s.main = 1;
             s.wildcard = false;
+            s.exposed_values = false;
             s.valid = 1;
             s.active = 1;
             s.frozen = 0;
@@ -1314,7 +1320,9 @@ macro_rules! kani_aliasing_monitor {
             ensures
                 monitor_wf(&*final(s)),
                 retag_spec(abstraction(&*old(s)), abstraction(&*final(s)), parent as nat, covers,
-                    in_cell, freeze, is_shared, is_protected, is_strong, r as nat),
+                    in_cell, freeze, is_shared, is_protected, is_strong, r as nat,
+                    old(s).exposed_values),
+                final(s).exposed_values == old(s).exposed_values,
                 final(s).tracked_object_id == old(s).tracked_object_id,
                 final(s).tracked_offset == old(s).tracked_offset,
         ))]
@@ -1330,8 +1338,9 @@ macro_rules! kani_aliasing_monitor {
             is_protected: bool,
             is_strong: bool,
         ) -> u8 {
-            if parent >= s.count && parent != EXPOSED_TAG {
-                return parent;
+            let wild = s.exposed_values && parent == EXPOSED_TAG;
+            if parent >= s.count && !wild {
+                return UNKNOWN_TAG;
             }
             if s.count == MAX_TAGS {
                 return UNKNOWN_TAG;
@@ -1340,7 +1349,7 @@ macro_rules! kani_aliasing_monitor {
             // interior mutability.
             let cellish = if covers { in_cell } else { !freeze };
             let is_cell = is_shared && cellish;
-            if is_cell && parent == EXPOSED_TAG {
+            if is_cell && wild {
                 // A `Cell` in a wildcard tree: accesses through it would be wildcard accesses
                 // from that tree, which the checks do not distinguish from an integer pointer's.
                 return UNKNOWN_TAG;
@@ -1350,7 +1359,7 @@ macro_rules! kani_aliasing_monitor {
             let tag = s.count;
             let bit = 1u64 << tag;
             s.count = s.count + 1;
-            if parent == EXPOSED_TAG {
+            if wild {
                 s.ancestors[tag as usize] = bit;
                 s.main = s.main & !bit;
                 s.wildcard = true;
@@ -1402,13 +1411,14 @@ macro_rules! kani_aliasing_monitor {
             requires monitor_wf(&*old(s)),
             ensures
                 monitor_wf(&*final(s)),
-                dealloc_refines(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat, r),
+                dealloc_refines(abstraction(&*old(s)), abstraction(&*final(s)), tag as nat, r,
+                    old(s).exposed_values),
         ))]
         #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_dealloc"))]
         pub fn monitor_dealloc(s: &mut MonitorState, tag: u8) -> u8 {
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
-            let code = if tag == EXPOSED_TAG {
+            let code = if s.exposed_values && tag == EXPOSED_TAG {
                 monitor_wildcard_access(s, true)
             } else if tag < s.count {
                 monitor_access(s, tag, true)
@@ -1424,6 +1434,19 @@ macro_rules! kani_aliasing_monitor {
                 return ACCESS_PROTECTED_DEALLOC;
             }
             ACCESS_OK
+        }
+
+        /// A pointer created from an integer, tagged `EXPOSED_TAG`, now exists.
+        #[cfg_attr(verus_keep_ghost, verus_verify)]
+        #[cfg_attr(verus_keep_ghost, verus_spec(
+            requires monitor_wf(&*old(s)),
+            ensures
+                monitor_wf(&*final(s)),
+                final(s).exposed_values,
+        ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_note_exposed"))]
+        pub fn monitor_note_exposed(s: &mut MonitorState) {
+            s.exposed_values = true;
         }
 
         /// Record that the pointer tagged `tag` was exposed.
