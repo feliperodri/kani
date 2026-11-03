@@ -143,7 +143,7 @@ impl TransformPass for AliasingPass {
         // Kani functions are not instrumented, nor is any function of the aliasing model's
         // module (its helpers and the monitor have no marker): instrumenting the model would
         // recurse.
-        if KaniFunction::try_from(instance).is_ok() || is_aliasing_model(instance) {
+        if !is_instrumented(instance) {
             return (false, body);
         }
         let dead_after_call = dead_after_call_temps(&body);
@@ -2423,6 +2423,12 @@ fn path_key(place: &Place) -> Option<PathKey> {
         })
         .collect::<Option<Vec<_>>>()?;
     Some((place.local, path))
+}
+
+/// Whether the aliasing checks instrument `instance`: Kani functions are not instrumented, nor
+/// is any function of the aliasing model's module (its helpers and the monitor have no marker).
+pub fn is_instrumented(instance: Instance) -> bool {
+    KaniFunction::try_from(instance).is_err() && !is_aliasing_model(instance)
 }
 
 /// Whether `instance` belongs to the module that `kani_core::kani_aliasing!` generates in the Kani
