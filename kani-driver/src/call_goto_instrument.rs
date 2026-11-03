@@ -204,6 +204,16 @@ impl KaniSession {
             ]);
         }
 
+        // The state of Kani's own checks must not be havocked by `--dfcc`, which makes every
+        // static nondeterministic: with loop contracts only, the harness's metadata has it;
+        // with a function contract, the contract's (below).
+        if harness.contract.is_none() {
+            for state in &harness.checks_state {
+                args.push("--nondet-static-exclude".into());
+                args.push(state.as_str().into());
+            }
+        }
+
         if let Some(assigns) = harness.contract.as_ref() {
             args.push("--enforce-contract".into());
             args.push(assigns.contracted_function_name.as_str().into());

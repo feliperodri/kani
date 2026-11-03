@@ -45,6 +45,11 @@ pub struct HarnessMetadata {
     pub contract: Option<AssignsContract>,
     /// If the harness contains some usage of loop contracts.
     pub has_loop_contracts: bool,
+    /// The static globals that hold the state of Kani's own checks, in the `file:name` form of
+    /// `--nondet-static-exclude`. CBMC's contract instrumentation makes every other static
+    /// nondeterministic; the aliasing checks' monitor must start from its initial state.
+    #[serde(default)]
+    pub checks_state: Vec<String>,
     /// If the harness was automatically generated or manually written.
     pub is_automatically_generated: bool,
     /// Whether the (automatically generated) harness uses *bounded* nondeterministic values

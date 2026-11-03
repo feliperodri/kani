@@ -15,7 +15,8 @@ use cbmc::goto_program::{Expr, Stmt, Symbol};
 use rustc_public::CrateDef;
 use rustc_public::mir::mono::Instance;
 use rustc_public::mir::{
-    BasicBlockIdx, Body, Local, Place, ProjectionElem, Rvalue, StatementKind, TerminatorKind,
+    BasicBlockIdx, Body, Local, Operand, Place, ProjectionElem, Rvalue, StatementKind,
+    TerminatorKind,
 };
 use rustc_public::ty::{RigidTy, TyKind};
 use std::collections::{BTreeMap, HashSet};
@@ -23,6 +24,14 @@ use tracing::{debug, debug_span};
 
 /// Codegen MIR functions into gotoc
 impl GotocCtx<'_, '_> {
+    /// The name of the goto function of `instance` (see `check_aliasing::goto_function_name`).
+    pub fn goto_function_name(&self, instance: Instance) -> String {
+        check_aliasing::goto_function_name(
+            instance,
+            self.queries.args().ub_check.contains(&ExtraChecks::Aliasing),
+        )
+    }
+
     /// The heads of the loops of `body` with a loop invariant, i.e. the targets of the calls to
     /// the functions that register loop contracts (see `LoopInvariantRegister`).
     fn loop_contract_heads(&self, body: &Body) -> Vec<BasicBlockIdx> {
@@ -119,6 +128,10 @@ impl GotocCtx<'_, '_> {
         let is_local = |place: &Place| {
             !place.projection.iter().any(|elem| matches!(elem, ProjectionElem::Deref))
         };
+        // The locals of loop invariants stay hidden: CBMC would otherwise havoc them with the
+        // loop's write set (see `loop_invariant_locals`).
+        let invariant_closures =
+            check_aliasing::loop_invariant_locals(self.tcx, &body.blocks, body.locals());
         // A drop passes the address of the dropped place to its drop glue.
         let dropped = body.blocks.iter().filter_map(|block| match &block.terminator.kind {
             TerminatorKind::Drop { place, .. } if is_local(place) => Some(place.local),
@@ -135,11 +148,12 @@ impl GotocCtx<'_, '_> {
                 _ => None,
             })
             .chain(dropped)
+            .filter(|local| !invariant_closures.contains(local))
             .collect()
     }
 
     pub fn codegen_function(&mut self, instance: Instance) {
-        let name = instance.mangled_name();
+        let name = self.goto_function_name(instance);
         let old_sym = self.symbol_table.lookup(&name).unwrap();
 
         let _trace_span = debug_span!("CodegenFunction", name = instance.name()).entered();
@@ -314,7 +328,7 @@ impl GotocCtx<'_, '_> {
         let body = self.transformer.body(self.tcx, instance);
         self.set_current_fn(instance, &body);
         debug!(krate=?instance.def.krate(), is_std=self.current_fn().is_std(), "declare_function");
-        let fname = instance.mangled_name();
+        let fname = self.goto_function_name(instance);
         let sym = Symbol::function(
             &fname,
             self.fn_typ(instance, &body),
