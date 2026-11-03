@@ -8,13 +8,14 @@ use crate::codegen_cprover_gotoc::GotocCtx;
 use crate::codegen_cprover_gotoc::codegen::block::{loop_heads, reverse_postorder};
 use crate::kani_middle::attributes::KaniAttributes;
 use crate::kani_middle::readable_name;
+use crate::kani_middle::transform::check_aliasing;
 use cbmc::InternString;
 use cbmc::InternedString;
 use cbmc::goto_program::{Expr, Stmt, Symbol};
 use rustc_public::CrateDef;
 use rustc_public::mir::mono::Instance;
 use rustc_public::mir::{
-    BasicBlockIdx, Body, Local, ProjectionElem, Rvalue, StatementKind, TerminatorKind,
+    BasicBlockIdx, Body, Local, Place, ProjectionElem, Rvalue, StatementKind, TerminatorKind,
 };
 use rustc_public::ty::{RigidTy, TyKind};
 use std::collections::{BTreeMap, HashSet};
@@ -54,6 +55,13 @@ impl GotocCtx<'_, '_> {
         // With the aliasing checks, CBMC gives visible variables shadow memory, which it cannot
         // initialize for some zero-sized types (`[(); usize::MAX]`); they hold no pointers.
         let aliasing_checks = self.queries.args().ub_check.contains(&ExtraChecks::Aliasing);
+        // CBMC initializes the shadow memory of every visible variable when it is declared. The
+        // checks never read the shadow memory of a variable whose address is not taken in a
+        // function they do not instrument (the aliasing model and Kani's functions), so hide
+        // those: otherwise each call to a model function initializes shadow memory for each of
+        // its locals, which is most of the symbolic execution of some harnesses.
+        let hide_unshadowed = aliasing_checks
+            && !check_aliasing::is_instrumented(self.current_fn().instance_stable());
         for (lc, ldata) in ldecls {
             if Some(lc) == body.spread_arg() {
                 // We have already added this local in the function prelude, so
@@ -79,7 +87,7 @@ impl GotocCtx<'_, '_> {
                 self.codegen_span_stable(ldata.span),
             )
             .with_is_hidden(
-                (!self.is_user_variable(&lc) && !shadowed.contains(&lc))
+                ((!self.is_user_variable(&lc) || hide_unshadowed) && !shadowed.contains(&lc))
                     || (aliasing_checks && self.is_zst_stable(ldata.ty)),
             )
             .with_is_parameter((lc > 0 && lc <= num_args) && !self.is_zst_stable(ldata.ty));
@@ -108,6 +116,14 @@ impl GotocCtx<'_, '_> {
         if !self.queries.args().ub_check.contains(&ExtraChecks::Aliasing) {
             return HashSet::new();
         }
+        let is_local = |place: &Place| {
+            !place.projection.iter().any(|elem| matches!(elem, ProjectionElem::Deref))
+        };
+        // A drop passes the address of the dropped place to its drop glue.
+        let dropped = body.blocks.iter().filter_map(|block| match &block.terminator.kind {
+            TerminatorKind::Drop { place, .. } if is_local(place) => Some(place.local),
+            _ => None,
+        });
         body.blocks
             .iter()
             .flat_map(|block| &block.statements)
@@ -115,11 +131,10 @@ impl GotocCtx<'_, '_> {
                 StatementKind::Assign(
                     _,
                     Rvalue::Ref(_, _, place) | Rvalue::AddressOf(_, place),
-                ) if !place.projection.iter().any(|elem| matches!(elem, ProjectionElem::Deref)) => {
-                    Some(place.local)
-                }
+                ) if is_local(place) => Some(place.local),
                 _ => None,
             })
+            .chain(dropped)
             .collect()
     }
 
