@@ -58,6 +58,9 @@ pub struct MinimalGotocCtx {
     pub concurrent_constructs: UnsupportedConstructs,
     /// If there exist some usage of loop contracts int context.
     pub has_loop_contracts: bool,
+    /// The statics of Kani's checks that loop contracts must not havoc (see
+    /// `HarnessMetadata::checks_state`).
+    pub checks_state: Vec<String>,
 }
 
 pub struct GotocCtx<'tcx, 'r> {
@@ -141,6 +144,7 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
                 unsupported_constructs: self.unsupported_constructs,
                 concurrent_constructs: self.concurrent_constructs,
                 has_loop_contracts: self.has_loop_contracts,
+                checks_state: vec![],
             },
             self.symbol_table,
         )

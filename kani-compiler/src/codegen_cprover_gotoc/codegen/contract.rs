@@ -61,7 +61,7 @@ impl GotocCtx<'_, '_> {
     /// `--nondet-static-exclude` expects (see `find_recursion_tracker`). A contract harness havocs
     /// every other static; the checks' monitor must start from its initial state instead, or every
     /// check would reason about arbitrary monitor states.
-    fn find_checks_state(&mut self, items: &[MonoItem]) -> Vec<String> {
+    pub fn find_checks_state(&mut self, items: &[MonoItem]) -> Vec<String> {
         items
             .iter()
             .filter_map(|item| {

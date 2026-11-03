@@ -56,7 +56,7 @@ use rustc_public::mir::{
 use rustc_public::rustc_internal;
 use rustc_public::target::MachineInfo;
 use rustc_public::ty::{
-    AdtKind, FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, UintTy,
+    AdtKind, FnDef, GenericArgKind, GenericArgs, MirConst, RigidTy, Span, Ty, TyKind, UintTy,
 };
 use rustc_public_bridge::IndexedVal;
 use rustc_span::Symbol;
@@ -150,6 +150,7 @@ impl TransformPass for AliasingPass {
         let mut body = MutableBody::from(body);
         let mut instrumenter = Instrumenter::new(tcx, &body, instance, self);
         instrumenter.dead_after_call = dead_after_call;
+        instrumenter.spec_locals = loop_invariant_locals(tcx, body.blocks(), body.locals());
         instrumenter.run(&mut body, is_harness(instance, tcx) || is_automatic_harness(instance));
         (true, body.into())
     }
@@ -285,6 +286,8 @@ struct Instrumenter<'a, 'tcx> {
     /// Compiler temporaries assigned a reference once and moved into a call once, and used nowhere
     /// else: their tag cannot be reached through them after the call.
     dead_after_call: HashSet<Local>,
+    /// The locals of loop invariants (`loop_invariant_locals`), which are not instrumented.
+    spec_locals: HashSet<Local>,
     /// The locals of the original body, for the types of the places it uses.
     locals: Vec<rustc_public::mir::LocalDecl>,
 }
@@ -320,6 +323,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             frame_count: None,
             protector_tags: vec![],
             dead_after_call: HashSet::new(),
+            spec_locals: HashSet::new(),
             locals: body.locals().to_vec(),
         }
     }
@@ -412,6 +416,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         // instruction to the first so that earlier positions stay valid.
         body.split_entry_block();
         let mut work = vec![];
+        let mut heads = vec![];
         let blocks = body.blocks().to_vec();
         for (bb, block) in blocks.iter().enumerate() {
             for (idx, stmt) in block.statements.iter().enumerate() {
@@ -420,11 +425,36 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     work.push((SourceInstruction::Statement { idx, bb }, before, after));
                 }
             }
-            let (before, after) = self.terminator_actions(body, &block.terminator.kind);
+            let (mut before, mut after) = self.terminator_actions(body, &block.terminator.kind);
+            if let TerminatorKind::Call { func, target: Some(head), .. } = &block.terminator.kind
+                && self.is_loop_contract_register(body, func)
+            {
+                // Kani puts the loop contract on the jump from this call to the loop head, which
+                // must stay the loop's back edge: nothing may run between them. CBMC havocs what
+                // the loop assigns at the head, so the tags stored in memory are forgotten there,
+                // after the havoc, instead of after the call. The call itself only evaluates the
+                // invariant, a specification: nothing is checked or recorded for it.
+                before.clear();
+                after.clear();
+                heads.push(*head);
+            }
             if !before.is_empty() || !after.is_empty() {
                 work.push((SourceInstruction::Terminator { bb }, before, after));
             }
         }
+        for head in heads {
+            let source = if blocks[head].statements.is_empty() {
+                SourceInstruction::Terminator { bb: head }
+            } else {
+                SourceInstruction::Statement { idx: 0, bb: head }
+            };
+            work.push((source, vec![Action::ForgetAll], vec![]));
+        }
+        // Insert from the last instruction to the first (see above).
+        work.sort_by_key(|(source, _, _)| match source {
+            SourceInstruction::Statement { idx, bb } => (*bb, *idx),
+            SourceInstruction::Terminator { bb } => (*bb, usize::MAX),
+        });
         for (mut source, before, after) in work.into_iter().rev() {
             for action in before {
                 self.insert(body, action, &mut source, InsertPosition::Before);
@@ -1187,6 +1217,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// Whether `func` is the function that a loop head calls to register the loop's contract.
+    fn is_loop_contract_register(&self, body: &MutableBody, func: &Operand) -> bool {
+        fn_def(body, func).is_some_and(|(def, _)| {
+            KaniAttributes::for_def_id(self.tcx, def.def_id()).fn_marker()
+                == Some(Symbol::intern("kani_register_loop_contract"))
+        })
+    }
+
     /// The memory accesses of a call to a foreign function, which has no MIR to instrument. CBMC
     /// models a few C library functions; their accesses are checked here. Any other foreign
     /// function could access memory in ways the checks cannot see: reaching such a call fails as
@@ -1338,6 +1376,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
     ) -> (Vec<Action>, Vec<Action>) {
         let mut actions = vec![];
         let mut after = vec![];
+        let spec_local = match kind {
+            StatementKind::Assign(place, _) => Some(place.local),
+            StatementKind::StorageLive(local) | StatementKind::StorageDead(local) => Some(*local),
+            _ => None,
+        };
+        if spec_local.is_some_and(|local| self.spec_locals.contains(&local)) {
+            return (actions, after);
+        }
         match kind {
             StatementKind::Assign(lhs, rvalue) => {
                 let lhs_ty = lhs.ty(body.locals()).unwrap();
@@ -1611,11 +1657,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
                 // CBMC havocs what a loop contract assigns when the loop starts, after its head
                 // registers the contract; a C function may write any memory.
-                let writes_uninstrumented =
-                    fn_def(body, func).is_some_and(|(def, _)| {
-                        KaniAttributes::for_def_id(self.tcx, def.def_id()).fn_marker()
-                            == Some(Symbol::intern("kani_register_loop_contract"))
-                    }) || direct_callee(body, func).is_some_and(|instance| {
+                let writes_uninstrumented = self.is_loop_contract_register(body, func)
+                    || direct_callee(body, func).is_some_and(|instance| {
                         instance.is_foreign_item()
                             && !instance.name().starts_with("alloc::alloc::__rust_")
                     });
@@ -2429,9 +2472,88 @@ fn path_key(place: &Place) -> Option<PathKey> {
 /// is any function of the aliasing model's module (its helpers and the monitor have no marker).
 /// The body of an automatic harness is: it is the harness, so it starts the monitor, and the
 /// references it passes to the function under verification need tags.
+/// Nor is the function that registers and evaluates a loop invariant: the invariant is a
+/// specification, evaluated in the aliasing checks' specification mode (`aliasing_spec`).
 pub fn is_instrumented(instance: Instance) -> bool {
     is_automatic_harness(instance)
-        || (KaniFunction::try_from(instance).is_err() && !is_aliasing_model(instance))
+        || (KaniFunction::try_from(instance).is_err()
+            && !is_aliasing_model(instance)
+            && !is_loop_contract_register_fn(instance)
+            && !is_loop_invariant_closure(instance))
+}
+
+/// Whether `instance` is the body of a loop invariant's closure, which `#[kani::loop_invariant]`
+/// marks. It is a specification: instrumenting it, even if its instrumentation does nothing when
+/// it runs (see `aliasing_spec`), would let CBMC's alias analysis for the loop's write set relate
+/// the pointers of the invariant to those of the loop.
+fn is_loop_invariant_closure(instance: Instance) -> bool {
+    let InstanceKind::Item = instance.kind else { return false };
+    instance
+        .def
+        .tool_attrs(&["kanitool".to_string(), "is_contract_generated".to_string()])
+        .iter()
+        .any(|attr| attr.as_str().contains("loop_invariant"))
+}
+
+/// The locals that hold a loop invariant's closure, references to it, and the values captured
+/// into it. The invariant is a specification, which the loop contract transformation builds once
+/// before the loop: the checks do not instrument these locals (building the closure is not part
+/// of the program's execution, and checking its reborrows would perform accesses the program
+/// does not), and the codegen keeps them hidden from CBMC, which would otherwise havoc them with
+/// the loop's write set.
+pub fn loop_invariant_locals(
+    tcx: TyCtxt,
+    blocks: &[rustc_public::mir::BasicBlock],
+    locals: &[rustc_public::mir::LocalDecl],
+) -> HashSet<Local> {
+    let peel = |mut ty: Ty| {
+        while let Some(pointee) = ty.kind().builtin_deref(true) {
+            ty = pointee.ty;
+        }
+        ty
+    };
+    let closures: HashSet<Ty> = blocks
+        .iter()
+        .filter_map(|block| match &block.terminator.kind {
+            TerminatorKind::Call { func, args, .. } => {
+                let TyKind::RigidTy(RigidTy::FnDef(def, _)) = func.ty(locals).ok()?.kind() else {
+                    return None;
+                };
+                (KaniAttributes::for_def_id(tcx, def.def_id()).fn_marker()
+                    == Some(Symbol::intern("kani_register_loop_contract")))
+                .then(|| args.first().and_then(|arg| arg.ty(locals).ok()).map(peel))
+                .flatten()
+            }
+            _ => None,
+        })
+        .collect();
+    if closures.is_empty() {
+        return HashSet::new();
+    }
+    let mut spec: HashSet<Local> =
+        (0..locals.len()).filter(|local| closures.contains(&peel(locals[*local].ty))).collect();
+    for stmt in blocks.iter().flat_map(|block| &block.statements) {
+        if let StatementKind::Assign(lhs, Rvalue::Aggregate(AggregateKind::Closure(..), ops)) =
+            &stmt.kind
+            && spec.contains(&lhs.local)
+        {
+            for op in ops {
+                if let Operand::Copy(place) | Operand::Move(place) = op
+                    && place.projection.is_empty()
+                {
+                    spec.insert(place.local);
+                }
+            }
+        }
+    }
+    spec
+}
+
+/// Whether `instance` is the function that a loop head calls to register its contract.
+fn is_loop_contract_register_fn(instance: Instance) -> bool {
+    let InstanceKind::Item = instance.kind else { return false };
+    crate::kani_middle::attributes::fn_marker(instance.def).as_deref()
+        == Some("kani_register_loop_contract")
 }
 
 /// Whether `instance` is the body that `autoharness` generates to verify a function. It has no
@@ -2440,9 +2562,24 @@ fn is_automatic_harness(instance: Instance) -> bool {
     KaniFunction::try_from(instance) == Ok(KaniFunction::Intrinsic(KaniIntrinsic::AutomaticHarness))
 }
 
+/// The name of the goto function of `instance`. The functions of the aliasing model get the
+/// `__VERIFIER_` prefix, as the non-generic ones already do through `export_name`: CBMC's contract
+/// instrumentation (DFCC) does not instrument functions with that prefix, nor, when it infers a
+/// loop's write set, inline them. Inlining the generic ones (e.g. `aliasing_access::<T>`) gives
+/// all their call sites the same parameter, which makes CBMC's alias analysis relate every pointer
+/// the instrumentation passes to them.
+pub fn goto_function_name(instance: Instance, aliasing_checks: bool) -> String {
+    let name = instance.mangled_name();
+    if aliasing_checks && is_aliasing_model(instance) && !name.starts_with("__VERIFIER") {
+        format!("__VERIFIER_kani_aliasing_{name}")
+    } else {
+        name
+    }
+}
+
 /// Whether `instance` belongs to the module that `kani_core::kani_aliasing!` generates in the Kani
 /// library (`kani::aliasing`), or in `core` when verifying the standard library.
-fn is_aliasing_model(instance: Instance) -> bool {
+pub fn is_aliasing_model(instance: Instance) -> bool {
     let name = instance.name();
     name.starts_with("kani::aliasing::") || name.contains("::kani::aliasing::")
 }

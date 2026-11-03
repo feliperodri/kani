@@ -835,7 +835,7 @@ pub fn loop_invariant(attr: TokenStream, item: TokenStream) -> TokenStream {
             Expr::While(ref mut ew) => {
                 let new_cond: Expr = syn::parse(
                     quote_spanned!(original_span =>
-                        #register_ident(&||->bool{#inv_expr}, 0))
+                        #register_ident(&#[kanitool::is_contract_generated(loop_invariant)] ||->bool{#inv_expr}, 0))
                     .into(),
                 )
                 .unwrap();
@@ -848,7 +848,7 @@ pub fn loop_invariant(attr: TokenStream, item: TokenStream) -> TokenStream {
             }
             Expr::Loop(ref mut el) => {
                 let invstmt: Stmt = syn::parse(quote_spanned!(original_span =>
-                    if !(#register_ident(&||->bool{#inv_expr}, 0)) {assert!(false); unreachable!()};)
+                    if !(#register_ident(&#[kanitool::is_contract_generated(loop_invariant)] ||->bool{#inv_expr}, 0)) {assert!(false); unreachable!()};)
                     .into()).unwrap();
                 let mut new_stmts: Vec<Stmt> = Vec::new();
                 new_stmts.push(invstmt);

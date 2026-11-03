@@ -691,7 +691,7 @@ impl<'tcx, 'r> GotocCtx<'tcx, 'r> {
         } else {
             // All non-foreign functions should've been declared beforehand.
             trace!(func=?instance, "codegen_func_symbol");
-            let func = instance.mangled_name();
+            let func = self.goto_function_name(instance);
             self.symbol_table
                 .lookup(&func)
                 .unwrap_or_else(|| panic!("Function `{func}` should've been declared before usage"))

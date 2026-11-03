@@ -773,7 +773,12 @@ macro_rules! kani_intrinsics {
             #[allow(dead_code)]
             #[kanitool::fn_marker = "RunLoopContractModel"]
             fn run_loop_contract_fn<F: Fn() -> bool>(func: &F, _transformed: usize) -> bool {
-                func()
+                // The invariant is a specification, not part of the program's execution: the
+                // aliasing checks neither check it nor let it change their state.
+                super::aliasing::aliasing_spec(true);
+                let holds = func();
+                super::aliasing::aliasing_spec(false);
+                holds
             }
 
             /// This is used by contracts to select which version of the contract to use during codegen.

@@ -198,10 +198,11 @@ impl CodegenUnits {
     }
 
     /// We flag that the harness contains usage of loop contracts.
-    pub fn store_loop_contracts(&mut self, harnesses: &[Harness]) {
-        for harness in harnesses {
+    pub fn store_loop_contracts(&mut self, harnesses: &[(Harness, Vec<String>)]) {
+        for (harness, checks_state) in harnesses {
             let metadata = self.harness_info.get_mut(harness).unwrap();
             metadata.has_loop_contracts = true;
+            metadata.checks_state = checks_state.clone();
         }
     }
 

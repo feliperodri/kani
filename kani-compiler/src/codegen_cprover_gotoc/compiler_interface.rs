@@ -217,7 +217,10 @@ impl GotocCodegenBackend {
 
         // Split ownership of the context so that the majority of fields can be saved to our results,
         // but the symbol table can be passed to the thread that handles exporting.
-        let (min_gcx, symbol_table) = gcx.split();
+        let checks_state =
+            if gcx.has_loop_contracts { gcx.find_checks_state(&items) } else { vec![] };
+        let (mut min_gcx, symbol_table) = gcx.split();
+        min_gcx.checks_state = checks_state;
 
         // No output should be generated if user selected no_codegen.
         if !tcx.sess.opts.unstable_opts.no_codegen && tcx.sess.opts.output_types.should_codegen() {
@@ -449,7 +452,8 @@ impl CodegenBackend for GotocCodegenBackend {
                                 &export_thread_pool,
                             );
                             if min_gcx.has_loop_contracts {
-                                loop_contracts_instances.push(*harness);
+                                loop_contracts_instances
+                                    .push((*harness, min_gcx.checks_state.clone()));
                             }
                             results.extend(min_gcx, items, None);
                             if let Some(assigns_contract) = contract_info {
