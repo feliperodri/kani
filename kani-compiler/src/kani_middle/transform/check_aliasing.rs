@@ -36,7 +36,7 @@
 
 use crate::args::ExtraChecks;
 use crate::kani_middle::attributes::KaniAttributes;
-use crate::kani_middle::kani_functions::{KaniFunction, KaniModel};
+use crate::kani_middle::kani_functions::{KaniFunction, KaniIntrinsic, KaniModel};
 use crate::kani_middle::transform::body::{
     CheckType, InsertPosition, MutableBody, SourceInstruction,
 };
@@ -150,7 +150,7 @@ impl TransformPass for AliasingPass {
         let mut body = MutableBody::from(body);
         let mut instrumenter = Instrumenter::new(tcx, &body, instance, self);
         instrumenter.dead_after_call = dead_after_call;
-        instrumenter.run(&mut body, is_harness(instance, tcx));
+        instrumenter.run(&mut body, is_harness(instance, tcx) || is_automatic_harness(instance));
         (true, body.into())
     }
 }
@@ -2427,8 +2427,17 @@ fn path_key(place: &Place) -> Option<PathKey> {
 
 /// Whether the aliasing checks instrument `instance`: Kani functions are not instrumented, nor
 /// is any function of the aliasing model's module (its helpers and the monitor have no marker).
+/// The body of an automatic harness is: it is the harness, so it starts the monitor, and the
+/// references it passes to the function under verification need tags.
 pub fn is_instrumented(instance: Instance) -> bool {
-    KaniFunction::try_from(instance).is_err() && !is_aliasing_model(instance)
+    is_automatic_harness(instance)
+        || (KaniFunction::try_from(instance).is_err() && !is_aliasing_model(instance))
+}
+
+/// Whether `instance` is the body that `autoharness` generates to verify a function. It has no
+/// `#[kani::proof]` attribute, so `is_harness` does not recognize it.
+fn is_automatic_harness(instance: Instance) -> bool {
+    KaniFunction::try_from(instance) == Ok(KaniFunction::Intrinsic(KaniIntrinsic::AutomaticHarness))
 }
 
 /// Whether `instance` belongs to the module that `kani_core::kani_aliasing!` generates in the Kani
