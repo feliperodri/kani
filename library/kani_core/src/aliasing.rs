@@ -31,6 +31,11 @@ macro_rules! kani_aliasing {
         /// whose tags are passed between caller and callee.
         const MAX_ARG_TAGS: usize = 8;
         const MAX_RET_TAGS: usize = 4;
+        // The array fields of `CallState` spell these lengths as literals: with
+        // `generic_const_exprs`, which the `kani` crate enables, a named constant there makes
+        // rustc ICE when another crate computes the layout of `CALL_STATE`
+        // (tests/script-based-pre/kani_lib_dep).
+        const _: () = assert!(MAX_ARG_TAGS == 8 && MAX_RET_TAGS == 4);
 
         // The functions below that are not generic are exported as `__VERIFIER_kani_aliasing_*`,
         // like the monitor's (see `kani_aliasing_monitor!`): CBMC's contract instrumentation does
@@ -48,11 +53,11 @@ macro_rules! kani_aliasing {
         /// returns, keyed by itself.
         struct CallState {
             call_callee: u64,
-            call_tags: [u8; MAX_ARG_TAGS],
+            call_tags: [u8; 8],
             ret_callee: u64,
             /// The trait method the function that returned implements, for calls through `dyn`.
             ret_method: u64,
-            ret_tags: [u8; MAX_RET_TAGS],
+            ret_tags: [u8; 4],
             /// Incremented when memory may have been written without instrumentation: it is
             /// part of every object's epoch.
             generation: u8,
