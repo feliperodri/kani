@@ -154,6 +154,7 @@ impl BodyTransformation {
                 unsupported_check_type: unsupported_check_type.clone(),
                 unknown_check_type: CheckType::new_safety_check_assert_assume(queries),
                 kani_functions: queries.kani_functions().clone(),
+                loop_ghost_locals: vec![],
             },
         );
         transformer.add_pass(queries, IntrinsicGeneratorPass::new(unsupported_check_type, queries));
@@ -176,11 +177,13 @@ impl BodyTransformation {
                     let result = pass.transform(tcx, body, instance);
                     modified |= result.0;
                     body = result.1;
-                    self.generated_loop_modifies.extend(
-                        pass.take_generated_loop_modifies()
-                            .into_iter()
-                            .map(|(register_fn, locals)| ((instance, register_fn), locals)),
-                    );
+                    // Several passes may add locals to the same loop.
+                    for (register_fn, locals) in pass.take_generated_loop_modifies() {
+                        self.generated_loop_modifies
+                            .entry((instance, register_fn))
+                            .or_default()
+                            .extend(locals);
+                    }
                     self.loop_modifies_bindings.extend(
                         pass.take_loop_modifies_bindings()
                             .into_iter()

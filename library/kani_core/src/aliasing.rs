@@ -102,6 +102,87 @@ macro_rules! kani_aliasing {
             calls().spec = false;
         }
 
+        /// Record in `snapshot` the state where a loop with a contract starts, for
+        /// `aliasing_loop_head`.
+        #[kanitool::fn_marker = "AliasingLoopEntryModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_entry")]
+        fn aliasing_loop_entry(snapshot: *mut MonitorState) {
+            if calls().spec {
+                return;
+            }
+            let s = state();
+            // SAFETY: the compiler passes a ghost local of the instrumented function.
+            let e = unsafe { &mut *snapshot };
+            e.tracked_object_id = s.tracked_object_id;
+            e.tracked_offset = s.tracked_offset;
+            e.count = s.count;
+            e.ancestors = s.ancestors;
+            e.main = s.main;
+            e.valid = s.valid;
+            e.active = s.active;
+            e.frozen = s.frozen;
+            e.conflicted = s.conflicted;
+            e.interior = s.interior;
+            e.protected = s.protected;
+            e.strong = s.strong;
+            e.initialized = s.initialized;
+            e.cell = s.cell;
+            e.alias = s.alias;
+            e.exposed = s.exposed;
+            e.unknown_exposed = s.unknown_exposed;
+            e.stored = s.stored;
+            e.wildcard = s.wildcard;
+            e.exposed_values = s.exposed_values;
+        }
+
+        /// Where an iteration of a loop with a contract starts, after CBMC havocked the loop's
+        /// write set: let the state be any state that some number of iterations can reach from
+        /// `snapshot`, the state where the loop started. Tree Borrows only moves a tag's
+        /// permission down (Reserved, Active, Frozen, Disabled), never changes its parent or its
+        /// protector while its protector's function runs, and the tags that an iteration
+        /// creates are unreachable at the next one (the compiler resets the tags of the pointers
+        /// the loop writes, and the tags stored in memory are forgotten). So the state keeps the
+        /// tags of `snapshot` with their tree, cells and protectors, and each tag's permission is
+        /// any one at or below its permission in `snapshot`.
+        #[kanitool::fn_marker = "AliasingLoopHeadModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_head")]
+        fn aliasing_loop_head(snapshot: *const MonitorState) {
+            if calls().spec {
+                return;
+            }
+            let s = state();
+            // SAFETY: the compiler passes the ghost local that `aliasing_loop_entry` wrote.
+            let e = unsafe { &*snapshot };
+            s.tracked_object_id = e.tracked_object_id;
+            s.tracked_offset = e.tracked_offset;
+            s.count = e.count;
+            s.ancestors = e.ancestors;
+            s.main = e.main;
+            s.interior = e.interior;
+            s.protected = e.protected;
+            s.strong = e.strong;
+            s.cell = e.cell;
+            s.alias = e.alias;
+            s.wildcard = e.wildcard;
+            let live = monitor_live(s);
+            s.valid = e.valid & super::any_raw::<u64>();
+            s.active = (e.active | super::any_raw::<u64>()) & live;
+            s.frozen = (e.frozen | super::any_raw::<u64>()) & live;
+            s.conflicted = (e.conflicted | (super::any_raw::<u64>() & e.protected)) & live;
+            s.initialized = (e.initialized | super::any_raw::<u64>()) & live;
+            s.exposed = (e.exposed | super::any_raw::<u64>()) & live;
+            s.stored = (e.stored | super::any_raw::<u64>()) & live;
+            s.unknown_exposed = e.unknown_exposed || super::any_raw::<u8>() & 1 == 1;
+            s.exposed_values = e.exposed_values || super::any_raw::<u8>() & 1 == 1;
+            // A tag becomes Frozen only from Active (Reserved, Active, Frozen, Disabled).
+            super::assume(s.frozen & !e.frozen & !s.active == 0);
+            // The invariants of `monitor_wf` on each tag's bits.
+            super::assume(s.frozen & s.interior & !s.active == 0);
+            super::assume(s.exposed & s.cell == 0);
+            super::assume(s.conflicted & (s.active | s.frozen) == 0);
+            super::assume(s.active & !s.initialized == 0);
+        }
+
         /// Start (`true`) or end (`false`) the evaluation of a specification, such as a loop
         /// invariant, which CBMC evaluates where the loop starts, after it havocs the loop's
         /// write set, and where an iteration ends. Specifications are not part of the program's
