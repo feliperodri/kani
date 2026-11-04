@@ -237,6 +237,7 @@ macro_rules! kani_aliasing {
         /// write set, and where an iteration ends. Specifications are not part of the program's
         /// execution: while one is evaluated, every function below leaves the state unchanged
         /// and reports nothing.
+        #[kanitool::fn_marker = "AliasingSpecModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_spec")]
         pub(crate) fn aliasing_spec(enter: bool) {
             let c = calls();

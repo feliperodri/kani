@@ -15,8 +15,7 @@ use cbmc::goto_program::{Expr, Stmt, Symbol};
 use rustc_public::CrateDef;
 use rustc_public::mir::mono::Instance;
 use rustc_public::mir::{
-    BasicBlockIdx, Body, Local, Operand, Place, ProjectionElem, Rvalue, StatementKind,
-    TerminatorKind,
+    BasicBlockIdx, Body, Local, Place, ProjectionElem, Rvalue, StatementKind, TerminatorKind,
 };
 use rustc_public::ty::{RigidTy, TyKind};
 use std::collections::{BTreeMap, HashSet};
