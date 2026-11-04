@@ -231,9 +231,13 @@ macro_rules! assert_spanned_err {
 /// use [`bracket_clause_stmt`], which keeps the clause expression as a direct
 /// argument to `assume`/`assert`.
 pub fn bracket_clause_expr(expr: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    // The guard is dropped explicitly: otherwise it lives until the end of the statement that
+    // contains this block, so that the clause would also cover what that statement does with the
+    // value (e.g. a reborrow of it), which is not part of the clause.
     quote::quote!({
         let __kani_clause_guard = kani::internal::enter_contract_clause_guard();
         let __kani_clause_value = #expr;
+        ::core::mem::drop(__kani_clause_guard);
         __kani_clause_value
     })
 }

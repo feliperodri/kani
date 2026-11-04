@@ -729,7 +729,10 @@ macro_rules! kani_intrinsics {
             #[kanitool::fn_marker = "WriteAnySliceModel"]
             #[inline(always)]
             pub unsafe fn write_any_slice<T: Arbitrary>(slice: *mut [T]) {
-                (*slice).fill_with(T::any)
+                // The caller's instrumentation checks the write (see `check_aliasing`).
+                super::aliasing::aliasing_spec(true);
+                (*slice).fill_with(T::any);
+                super::aliasing::aliasing_spec(false);
             }
 
             /// Fill in a pointer with kani::any.
@@ -737,7 +740,10 @@ macro_rules! kani_intrinsics {
             #[kanitool::fn_marker = "WriteAnySlimModel"]
             #[inline(always)]
             pub unsafe fn write_any_slim<T: Arbitrary>(pointer: *mut T) {
-                ptr::write(pointer, T::any())
+                // The caller's instrumentation checks the write (see `check_aliasing`).
+                super::aliasing::aliasing_spec(true);
+                ptr::write(pointer, T::any());
+                super::aliasing::aliasing_spec(false);
             }
 
             /// Fill in a str with kani::any.
@@ -853,6 +859,9 @@ macro_rules! kani_intrinsics {
                 unsafe {
                     CONTRACT_CLAUSE_DEPTH = CONTRACT_CLAUSE_DEPTH.saturating_add(1);
                 }
+                // A clause is a specification: the aliasing checks neither check it nor let it
+                // change their state.
+                super::aliasing::aliasing_spec(true);
             }
 
             /// Marks the end of the evaluation of a contract clause.
@@ -866,6 +875,7 @@ macro_rules! kani_intrinsics {
                 unsafe {
                     CONTRACT_CLAUSE_DEPTH = CONTRACT_CLAUSE_DEPTH.saturating_sub(1);
                 }
+                super::aliasing::aliasing_spec(false);
             }
 
             /// RAII guard returned by [enter_contract_clause_guard]. Its
