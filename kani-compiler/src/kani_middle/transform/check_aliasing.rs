@@ -121,6 +121,9 @@ pub struct AliasingPass {
     /// access the checks cannot decide.
     pub unknown_check_type: CheckType,
     pub kani_functions: HashMap<KaniFunction, FnDef>,
+    /// The ghost locals that the loops of the last instrumented body write (see
+    /// `loop_ghost_locals`).
+    pub loop_ghost_locals: Vec<(Instance, Vec<Local>)>,
 }
 
 impl TransformPass for AliasingPass {
@@ -151,8 +154,14 @@ impl TransformPass for AliasingPass {
         let mut instrumenter = Instrumenter::new(tcx, &body, instance, self);
         instrumenter.dead_after_call = dead_after_call;
         instrumenter.spec_locals = loop_invariant_locals(tcx, body.blocks(), body.locals());
+        let first_ghost = body.locals().len();
         instrumenter.run(&mut body, is_harness(instance, tcx) || is_automatic_harness(instance));
+        self.loop_ghost_locals = loop_ghost_locals(tcx, &body, first_ghost);
         (true, body.into())
+    }
+
+    fn take_generated_loop_modifies(&mut self) -> Vec<(Instance, Vec<Local>)> {
+        std::mem::take(&mut self.loop_ghost_locals)
     }
 }
 
@@ -248,6 +257,11 @@ enum Action {
     ForgetTags { ptr: Operand },
     /// Memory may be written without instrumentation: forget every stored tag.
     ForgetAll,
+    /// A loop with a contract starts: record the state in the ghost local `snapshot`.
+    LoopEntry { snapshot: Local },
+    /// An iteration of a loop with a contract starts: the state is any one that iterations can
+    /// reach from `snapshot` (see `aliasing_loop_head`).
+    LoopHead { snapshot: Local },
     /// A pointer tagged with the exposed tag is created.
     NoteExposed,
     /// Record the argument tags of a direct call.
@@ -416,7 +430,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         // instruction to the first so that earlier positions stay valid.
         body.split_entry_block();
         let mut work = vec![];
-        let mut heads = vec![];
+        let mut heads: Vec<(usize, Vec<Action>)> = vec![];
+        let mut entries: Vec<usize> = vec![];
+        let mut entry_snapshots: Vec<(usize, Local)> = vec![];
         let blocks = body.blocks().to_vec();
         for (bb, block) in blocks.iter().enumerate() {
             for (idx, stmt) in block.statements.iter().enumerate() {
@@ -434,21 +450,74 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 // the loop assigns at the head, so the tags stored in memory are forgotten there,
                 // after the havoc, instead of after the call. The call itself only evaluates the
                 // invariant, a specification: nothing is checked or recorded for it.
+                //
+                // The loop contract transformation, which runs before this pass, made this block
+                // the loop's latch. The blocks that enter the loop at `head` from outside record
+                // the state where the loop starts. Each iteration then starts at `head` from any state that
+                // iterations can reach from it (`aliasing_loop_head`), with the tags of the
+                // pointers that the loop writes unknown: CBMC havocs them with the loop's write
+                // set, and a havocked tag could be the tag of any other reference.
+                let snapshot = self.new_snapshot(body);
+                let in_loop = strongly_connected(&blocks, *head);
+                let written: HashSet<Local> = in_loop
+                    .iter()
+                    .flat_map(|b| {
+                        let block = &blocks[*b];
+                        block
+                            .statements
+                            .iter()
+                            .filter_map(|stmt| match &stmt.kind {
+                                StatementKind::Assign(place, _) => Some(place.local),
+                                _ => None,
+                            })
+                            .chain(match &block.terminator.kind {
+                                TerminatorKind::Call { destination, .. } => Some(destination.local),
+                                _ => None,
+                            })
+                    })
+                    .collect();
+                let mut resets: Vec<(Local, TagValue)> = self
+                    .tags
+                    .iter()
+                    .filter(|((local, _), _)| written.contains(local))
+                    .map(|(_, tag)| (*tag, TagValue::Const(UNKNOWN_TAG)))
+                    .collect();
+                resets.sort_by_key(|(tag, _)| *tag);
+                for (pred, block) in blocks.iter().enumerate() {
+                    if !in_loop.contains(&pred) && block.terminator.successors().contains(head) {
+                        entries.push(pred);
+                    }
+                }
+                entry_snapshots.extend(entries.drain(..).map(|pred| (pred, snapshot)));
                 before.clear();
                 after.clear();
-                heads.push(*head);
+                heads.push((
+                    *head,
+                    vec![
+                        Action::ForgetAll,
+                        Action::LoopHead { snapshot },
+                        Action::SetTags { assignments: resets },
+                    ],
+                ));
             }
             if !before.is_empty() || !after.is_empty() {
                 work.push((SourceInstruction::Terminator { bb }, before, after));
             }
         }
-        for head in heads {
+        for (pred, snapshot) in entry_snapshots {
+            work.push((
+                SourceInstruction::Terminator { bb: pred },
+                vec![Action::LoopEntry { snapshot }],
+                vec![],
+            ));
+        }
+        for (head, actions) in heads {
             let source = if blocks[head].statements.is_empty() {
                 SourceInstruction::Terminator { bb: head }
             } else {
                 SourceInstruction::Statement { idx: 0, bb: head }
             };
-            work.push((source, vec![Action::ForgetAll], vec![]));
+            work.push((source, actions, vec![]));
         }
         // Insert from the last instruction to the first (see above).
         work.sort_by_key(|(source, _, _)| match source {
@@ -2032,6 +2101,27 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let ret = unit_place(body, span);
                 body.insert_call(&forget, source, position, vec![], ret);
             }
+            Action::LoopEntry { snapshot } | Action::LoopHead { snapshot } => {
+                let (model, kind) = if matches!(action, Action::LoopEntry { .. }) {
+                    (KaniModel::AliasingLoopEntry, RawPtrKind::Mut)
+                } else {
+                    (KaniModel::AliasingLoopHead, RawPtrKind::Const)
+                };
+                let model = self.model(model, vec![]);
+                let ptr = body.insert_assignment(
+                    Rvalue::AddressOf(kind, Place::from(snapshot)),
+                    source,
+                    position,
+                );
+                let ret = unit_place(body, span);
+                body.insert_call(
+                    &model,
+                    source,
+                    position,
+                    vec![Operand::Move(Place::from(ptr))],
+                    ret,
+                );
+            }
             Action::EndProtector { tag_local } => {
                 let code = body.new_local(Ty::unsigned_ty(UintTy::U8), span, Mutability::Not);
                 let end = self.model(KaniModel::AliasingEndProtector, vec![]);
@@ -2413,6 +2503,15 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         }
     }
 
+    /// A new ghost local for the state where a loop starts (see `Action::LoopEntry`).
+    fn new_snapshot(&self, body: &mut MutableBody) -> Local {
+        let entry = self.model(KaniModel::AliasingLoopEntry, vec![]);
+        let sig = entry.ty().kind().fn_sig().unwrap().skip_binder();
+        let state = sig.inputs()[0].kind().builtin_deref(true).unwrap().ty;
+        let span = body.blocks()[0].terminator.source_info.span;
+        body.new_local(state, span, Mutability::Mut)
+    }
+
     fn model(&self, model: KaniModel, tys: Vec<Ty>) -> Instance {
         let def = self.pass.kani_functions[&KaniFunction::Model(model)];
         let args = GenericArgs(tys.into_iter().map(GenericArgKind::Type).collect());
@@ -2466,6 +2565,87 @@ fn path_key(place: &Place) -> Option<PathKey> {
         })
         .collect::<Option<Vec<_>>>()?;
     Some((place.local, path))
+}
+
+/// The blocks of the loop through `head`: the blocks reachable from it that reach it back.
+fn strongly_connected(blocks: &[rustc_public::mir::BasicBlock], head: usize) -> HashSet<usize> {
+    let mut predecessors = vec![Vec::new(); blocks.len()];
+    for (bb, block) in blocks.iter().enumerate() {
+        for succ in block.terminator.successors() {
+            predecessors[succ].push(bb);
+        }
+    }
+    let reach = |next: &dyn Fn(usize) -> Vec<usize>| {
+        let mut seen = HashSet::new();
+        let mut stack = next(head);
+        while let Some(bb) = stack.pop() {
+            if seen.insert(bb) {
+                stack.extend(next(bb));
+            }
+        }
+        seen
+    };
+    let forward = reach(&|bb| blocks[bb].terminator.successors());
+    let backward = reach(&|bb| predecessors[bb].clone());
+    forward.intersection(&backward).copied().collect()
+}
+
+/// For each loop with a contract in `body`, by the instance of the function its latch calls to
+/// register the contract: the locals at or after `first_ghost` (the ones the checks added) that
+/// the loop writes. They are ghost state (the tags of pointers and the checks' temporaries), which
+/// the user cannot name in a loop modifies clause, so codegen adds them to an explicit one; the
+/// tags among them are reset where the loop starts (see `Instrumenter::run`).
+fn loop_ghost_locals(
+    tcx: TyCtxt,
+    body: &MutableBody,
+    first_ghost: usize,
+) -> Vec<(Instance, Vec<Local>)> {
+    let blocks = body.blocks();
+    let mut result = vec![];
+    for (latch, block) in blocks.iter().enumerate() {
+        let TerminatorKind::Call { func, .. } = &block.terminator.kind else { continue };
+        let Some((def, args)) = fn_def(body, func) else { continue };
+        if KaniAttributes::for_def_id(tcx, def.def_id()).fn_marker()
+            != Some(Symbol::intern("kani_register_loop_contract"))
+        {
+            continue;
+        }
+        let Ok(register_fn) = Instance::resolve(def, &args) else { continue };
+        // The loop: the blocks reachable from the block that registers the contract (the loop
+        // head, which every iteration runs) that also reach it back.
+        let in_loop = strongly_connected(blocks, latch);
+        let mut written: Vec<Local> = in_loop
+            .iter()
+            .flat_map(|bb| {
+                let block = &blocks[*bb];
+                block
+                    .statements
+                    .iter()
+                    .filter_map(|stmt| match &stmt.kind {
+                        StatementKind::Assign(place, _) => Some(place.local),
+                        _ => None,
+                    })
+                    .chain(match &block.terminator.kind {
+                        TerminatorKind::Call { destination, .. } => Some(destination.local),
+                        _ => None,
+                    })
+            })
+            .filter(|local| *local >= first_ghost)
+            // CBMC does not support zero-sized targets, which cannot be modified anyway.
+            .filter(|local| {
+                !body.locals()[*local]
+                    .ty
+                    .layout()
+                    .is_ok_and(|layout| layout.shape().size.bytes() == 0)
+            })
+            .collect();
+        written.sort();
+        written.dedup();
+        if !written.is_empty() {
+            result.push((register_fn, written));
+        }
+    }
+    result
 }
 
 /// Whether the aliasing checks instrument `instance`: Kani functions are not instrumented, nor
