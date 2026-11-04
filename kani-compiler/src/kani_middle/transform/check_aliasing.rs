@@ -112,6 +112,10 @@ const MSG_WRITE_FROZEN: &str = "Undefined Behavior: memory written through a poi
     read permission, derived from a shared reference or from a mutable reference frozen by a \
     later read through another pointer (aliasing checks)";
 
+/// A loop with a contract: its head block, the local holding the entry snapshot of the monitor,
+/// the tag locals to reset at the head, and the blocks of the loop.
+type LoopInfo = (usize, Local, Vec<(Local, TagValue)>, HashSet<usize>);
+
 /// Top-level pass for the aliasing checks.
 #[derive(Debug, Clone)]
 pub struct AliasingPass {
@@ -257,6 +261,8 @@ enum Action {
     ForgetTags { ptr: Operand },
     /// Memory may be written without instrumentation: forget every stored tag.
     ForgetAll,
+    /// A specification starts (`enter`) or ends: see `aliasing_spec`.
+    Spec { enter: bool },
     /// A loop with a contract starts: record the state in the ghost local `snapshot`.
     LoopEntry { snapshot: Local },
     /// An iteration of a loop with a contract starts: the state is any one that iterations can
@@ -434,7 +440,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         body.split_entry_block();
         let mut work = vec![];
         let mut heads: Vec<(usize, Vec<Action>)> = vec![];
-        let mut loops: Vec<(usize, Local, Vec<(Local, TagValue)>, HashSet<usize>)> = vec![];
+        // (head block, snapshot local, tag resets, blocks of the loop)
+        let mut loops: Vec<LoopInfo> = vec![];
         let mut entries: Vec<usize> = vec![];
         let mut entry_snapshots: Vec<(usize, Local)> = vec![];
         let blocks = body.blocks().to_vec();
@@ -1832,6 +1839,19 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         matches!(action, Action::SetTag { .. } | Action::SetTags { .. })
                     }));
                 }
+                // A contract clause is a specification: the checks neither check it nor let it
+                // change their state (see `aliasing_spec`).
+                if let Some(instance) = direct_callee(body, func) {
+                    match KaniFunction::try_from(instance) {
+                        Ok(KaniFunction::Model(KaniModel::EnterContractClause)) => {
+                            after.push(Action::Spec { enter: true })
+                        }
+                        Ok(KaniFunction::Model(KaniModel::ExitContractClause)) => {
+                            before.push(Action::Spec { enter: false })
+                        }
+                        _ => {}
+                    }
+                }
                 // A function contract that replaces a call havocs what the function modifies
                 // with `kani::internal::write_any` (replaced by the `write_any_*` models, which
                 // the checks do not instrument): it writes the pointee through the pointer's tag,
@@ -1857,6 +1877,11 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                         is_write: true,
                         guard: vec![],
                     });
+                    // The models write through code that the checks instrument, without the
+                    // pointer's tag: they run in specification mode, since the write is checked
+                    // here.
+                    before.push(Action::Spec { enter: true });
+                    after.push(Action::Spec { enter: false });
                     after.push(Action::ForgetTags { ptr: args[0].clone() });
                 }
                 if let Some(instance) = direct_callee(body, func)
@@ -2219,6 +2244,21 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let forget = self.model(KaniModel::AliasingForgetAll, vec![]);
                 let ret = unit_place(body, span);
                 body.insert_call(&forget, source, position, vec![], ret);
+            }
+            Action::Spec { enter } => {
+                let spec = self.model(KaniModel::AliasingSpec, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(
+                    &spec,
+                    source,
+                    position,
+                    vec![Operand::Constant(ConstOperand {
+                        span,
+                        user_ty: None,
+                        const_: MirConst::from_bool(enter),
+                    })],
+                    ret,
+                );
             }
             Action::LoopRoots { all, tags, objects } => {
                 let roots = self.model(KaniModel::AliasingLoopRoots, vec![]);
