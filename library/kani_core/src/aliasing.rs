@@ -61,9 +61,13 @@ macro_rules! kani_aliasing {
             /// Incremented when memory may have been written without instrumentation: it is
             /// part of every object's epoch.
             generation: u8,
-            /// A specification (a loop invariant) is being evaluated: it is not part of the
-            /// program's execution, so it neither changes the state nor is checked.
-            spec: bool,
+            /// How many specifications (loop invariants, contract clauses) are being evaluated:
+            /// they are not part of the program's execution, so they neither change the state
+            /// nor are checked. A depth, since a clause may call a function with contracts.
+            spec: u8,
+            /// The tags of the loop whose head is being entered that every access of the loop
+            /// goes through a descendant of (see `aliasing_loop_roots`).
+            loop_common: u64,
         }
 
         #[kanitool::fn_marker = "KaniAliasingCallState"]
@@ -74,7 +78,8 @@ macro_rules! kani_aliasing {
             ret_method: 0,
             ret_tags: [UNKNOWN_TAG; MAX_RET_TAGS],
             generation: 0,
-            spec: false,
+            spec: 0,
+            loop_common: 0,
         };
 
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_state")]
@@ -99,7 +104,7 @@ macro_rules! kani_aliasing {
             calls().call_callee = 0;
             calls().ret_callee = 0;
             calls().generation = 0;
-            calls().spec = false;
+            calls().spec = 0;
         }
 
         /// Record in `snapshot` the state where a loop with a contract starts, for
@@ -107,7 +112,7 @@ macro_rules! kani_aliasing {
         #[kanitool::fn_marker = "AliasingLoopEntryModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_entry")]
         fn aliasing_loop_entry(snapshot: *mut MonitorState) {
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let s = state();
@@ -135,6 +140,45 @@ macro_rules! kani_aliasing {
             e.exposed_values = s.exposed_values;
         }
 
+        /// Start computing, where an iteration of a loop starts, the tags that see only local
+        /// accesses in the loop (`aliasing_loop_head`): the common ancestors of the tags that the
+        /// loop accesses memory through (its roots, added by `aliasing_loop_root_tag` and
+        /// `aliasing_loop_root_object`). `all` if the compiler cannot tell the loop's roots.
+        #[kanitool::fn_marker = "AliasingLoopRootsModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_roots")]
+        fn aliasing_loop_roots(all: bool) {
+            calls().loop_common = if all { 0 } else { u64::MAX };
+        }
+
+        /// The loop accesses memory through descendants of the pointer tagged `tag`, which it does
+        /// not change. An access through the unknown tag stops the execution, so it adds no
+        /// root; an access through a pointer created from an integer may be foreign to any tag.
+        #[kanitool::fn_marker = "AliasingLoopRootTagModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_root_tag")]
+        fn aliasing_loop_root_tag(tag: u8) {
+            let s = state();
+            if tag == UNKNOWN_TAG {
+                return;
+            }
+            if tag >= s.count {
+                calls().loop_common = 0;
+                return;
+            }
+            calls().loop_common &= s.ancestors[tag as usize];
+        }
+
+        /// The loop accesses the `size` bytes at `ptr` directly (through the root tag of their
+        /// allocation): if they contain the tracked byte, only the root sees local accesses.
+        #[kanitool::fn_marker = "AliasingLoopRootObjectModel"]
+        #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_root_object")]
+        fn aliasing_loop_root_object(ptr: *const u8, size: usize) {
+            let obj = super::mem::pointer_object(ptr);
+            let offset = super::mem::pointer_offset(ptr);
+            if monitor_covers(state(), obj, offset, size) {
+                calls().loop_common &= 1;
+            }
+        }
+
         /// Where an iteration of a loop with a contract starts, after CBMC havocked the loop's
         /// write set: let the state be any state that some number of iterations can reach from
         /// `snapshot`, the state where the loop started. Tree Borrows only moves a tag's
@@ -147,7 +191,7 @@ macro_rules! kani_aliasing {
         #[kanitool::fn_marker = "AliasingLoopHeadModel"]
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_loop_head")]
         fn aliasing_loop_head(snapshot: *const MonitorState) {
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let s = state();
@@ -165,10 +209,15 @@ macro_rules! kani_aliasing {
             s.alias = e.alias;
             s.wildcard = e.wildcard;
             let live = monitor_live(s);
-            s.valid = e.valid & super::any_raw::<u64>();
+            // The tags that are ancestors of every tag the loop accesses through see only local
+            // accesses, which never disable, freeze or conflict a tag (Reserved only becomes
+            // Active): they keep these bits.
+            let local = calls().loop_common & live;
+            let any = !local;
+            s.valid = e.valid & (super::any_raw::<u64>() | local);
             s.active = (e.active | super::any_raw::<u64>()) & live;
-            s.frozen = (e.frozen | super::any_raw::<u64>()) & live;
-            s.conflicted = (e.conflicted | (super::any_raw::<u64>() & e.protected)) & live;
+            s.frozen = (e.frozen | (super::any_raw::<u64>() & any)) & live;
+            s.conflicted = (e.conflicted | (super::any_raw::<u64>() & e.protected & any)) & live;
             s.initialized = (e.initialized | super::any_raw::<u64>()) & live;
             s.exposed = (e.exposed | super::any_raw::<u64>()) & live;
             s.stored = (e.stored | super::any_raw::<u64>()) & live;
@@ -190,7 +239,8 @@ macro_rules! kani_aliasing {
         /// and reports nothing.
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_spec")]
         pub(crate) fn aliasing_spec(enter: bool) {
-            calls().spec = enter;
+            let c = calls();
+            c.spec = if enter { c.spec.saturating_add(1) } else { c.spec.saturating_sub(1) };
         }
 
         /// Access `size` bytes at offset `offset` of object `obj` through `tag`. Return
@@ -206,7 +256,7 @@ macro_rules! kani_aliasing {
             is_write: bool,
         ) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return ACCESS_OK;
             }
             let s = state();
@@ -292,7 +342,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_forget_all")]
         fn aliasing_forget_all() {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let generation = calls().generation;
@@ -307,7 +357,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_clear_tags")]
         fn aliasing_clear_tags(slot: *const u8, size: usize) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             if size == 0 {
@@ -350,7 +400,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_store_tag")]
         fn aliasing_store_tag(enabled: bool, slot: *const u8, tag: u8, outlives_frame: bool) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             if !enabled {
@@ -394,7 +444,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_forget_tags")]
         fn aliasing_forget_tags(ptr: *const u8) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let epoch = shadow_get(ptr as *const Word, FIELD_EPOCH);
@@ -509,7 +559,7 @@ macro_rules! kani_aliasing {
             is_strong: bool,
         ) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return UNKNOWN_TAG;
             }
             let s = state();
@@ -595,7 +645,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_dealloc")]
         fn aliasing_dealloc(tag: u8, ptr: *const u8, size: usize) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return ACCESS_OK;
             }
             let s = state();
@@ -614,7 +664,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_expose")]
         fn aliasing_expose(tag: u8) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             monitor_expose(state(), tag);
@@ -638,7 +688,7 @@ macro_rules! kani_aliasing {
             tag7: u8,
         ) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let c = calls();
@@ -654,7 +704,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_arg_tag")]
         fn aliasing_arg_tag(callee: u64, method: u64, index: usize) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return UNKNOWN_TAG;
             }
             let c = calls();
@@ -672,7 +722,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_args")]
         fn aliasing_end_args() {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             calls().call_callee = 0;
@@ -684,7 +734,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_frame_enter")]
         fn aliasing_frame_enter() -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return state().count;
             }
             state().count
@@ -710,7 +760,7 @@ macro_rules! kani_aliasing {
             tag3: u8,
         ) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let c = calls();
@@ -731,7 +781,7 @@ macro_rules! kani_aliasing {
         #[allow(clippy::manual_range_contains)]
         fn aliasing_drop_tag(tag: u8) {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             let s = state();
@@ -745,7 +795,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_note_exposed")]
         fn aliasing_note_exposed() {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             monitor_note_exposed(state());
@@ -757,7 +807,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_protector")]
         fn aliasing_end_protector(tag: u8) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return ACCESS_OK;
             }
             let code = monitor_end_protector(state(), tag);
@@ -772,7 +822,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_ret_tag")]
         fn aliasing_ret_tag(callee: u64, index: usize) -> u8 {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return UNKNOWN_TAG;
             }
             let c = calls();
@@ -792,7 +842,7 @@ macro_rules! kani_aliasing {
         #[unsafe(export_name = "__VERIFIER_kani_aliasing_aliasing_end_ret")]
         fn aliasing_end_ret() {
             // Specifications (loop invariants) do not change the state: see `aliasing_spec`.
-            if calls().spec {
+            if calls().spec != 0 {
                 return;
             }
             calls().ret_callee = 0;

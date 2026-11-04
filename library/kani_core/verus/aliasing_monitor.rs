@@ -2553,4 +2553,77 @@ proof fn lemma_store(s0: MonitorState, s: MonitorState, tag: u8)
         node_eq(#[trigger] b.nodes[t], a.nodes[t]) by {}
 }
 fn main() {}
+// --- Loop and function contracts: permissions only move down ---------------------------------
+//
+// At the head of a loop with a contract, the checks let the state be any one whose tags, those
+// alive where the loop started, are at or below their state there (`aliasing_loop_head` in
+// `../src/aliasing.rs`). That is sound because no transition moves a node up: the lemmas below.
+// Tags that only see local accesses in the loop keep their permission except Reserved to Active,
+// which the second lemma gives.
+
+/// `new` is reachable from `old` by Tree Borrows transitions: Reserved, Active, Frozen,
+/// Disabled, in this order, with a Reserved that may become conflicted but keeps its interior
+/// mutability.
+pub open spec fn perm_le(new: Perm, old: Perm) -> bool {
+    match old {
+        Perm::Disabled => new == Perm::Disabled,
+        Perm::Frozen => new == Perm::Frozen || new == Perm::Disabled,
+        Perm::Active => new == Perm::Active || new == Perm::Frozen || new == Perm::Disabled,
+        Perm::Reserved { conflicted, interior } => match new {
+            Perm::Reserved { conflicted: c2, interior: i2 } => i2 == interior && (conflicted ==> c2),
+            _ => true,
+        },
+    }
+}
+
+/// `new` is `old` after transitions: its permission is at or below, it is initialized if `old`
+/// is, and nothing else changed.
+pub open spec fn node_le(new: Node, old: Node) -> bool {
+    &&& perm_le(new.perm, old.perm)
+    &&& (old.initialized ==> new.initialized)
+    &&& new.ancestors == old.ancestors
+    &&& new.main == old.main
+    &&& new.protected == old.protected
+    &&& new.strong == old.strong
+    &&& new.cell == old.cell
+    &&& new.alias == old.alias
+    &&& new.exposed == old.exposed
+    &&& new.stored == old.stored
+}
+
+pub proof fn lemma_perm_le_refl(p: Perm)
+    ensures perm_le(p, p),
+{
+}
+
+pub proof fn lemma_perm_le_trans(a: Perm, b: Perm, c: Perm)
+    requires perm_le(a, b), perm_le(b, c),
+    ensures perm_le(a, c),
+{
+}
+
+pub proof fn lemma_node_le_trans(a: Node, b: Node, c: Node)
+    requires node_le(a, b), node_le(b, c),
+    ensures node_le(a, c),
+{
+    lemma_perm_le_trans(a.perm, b.perm, c.perm);
+}
+
+/// Every transition, local or foreign, moves a node down.
+pub proof fn lemma_steps_monotone(n: Node, is_write: bool)
+    ensures
+        local_step(n, is_write) matches Some(m) ==> node_le(m, n),
+        foreign_step(n, is_write) matches Some(m) ==> node_le(m, n),
+{
+}
+
+/// A local access never disables, freezes or conflicts a node: it keeps its permission, or a
+/// Reserved becomes Active.
+pub proof fn lemma_local_step_keeps(n: Node, is_write: bool)
+    ensures
+        local_step(n, is_write) matches Some(m) ==> (m.perm == n.perm || (
+            n.perm matches Perm::Reserved { .. } && m.perm == Perm::Active)),
+{
+}
+
 } // verus!

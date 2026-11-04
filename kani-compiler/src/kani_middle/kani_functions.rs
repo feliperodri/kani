@@ -99,6 +99,12 @@ pub enum KaniModel {
     AliasingLoopEntry,
     #[strum(serialize = "AliasingLoopHeadModel")]
     AliasingLoopHead,
+    #[strum(serialize = "AliasingLoopRootObjectModel")]
+    AliasingLoopRootObject,
+    #[strum(serialize = "AliasingLoopRootTagModel")]
+    AliasingLoopRootTag,
+    #[strum(serialize = "AliasingLoopRootsModel")]
+    AliasingLoopRoots,
     #[strum(serialize = "AliasingNewBorrowModel")]
     AliasingNewBorrow,
     #[strum(serialize = "AliasingNewBorrowBytesModel")]

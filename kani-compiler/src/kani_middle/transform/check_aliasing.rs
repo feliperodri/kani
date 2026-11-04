@@ -36,7 +36,7 @@
 
 use crate::args::ExtraChecks;
 use crate::kani_middle::attributes::KaniAttributes;
-use crate::kani_middle::kani_functions::{KaniFunction, KaniIntrinsic, KaniModel};
+use crate::kani_middle::kani_functions::{KaniFunction, KaniHook, KaniIntrinsic, KaniModel};
 use crate::kani_middle::transform::body::{
     CheckType, InsertPosition, MutableBody, SourceInstruction,
 };
@@ -191,7 +191,7 @@ struct RetagKind {
 }
 
 /// Where the tag of a pointer comes from.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum TagValue {
     Const(u8),
     Local(Local),
@@ -262,6 +262,9 @@ enum Action {
     /// An iteration of a loop with a contract starts: the state is any one that iterations can
     /// reach from `snapshot` (see `aliasing_loop_head`).
     LoopHead { snapshot: Local },
+    /// The roots of a loop, for `LoopHead`: the tags it accesses memory through descendants of,
+    /// which it does not change, and the locals it accesses directly. `all` if they are unknown.
+    LoopRoots { all: bool, tags: Vec<TagValue>, objects: Vec<Place> },
     /// A pointer tagged with the exposed tag is created.
     NoteExposed,
     /// Record the argument tags of a direct call.
@@ -431,6 +434,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
         body.split_entry_block();
         let mut work = vec![];
         let mut heads: Vec<(usize, Vec<Action>)> = vec![];
+        let mut loops: Vec<(usize, Local, Vec<(Local, TagValue)>, HashSet<usize>)> = vec![];
         let mut entries: Vec<usize> = vec![];
         let mut entry_snapshots: Vec<(usize, Local)> = vec![];
         let blocks = body.blocks().to_vec();
@@ -442,6 +446,17 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 }
             }
             let (mut before, mut after) = self.terminator_actions(body, &block.terminator.kind);
+            // `untracked_deref` (a hook) records no returned tags: its result gets the tags of
+            // the place it copies (see `terminator_actions`), which taking returned tags would
+            // overwrite.
+            if let TerminatorKind::Call { func, .. } = &block.terminator.kind
+                && direct_callee(body, func).is_some_and(|instance| {
+                    KaniFunction::try_from(instance)
+                        == Ok(KaniFunction::Hook(KaniHook::UntrackedDeref))
+                })
+            {
+                after.retain(|action| !matches!(action, Action::TakeRets { .. }));
+            }
             if let TerminatorKind::Call { func, target: Some(head), .. } = &block.terminator.kind
                 && self.is_loop_contract_register(body, func)
             {
@@ -467,13 +482,18 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             .statements
                             .iter()
                             .filter_map(|stmt| match &stmt.kind {
-                                StatementKind::Assign(place, _) => Some(place.local),
+                                StatementKind::Assign(place, _) => Some(place),
                                 _ => None,
                             })
                             .chain(match &block.terminator.kind {
-                                TerminatorKind::Call { destination, .. } => Some(destination.local),
+                                TerminatorKind::Call { destination, .. } => Some(destination),
                                 _ => None,
                             })
+                            // A write through a pointer does not change the pointer.
+                            .filter(|place| {
+                                !place.projection.iter().any(|e| matches!(e, ProjectionElem::Deref))
+                            })
+                            .map(|place| place.local)
                     })
                     .collect();
                 let mut resets: Vec<(Local, TagValue)> = self
@@ -491,18 +511,28 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 entry_snapshots.extend(entries.drain(..).map(|pred| (pred, snapshot)));
                 before.clear();
                 after.clear();
-                heads.push((
-                    *head,
-                    vec![
-                        Action::ForgetAll,
-                        Action::LoopHead { snapshot },
-                        Action::SetTags { assignments: resets },
-                    ],
-                ));
+                loops.push((*head, snapshot, resets, in_loop));
             }
             if !before.is_empty() || !after.is_empty() {
                 work.push((SourceInstruction::Terminator { bb }, before, after));
             }
+        }
+        // The roots of each loop are known once the instrumentation of all its blocks is.
+        for (head, snapshot, resets, in_loop) in loops {
+            let roots = loop_roots(
+                work.iter()
+                    .filter(|(source, _, _)| in_loop.contains(&source_block(source)))
+                    .map(|(source, before, after)| (source, before, after)),
+            );
+            heads.push((
+                head,
+                vec![
+                    Action::ForgetAll,
+                    roots,
+                    Action::LoopHead { snapshot },
+                    Action::SetTags { assignments: resets },
+                ],
+            ));
         }
         for (pred, snapshot) in entry_snapshots {
             work.push((
@@ -1743,6 +1773,92 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 {
                     self.foreign_accesses(instance, args, destination, &mut before, &mut after);
                 }
+                // `kani::internal::untracked_deref(p)` (a hook, with no MIR) is `copy *p`, which
+                // function contracts use to name a modifies target: its result has the tags
+                // of `*p`.
+                if let Some(instance) = direct_callee(body, func)
+                    && KaniFunction::try_from(instance)
+                        == Ok(KaniFunction::Hook(KaniHook::UntrackedDeref))
+                    && let Some(Operand::Copy(ptr) | Operand::Move(ptr)) = args.first()
+                {
+                    // The contract macros pass `&target`, a reference they create in a clause
+                    // (through reborrows and copies): the copied place is `target` itself.
+                    let def_of = |local: Local| {
+                        body.blocks().iter().flat_map(|block| &block.statements).find_map(|stmt| {
+                            match &stmt.kind {
+                                StatementKind::Assign(lhs, rvalue)
+                                    if lhs.local == local && lhs.projection.is_empty() =>
+                                {
+                                    Some(rvalue.clone())
+                                }
+                                _ => None,
+                            }
+                        })
+                    };
+                    let mut referent = None;
+                    let mut current = ptr.clone();
+                    for _ in 0..8 {
+                        if !current.projection.is_empty() {
+                            break;
+                        }
+                        match def_of(current.local) {
+                            Some(Rvalue::Ref(_, _, place) | Rvalue::AddressOf(_, place)) => {
+                                match place.projection.as_slice() {
+                                    // A reborrow `&*p`: follow `p`.
+                                    [ProjectionElem::Deref] => current = Place::from(place.local),
+                                    _ => {
+                                        referent = Some(place);
+                                        break;
+                                    }
+                                }
+                            }
+                            Some(Rvalue::Use(Operand::Copy(place) | Operand::Move(place), _)) => {
+                                current = place
+                            }
+                            _ => break,
+                        }
+                    }
+                    let pointee = referent.unwrap_or_else(|| {
+                        let mut pointee = ptr.clone();
+                        pointee.projection.push(ProjectionElem::Deref);
+                        pointee
+                    });
+                    let copy = StatementKind::Assign(
+                        destination.clone(),
+                        Rvalue::Use(Operand::Copy(pointee), rustc_public::mir::WithRetag::No),
+                    );
+                    let (copy_before, copy_after) = self.statement_actions(body, &copy);
+                    after.extend(copy_before.into_iter().chain(copy_after).filter(|action| {
+                        matches!(action, Action::SetTag { .. } | Action::SetTags { .. })
+                    }));
+                }
+                // A function contract that replaces a call havocs what the function modifies
+                // with `kani::internal::write_any` (replaced by the `write_any_*` models, which
+                // the checks do not instrument): it writes the pointee through the pointer's tag,
+                // and leaves no tags in it.
+                if let Some(instance) = direct_callee(body, func)
+                    && matches!(
+                        KaniFunction::try_from(instance),
+                        Ok(KaniFunction::Intrinsic(KaniIntrinsic::WriteAny)
+                            | KaniFunction::Model(
+                                KaniModel::WriteAnySlim
+                                    | KaniModel::WriteAnySlice
+                                    | KaniModel::WriteAnyStr
+                            ))
+                    )
+                    && let Some(Operand::Copy(ptr) | Operand::Move(ptr)) = args.first()
+                {
+                    let tag = self.operand_tag(&args[0]);
+                    let mut pointee = ptr.clone();
+                    pointee.projection.push(ProjectionElem::Deref);
+                    before.push(Action::Access {
+                        place: pointee,
+                        tag,
+                        is_write: true,
+                        guard: vec![],
+                    });
+                    after.push(Action::ForgetTags { ptr: args[0].clone() });
+                }
                 if let Some(instance) = direct_callee(body, func)
                     && instance.is_foreign_item()
                     && matches!(
@@ -1871,6 +1987,9 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     // References created only to be passed to this call: once it returns, nothing
                     // reaches them unless the callee returned, stored or exposed them, which the
                     // library checks. Last created first, since only the last tag can be dropped.
+                    // Not if the result holds pointers: taking the returned tags (above) ends the
+                    // library's record of them, so a returned reference would lose its tag.
+                    let returns_pointers = !self.flat_paths(dest_ty).is_empty();
                     let mut temps: Vec<Local> = args
                         .iter()
                         .filter_map(|arg| match arg {
@@ -1879,7 +1998,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             }
                             _ => None,
                         })
-                        .filter(|local| self.dead_after_call.contains(local))
+                        .filter(|local| !returns_pointers && self.dead_after_call.contains(local))
                         .filter_map(|local| self.tags.get(&(local, vec![])).copied())
                         .collect();
                     temps.reverse();
@@ -2100,6 +2219,54 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let forget = self.model(KaniModel::AliasingForgetAll, vec![]);
                 let ret = unit_place(body, span);
                 body.insert_call(&forget, source, position, vec![], ret);
+            }
+            Action::LoopRoots { all, tags, objects } => {
+                let roots = self.model(KaniModel::AliasingLoopRoots, vec![]);
+                let ret = unit_place(body, span);
+                body.insert_call(
+                    &roots,
+                    source,
+                    position,
+                    vec![Operand::Constant(ConstOperand {
+                        span,
+                        user_ty: None,
+                        const_: MirConst::from_bool(all),
+                    })],
+                    ret,
+                );
+                let root_tag = self.model(KaniModel::AliasingLoopRootTag, vec![]);
+                for tag in tags {
+                    let args = vec![self.tag_operand(body, tag, source, position)];
+                    let ret = unit_place(body, span);
+                    body.insert_call(&root_tag, source, position, args, ret);
+                }
+                let root_object = self.model(KaniModel::AliasingLoopRootObject, vec![]);
+                for place in objects {
+                    let ty = place.ty(body.locals()).unwrap();
+                    let size = ty.layout().map_or(0, |layout| layout.shape().size.bytes());
+                    let raw = body.insert_assignment(
+                        Rvalue::AddressOf(RawPtrKind::Const, place),
+                        source,
+                        position,
+                    );
+                    let ptr = body.insert_ptr_cast(
+                        Operand::Move(Place::from(raw)),
+                        Ty::unsigned_ty(UintTy::U8),
+                        Mutability::Not,
+                        source,
+                        position,
+                    );
+                    let args = vec![
+                        Operand::Move(Place::from(ptr)),
+                        Operand::Constant(ConstOperand {
+                            span,
+                            user_ty: None,
+                            const_: MirConst::try_from_uint(size as u128, UintTy::Usize).unwrap(),
+                        }),
+                    ];
+                    let ret = unit_place(body, span);
+                    body.insert_call(&root_object, source, position, args, ret);
+                }
             }
             Action::LoopEntry { snapshot } | Action::LoopHead { snapshot } => {
                 let (model, kind) = if matches!(action, Action::LoopEntry { .. }) {
@@ -2565,6 +2732,129 @@ fn path_key(place: &Place) -> Option<PathKey> {
         })
         .collect::<Option<Vec<_>>>()?;
     Some((place.local, path))
+}
+
+/// The block of an instrumented instruction.
+fn source_block(source: &SourceInstruction) -> usize {
+    match source {
+        SourceInstruction::Statement { bb, .. } | SourceInstruction::Terminator { bb } => *bb,
+    }
+}
+
+/// The roots of a loop (`Action::LoopRoots`), from the instrumentation of its instructions. Each
+/// tag that an access, a reborrow or a call of the loop uses is resolved through the tags that the
+/// loop defines (by reborrows, copies and calls) to tags that the loop does not change, or to the
+/// locals it accesses directly. A tag loaded from memory or created from an integer has no known
+/// root; a call may also access statics directly, through their root tag.
+fn loop_roots<'w>(
+    instructions: impl Iterator<Item = (&'w SourceInstruction, &'w Vec<Action>, &'w Vec<Action>)>,
+) -> Action {
+    enum Def {
+        Tag(TagValue, Option<Place>),
+        Call(Vec<TagValue>),
+    }
+    let instructions: Vec<_> = instructions.collect();
+    let mut defs: HashMap<Local, Vec<Def>> = HashMap::new();
+    let mut uses: Vec<(TagValue, Option<Place>)> = vec![];
+    let mut calls = false;
+    for (_, before, after) in &instructions {
+        let actions: Vec<&Action> = before.iter().chain(after.iter()).collect();
+        let call_tags: Vec<TagValue> = actions
+            .iter()
+            .filter_map(|action| match action {
+                Action::PushCall { tags, .. } => Some(tags.clone()),
+                _ => None,
+            })
+            .flatten()
+            .collect();
+        for action in actions {
+            match action {
+                Action::Access { place, tag, .. }
+                | Action::AccessBytes { place, tag, .. }
+                | Action::ReadOutsideCells { place, tag, .. } => {
+                    uses.push((tag.clone(), Some(place.clone())));
+                }
+                Action::AccessCount { tag, .. }
+                | Action::AccessStrlen { tag, .. }
+                | Action::Dealloc { tag, .. } => uses.push((tag.clone(), None)),
+                Action::NewBorrow { tag_local, place, parent, .. } => {
+                    uses.push((parent.clone(), Some(place.clone())));
+                    defs.entry(*tag_local)
+                        .or_default()
+                        .push(Def::Tag(parent.clone(), Some(place.clone())));
+                }
+                Action::DropRetag { place, parent, .. } => {
+                    uses.push((parent.clone(), Some(place.clone())));
+                }
+                Action::PushCall { tags, .. } => {
+                    calls = true;
+                    uses.extend(tags.iter().map(|tag| (tag.clone(), None)));
+                }
+                Action::SetTag { tag_local, value } => {
+                    defs.entry(*tag_local).or_default().push(Def::Tag(value.clone(), None));
+                }
+                Action::SetTags { assignments } => {
+                    for (tag_local, value) in assignments {
+                        defs.entry(*tag_local).or_default().push(Def::Tag(value.clone(), None));
+                    }
+                }
+                Action::TakeRets { targets, .. } => {
+                    for (_, tag_local) in targets {
+                        defs.entry(*tag_local).or_default().push(Def::Call(call_tags.clone()));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let mut tags: Vec<TagValue> = vec![];
+    let mut objects: Vec<Place> = vec![];
+    let mut all = false;
+    let mut seen: HashSet<Local> = HashSet::new();
+    let mut work = uses;
+    while let Some((tag, place)) = work.pop() {
+        match tag {
+            TagValue::Const(UNKNOWN_TAG) => {}
+            TagValue::Const(ROOT_TAG) => match place {
+                // A direct access to a local, through the root tag of its allocation.
+                Some(place)
+                    if !place.projection.iter().any(|e| matches!(e, ProjectionElem::Deref)) =>
+                {
+                    let object = Place::from(place.local);
+                    if !objects.contains(&object) {
+                        objects.push(object);
+                    }
+                }
+                _ => all = true,
+            },
+            TagValue::Const(_) | TagValue::Load(_) => all = true,
+            TagValue::Local(local) => match defs.get(&local) {
+                None => {
+                    if !tags.contains(&TagValue::Local(local)) {
+                        tags.push(TagValue::Local(local));
+                    }
+                }
+                Some(local_defs) => {
+                    if seen.insert(local) {
+                        for def in local_defs {
+                            match def {
+                                Def::Tag(value, place) => work.push((value.clone(), place.clone())),
+                                Def::Call(call_tags) => {
+                                    calls = true;
+                                    work.extend(call_tags.iter().map(|tag| (tag.clone(), None)));
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    }
+    if calls {
+        // A callee may access a static directly.
+        tags.push(TagValue::Const(ROOT_TAG));
+    }
+    Action::LoopRoots { all, tags, objects }
 }
 
 /// The blocks of the loop through `head`: the blocks reachable from it that reach it back.
