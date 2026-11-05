@@ -18,7 +18,7 @@ With Verus 0.2026.10.18:
 verus library/kani_core/verus/aliasing_monitor.rs
 ```
 
-Expected: `verification results:: 126 verified, 0 errors`. The proof uses no `assume`, `admit` or
+Expected: `verification results:: 162 verified, 0 errors`. The proof uses no `assume`, `admit` or
 `external_body`.
 
 ## What is proved
@@ -50,8 +50,31 @@ compute the sets that Miri's rules give.
 | `monitor_expose` | `expose_spec`: the tag accesses act through becomes exposed | 11 |
 | `monitor_store` | `store_spec`: the tag of a pointer stored in memory is recorded, so that the frame that created it keeps it | 11 |
 | `monitor_return` | `return_spec`: protectors end; unexposed tags of the frame that are not returned are dropped | 9 |
+| `monitor_loop_head` | `loop_head_spec`; when its result is true the state is well formed (`lemma_loop_head_wf`) | loops |
 
-All of them also preserve `monitor_wf`. Results the checks cannot decide
+All of them also preserve `monitor_wf`.
+
+## Loops with contracts
+
+At the head of a loop with a contract, `monitor_loop_head` replaces the state with any state in
+`loop_rel` with the state where the loop started. The tags alive at loop entry keep their
+ancestors, protector and cell; their permissions only move down (Reserved, Active, Frozen,
+Disabled); and the loop's roots, the ancestors of every tag it accesses through, only see local
+accesses. The proof that this is sound has three parts:
+
+1. Every operation keeps `loop_rel` (`lemma_loop_apply`, `lemma_loop_access`,
+   `lemma_loop_wildcard`, `lemma_loop_dealloc`, `lemma_loop_end_protector`,
+   `lemma_loop_new_borrow`, `lemma_loop_expose`, `lemma_loop_store`, `lemma_loop_return`), from
+   the operations' theorems above. The conditions: accesses act through descendants of the
+   roots, or the loop has no roots; functions called in the loop return in it.
+2. Dropping the tags created by earlier iterations keeps the state well formed and the other
+   tags unchanged (`lemma_project`).
+3. For every well-formed state in the relation, some choice of the nondeterministic values makes
+   `monitor_loop_head` produce it, up to the abstraction, and accept it
+   (`lemma_loop_head_complete`, `lemma_loop_head_sound`).
+
+So the havoc covers every state the loop can reach at its head, without the tags of earlier
+iterations. Results the checks cannot decide
 (`ACCESS_UNKNOWN_*`) carry no theorem beyond `monitor_wf`; the library reports them as
 unsupported.
 
@@ -69,6 +92,14 @@ proof must reject each of them.
 - The wrappers in `aliasing.rs` (pointer to object/offset, coverage of the tracked byte,
   `UnsafeCell` byte masks, passing tags across calls) and the compiler instrumentation in
   `kani-compiler/src/kani_middle/transform/check_aliasing.rs`.
+- That dropping the tags created by earlier iterations of a loop is sound: it relies on the
+  instrumentation giving the pointers the loop assigns the unknown tag at the head, and on
+  forgetting the shadow tags the loop may overwrite, so that no later access acts through them.
+- That `exposed_values` and the tracked byte don't change during a loop except `exposed_values`
+  becoming true (`lemma_loop_head_sound` assumes it; the operations' theorems are about the
+  abstraction, which doesn't contain these fields).
+- That the compiler's roots satisfy the conditions of part 1 (`loop_roots` in
+  `check_aliasing.rs`, `aliasing_loop_root_tag` in `aliasing.rs`).
 - That dropping the tags of a returning function is sound: it relies on the instrumentation
   recording, with `monitor_store`, every tag it stores in shadow memory, and giving the other
   pointers read from memory the unknown tag.

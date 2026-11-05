@@ -2626,4 +2626,792 @@ pub proof fn lemma_local_step_keeps(n: Node, is_write: bool)
 {
 }
 
+// --- The loop head: the havoc is sound and complete ------------------------------------------
+//
+// `monitor_loop_head` replaces the borrow state at the head of a loop with a contract. The
+// argument that this is sound has three parts:
+// 1. Every monitor operation keeps `loop_rel(entry, _, roots)` (`lemma_loop_*` below): the tags
+//    alive at loop entry keep their ancestors and protector, their permissions only move down,
+//    and the roots only see local accesses. So the state at the head after any number of
+//    iterations is in that relation with the state at entry.
+// 2. Dropping the tags created by earlier iterations (`project`) keeps the state well formed
+//    and the other tags unchanged (`lemma_project`).
+// 3. For every well-formed state in the relation, some choice of the nondeterministic values
+//    makes `monitor_loop_head` produce it, up to the abstraction, and pass its assumption
+//    (`lemma_loop_head_complete`). When the assumption holds, the state is well formed
+//    (`lemma_loop_head_wf`), so the other theorems apply to it.
+
+pub open spec fn loop_head_spec(e: MonitorState, common: u64, v: LoopHavoc) -> MonitorState {
+    let live = live_mask(e.count as u64);
+    let local = common & live;
+    let any = !local;
+    MonitorState {
+        valid: e.valid & (v.valid | local),
+        active: (e.active | v.active) & live,
+        frozen: (e.frozen | (v.frozen & any)) & live,
+        conflicted: (e.conflicted | (v.conflicted & e.protected & any)) & live,
+        initialized: (e.initialized | v.initialized) & live,
+        exposed: (e.exposed | v.exposed) & live,
+        stored: (e.stored | v.stored) & live,
+        unknown_exposed: e.unknown_exposed || v.unknown_exposed,
+        exposed_values: e.exposed_values || v.exposed_values,
+        ..e
+    }
+}
+
+pub open spec fn loop_head_ok(h: &MonitorState, e: &MonitorState) -> bool {
+    &&& h.frozen & !e.frozen & !h.active == 0
+    &&& h.frozen & h.interior & !h.active == 0
+    &&& h.exposed & h.cell == 0
+    &&& h.conflicted & (h.active | h.frozen) == 0
+    &&& h.active & !h.initialized == 0
+}
+
+proof fn lemma_bits_and_not_not(x: u64, y: u64, z: u64, i: u64)
+    requires i < 64,
+    ensures bit(x & !y & !z, i) == (bit(x, i) && !bit(y, i) && !bit(z, i)),
+{
+    assert((((x & !y & !z) >> i) & 1u64 == 1u64) == (((x >> i) & 1u64 == 1u64)
+        && !((y >> i) & 1u64 == 1u64) && !((z >> i) & 1u64 == 1u64))) by (bit_vector)
+        requires i < 64;
+}
+
+proof fn lemma_bits_and_and_not(x: u64, y: u64, z: u64, i: u64)
+    requires i < 64,
+    ensures bit(x & y & !z, i) == (bit(x, i) && bit(y, i) && !bit(z, i)),
+{
+    assert((((x & y & !z) >> i) & 1u64 == 1u64) == (((x >> i) & 1u64 == 1u64)
+        && ((y >> i) & 1u64 == 1u64) && !((z >> i) & 1u64 == 1u64))) by (bit_vector)
+        requires i < 64;
+}
+
+proof fn lemma_bits_and_or(x: u64, y: u64, z: u64, i: u64)
+    requires i < 64,
+    ensures bit(x & (y | z), i) == (bit(x, i) && (bit(y, i) || bit(z, i))),
+{
+    assert((((x & (y | z)) >> i) & 1u64 == 1u64) == (((x >> i) & 1u64 == 1u64)
+        && (((y >> i) & 1u64 == 1u64) || ((z >> i) & 1u64 == 1u64)))) by (bit_vector)
+        requires i < 64;
+}
+
+proof fn lemma_bits_and_not(x: u64, y: u64, i: u64)
+    requires i < 64,
+    ensures bit(x & !y, i) == (bit(x, i) && !bit(y, i)),
+{
+    assert((((x & !y) >> i) & 1u64 == 1u64) == (((x >> i) & 1u64 == 1u64)
+        && !((y >> i) & 1u64 == 1u64))) by (bit_vector) requires i < 64;
+}
+
+/// A mask is zero if and only if none of its bits is set.
+proof fn lemma_zero_iff(m: u64)
+    ensures (m == 0) == forall|i: u64| i < 64 ==> !bit(m, i),
+{
+    if m == 0 {
+        assert forall|i: u64| i < 64 implies !bit(m, i) by { lemma_bit_zero(i); }
+    }
+    if forall|i: u64| i < 64 ==> !bit(m, i) {
+        lemma_all_bits_clear(m);
+    }
+}
+
+/// The bits of `loop_head_spec`.
+proof fn lemma_loop_head_bits(e: MonitorState, common: u64, v: LoopHavoc, i: u64)
+    requires 1 <= e.count <= 64, i < 64,
+    ensures ({
+        let h = loop_head_spec(e, common, v);
+        let live = i < e.count;
+        let local = bit(common, i) && live;
+        &&& bit(h.valid, i) == (bit(e.valid, i) && (bit(v.valid, i) || local))
+        &&& bit(h.active, i) == ((bit(e.active, i) || bit(v.active, i)) && live)
+        &&& bit(h.frozen, i) == ((bit(e.frozen, i) || (bit(v.frozen, i) && !local)) && live)
+        &&& bit(h.conflicted, i) == ((bit(e.conflicted, i) || (bit(v.conflicted, i)
+            && bit(e.protected, i) && !local)) && live)
+        &&& bit(h.initialized, i) == ((bit(e.initialized, i) || bit(v.initialized, i)) && live)
+        &&& bit(h.exposed, i) == ((bit(e.exposed, i) || bit(v.exposed, i)) && live)
+        &&& bit(h.stored, i) == ((bit(e.stored, i) || bit(v.stored, i)) && live)
+    }),
+{
+    let lm = live_mask(e.count as u64);
+    lemma_bit_live(e.count as u64, i);
+    let local = common & lm;
+    lemma_bit_and(common, lm, i);
+    lemma_bit_not(local, i);
+    lemma_bit_or(v.valid, local, i);
+    lemma_bit_and(e.valid, v.valid | local, i);
+    lemma_bit_or(e.active, v.active, i);
+    lemma_bit_and(e.active | v.active, lm, i);
+    lemma_bit_and(v.frozen, !local, i);
+    lemma_bit_or(e.frozen, v.frozen & !local, i);
+    lemma_bit_and(e.frozen | (v.frozen & !local), lm, i);
+    lemma_bit_and(v.conflicted, e.protected, i);
+    lemma_bit_and(v.conflicted & e.protected, !local, i);
+    lemma_bit_or(e.conflicted, v.conflicted & e.protected & !local, i);
+    lemma_bit_and(e.conflicted | (v.conflicted & e.protected & !local), lm, i);
+    lemma_bit_or(e.initialized, v.initialized, i);
+    lemma_bit_and(e.initialized | v.initialized, lm, i);
+    lemma_bit_or(e.exposed, v.exposed, i);
+    lemma_bit_and(e.exposed | v.exposed, lm, i);
+    lemma_bit_or(e.stored, v.stored, i);
+    lemma_bit_and(e.stored | v.stored, lm, i);
+}
+
+/// The per-bit conditions of `loop_head_ok`.
+pub open spec fn loop_head_ok_at(h: MonitorState, e: MonitorState, i: u64) -> bool {
+    &&& (bit(h.frozen, i) && !bit(e.frozen, i) ==> bit(h.active, i))
+    &&& (bit(h.frozen, i) && bit(h.interior, i) ==> bit(h.active, i))
+    &&& !(bit(h.exposed, i) && bit(h.cell, i))
+    &&& (bit(h.conflicted, i) ==> !bit(h.active, i) && !bit(h.frozen, i))
+    &&& (bit(h.active, i) ==> bit(h.initialized, i))
+}
+
+/// The per-bit meaning of `loop_head_ok`.
+proof fn lemma_loop_head_ok_bits(h: MonitorState, e: MonitorState)
+    ensures loop_head_ok(&h, &e) == forall|i: u64| i < 64 ==> #[trigger] loop_head_ok_at(h, e, i),
+{
+    let w1 = h.frozen & !e.frozen & !h.active;
+    let w2 = h.frozen & h.interior & !h.active;
+    let w3 = h.exposed & h.cell;
+    let w4 = h.conflicted & (h.active | h.frozen);
+    let w5 = h.active & !h.initialized;
+    assert forall|i: u64| i < 64 implies loop_head_ok_at(h, e, i) == (!bit(w1, i) && !bit(w2, i)
+        && !bit(w3, i) && !bit(w4, i) && !bit(w5, i)) by {
+        lemma_bits_and_not_not(h.frozen, e.frozen, h.active, i);
+        lemma_bits_and_and_not(h.frozen, h.interior, h.active, i);
+        lemma_bit_and(h.exposed, h.cell, i);
+        lemma_bits_and_or(h.conflicted, h.active, h.frozen, i);
+        lemma_bits_and_not(h.active, h.initialized, i);
+    }
+    lemma_zero_iff(w1);
+    lemma_zero_iff(w2);
+    lemma_zero_iff(w3);
+    lemma_zero_iff(w4);
+    lemma_zero_iff(w5);
+    if forall|i: u64| i < 64 ==> #[trigger] loop_head_ok_at(h, e, i) {
+        assert forall|i: u64| i < 64 implies !bit(w1, i) && !bit(w2, i) && !bit(w3, i)
+            && !bit(w4, i) && !bit(w5, i) by {
+            assert(loop_head_ok_at(h, e, i));
+        }
+    }
+    if loop_head_ok(&h, &e) {
+        assert forall|i: u64| i < 64 implies #[trigger] loop_head_ok_at(h, e, i) by {
+            assert(!bit(w1, i) && !bit(w2, i) && !bit(w3, i) && !bit(w4, i) && !bit(w5, i));
+        }
+    }
+}
+
+/// Soundness of the assumption: a state `monitor_loop_head` accepts is well formed.
+pub proof fn lemma_loop_head_wf(e: MonitorState, h: MonitorState, common: u64, v: LoopHavoc)
+    requires monitor_wf(&e), h == loop_head_spec(e, common, v), loop_head_ok(&h, &e),
+    ensures monitor_wf(&h),
+{
+    lemma_loop_head_ok_bits(h, e);
+    assert forall|i: u64| i < 64 implies {
+        &&& (bit(h.frozen, i) && bit(h.interior, i) ==> bit(h.active, i))
+        &&& (bit(h.exposed, i) ==> !bit(h.cell, i))
+        &&& (bit(h.conflicted, i) ==> !bit(h.active, i) && !bit(h.frozen, i)
+            && bit(h.protected, i))
+        &&& (bit(h.active, i) ==> bit(h.initialized, i))
+        &&& (bit(h.interior, i) ==> !bit(h.protected, i))
+        &&& (bit(h.strong, i) ==> bit(h.protected, i))
+    } by {
+        assert(loop_head_ok_at(h, e, i));
+        lemma_loop_head_bits(e, common, v, i);
+    }
+    assert forall|i: u64| h.count <= i < 64 implies {
+        &&& !bit(h.valid, i) && !bit(h.active, i) && !bit(h.frozen, i)
+        &&& !bit(h.conflicted, i) && !bit(h.initialized, i) && !bit(h.exposed, i)
+        &&& !bit(h.stored, i)
+    } by {
+        lemma_loop_head_bits(e, common, v, i);
+    }
+}
+
+/// The nondeterministic choices that make `monitor_loop_head` produce `s`.
+pub open spec fn loop_head_witness(e: MonitorState, s: MonitorState) -> LoopHavoc {
+    LoopHavoc {
+        valid: s.valid,
+        active: (s.active | (s.frozen & !e.frozen)) & s.valid,
+        frozen: s.frozen & s.valid,
+        conflicted: s.conflicted & s.valid,
+        initialized: s.initialized,
+        exposed: s.exposed,
+        stored: s.stored,
+        unknown_exposed: s.unknown_exposed,
+        exposed_values: s.exposed_values,
+    }
+}
+
+/// Facts about a node that `monitor_wf` gives.
+pub open spec fn node_wf(n: Node) -> bool {
+    &&& n.perm == Perm::Active ==> n.initialized
+    &&& (n.perm matches Perm::Reserved { conflicted: true, .. }) ==> n.protected
+}
+
+/// `new` is `old` after any transitions during a loop: the permission moved down, and only the
+/// initialized, exposed and stored flags may have been set. A conflicted Reserved can only be
+/// disabled (it is protected, so a local write is undefined behavior), and a tag that became
+/// Frozen was Active, so it is initialized.
+pub open spec fn loop_le(new: Node, old: Node) -> bool {
+    &&& perm_le(new.perm, old.perm)
+    &&& (old.perm matches Perm::Reserved { conflicted: true, .. }) ==> (new.perm == old.perm
+        || new.perm == Perm::Disabled)
+    &&& (new.perm == Perm::Frozen && old.perm != Perm::Frozen) ==> new.initialized
+    &&& (old.initialized ==> new.initialized)
+    &&& (old.exposed ==> new.exposed)
+    &&& (old.stored ==> new.stored)
+    &&& new.ancestors == old.ancestors
+    &&& new.main == old.main
+    &&& new.protected == old.protected
+    &&& new.strong == old.strong
+    &&& new.cell == old.cell
+    &&& new.alias == old.alias
+}
+
+/// The permission of a tag that only sees local accesses: unchanged, or a Reserved that was
+/// written.
+pub open spec fn root_keep(new: Perm, old: Perm) -> bool {
+    new == old || ((old matches Perm::Reserved { conflicted: false, .. }) && new == Perm::Active)
+}
+
+/// The state `a` at the head of a loop that started in state `e`, whose roots are `roots`.
+pub open spec fn loop_rel(e: AbsState, a: AbsState, roots: ISet<nat>) -> bool {
+    &&& e.count <= a.count
+    &&& (e.unknown_exposed ==> a.unknown_exposed)
+    &&& forall|t: nat| t < e.count ==> loop_le(#[trigger] a.nodes[t], e.nodes[t])
+    &&& forall|t: nat| t < e.count && roots.contains(t) ==> root_keep((#[trigger] a.nodes[t]).perm,
+        e.nodes[t].perm)
+}
+
+/// Completeness: every well-formed state in the relation with the entry state is, up to the
+/// abstraction, a state `monitor_loop_head` produces and accepts.
+pub proof fn lemma_loop_head_complete(e: MonitorState, s: MonitorState, common: u64)
+    requires
+        monitor_wf(&e), monitor_wf(&s), s.count == e.count,
+        s.tracked_object_id == e.tracked_object_id, s.tracked_offset == e.tracked_offset,
+        e.exposed_values ==> s.exposed_values,
+        loop_rel(abstraction(&e), abstraction(&s), mask_set(common & live_mask(e.count as u64))),
+    ensures ({
+        let h = loop_head_spec(e, common, loop_head_witness(e, s));
+        &&& loop_head_ok(&h, &e)
+        &&& monitor_wf(&h)
+        &&& same_state(abstraction(&h), abstraction(&s))
+        &&& h.exposed_values == s.exposed_values
+        &&& h.tracked_object_id == s.tracked_object_id
+        &&& h.tracked_offset == s.tracked_offset
+    }),
+{
+    let v = loop_head_witness(e, s);
+    let h = loop_head_spec(e, common, v);
+    let lm = live_mask(e.count as u64);
+    let ae = abstraction(&e);
+    let as_ = abstraction(&s);
+    assert forall|i: u64| i < 64 implies {
+        &&& (i < e.count ==> bit(common & lm, i) == bit(common, i))
+        &&& bit(v.active, i) == ((bit(s.active, i) || (bit(s.frozen, i) && !bit(e.frozen, i)))
+            && bit(s.valid, i))
+        &&& bit(v.frozen, i) == (bit(s.frozen, i) && bit(s.valid, i))
+        &&& bit(v.conflicted, i) == (bit(s.conflicted, i) && bit(s.valid, i))
+    } by {
+        lemma_bit_live(e.count as u64, i);
+        lemma_bit_and(common, lm, i);
+        lemma_bit_and(s.frozen, !e.frozen, i);
+        lemma_bit_not(e.frozen, i);
+        lemma_bit_or(s.active, s.frozen & !e.frozen, i);
+        lemma_bit_and(s.active | (s.frozen & !e.frozen), s.valid, i);
+        lemma_bit_and(s.frozen, s.valid, i);
+        lemma_bit_and(s.conflicted, s.valid, i);
+    }
+    // Per tag: the bits of `h` against those of `s`.
+    assert forall|i: u64| i < 64 implies {
+        &&& #[trigger] loop_head_ok_at(h, e, i)
+        &&& (i < e.count ==> perm_of(&h, i) == perm_of(&s, i))
+        &&& bit(h.initialized, i) == bit(s.initialized, i)
+        &&& bit(h.exposed, i) == bit(s.exposed, i)
+        &&& bit(h.stored, i) == bit(s.stored, i)
+    } by {
+        lemma_loop_head_bits(e, common, v, i);
+        if i < e.count {
+            let t = i as nat;
+            assert(loop_le(as_.nodes[t], ae.nodes[t]));
+            if bit(common, i) {
+                assert(mask_set(common & lm).contains(t));
+                assert(root_keep(as_.nodes[t].perm, ae.nodes[t].perm));
+            }
+        }
+    }
+    lemma_loop_head_ok_bits(h, e);
+    lemma_loop_head_wf(e, h, common, v);
+    let ah = abstraction(&h);
+    assert forall|t: nat| t < ah.count implies node_eq(#[trigger] as_.nodes[t], ah.nodes[t]) by {
+        assert(loop_head_ok_at(h, e, t as u64));
+        assert(loop_le(as_.nodes[t], ae.nodes[t]));
+        assert(mask_set(h.ancestors[t as int]) =~= mask_set(s.ancestors[t as int]));
+    }
+}
+
+/// The state without the tags `n..`: those created by earlier iterations of a loop.
+pub open spec fn project(s: MonitorState, n: u8) -> MonitorState {
+    let live = live_mask(n as u64);
+    MonitorState {
+        count: n,
+        main: s.main & live,
+        valid: s.valid & live,
+        active: s.active & live,
+        frozen: s.frozen & live,
+        conflicted: s.conflicted & live,
+        interior: s.interior & live,
+        protected: s.protected & live,
+        strong: s.strong & live,
+        initialized: s.initialized & live,
+        cell: s.cell & live,
+        exposed: s.exposed & live,
+        stored: s.stored & live,
+        ..s
+    }
+}
+
+pub proof fn lemma_project(s: MonitorState, n: u8)
+    requires monitor_wf(&s), 1 <= n <= s.count,
+    ensures ({
+        let p = project(s, n);
+        &&& monitor_wf(&p)
+        &&& p.unknown_exposed == s.unknown_exposed
+        &&& p.exposed_values == s.exposed_values
+        &&& p.tracked_object_id == s.tracked_object_id
+        &&& p.tracked_offset == s.tracked_offset
+        &&& forall|t: nat| t < n ==> node_eq(#[trigger] abstraction(&p).nodes[t],
+            abstraction(&s).nodes[t])
+    }),
+{
+    let p = project(s, n);
+    let lm = live_mask(n as u64);
+    assert forall|i: u64| i < 64 implies {
+        &&& bit(p.main, i) == (bit(s.main, i) && i < n)
+        &&& bit(p.valid, i) == (bit(s.valid, i) && i < n)
+        &&& bit(p.active, i) == (bit(s.active, i) && i < n)
+        &&& bit(p.frozen, i) == (bit(s.frozen, i) && i < n)
+        &&& bit(p.conflicted, i) == (bit(s.conflicted, i) && i < n)
+        &&& bit(p.interior, i) == (bit(s.interior, i) && i < n)
+        &&& bit(p.protected, i) == (bit(s.protected, i) && i < n)
+        &&& bit(p.strong, i) == (bit(s.strong, i) && i < n)
+        &&& bit(p.initialized, i) == (bit(s.initialized, i) && i < n)
+        &&& bit(p.cell, i) == (bit(s.cell, i) && i < n)
+        &&& bit(p.exposed, i) == (bit(s.exposed, i) && i < n)
+        &&& bit(p.stored, i) == (bit(s.stored, i) && i < n)
+        &&& bit(live_mask(s.count as u64), i) == (i < s.count)
+        &&& bit(lm, i) == (i < n)
+    } by {
+        lemma_bit_live(n as u64, i);
+        lemma_bit_live(s.count as u64, i);
+        lemma_bit_and(s.main, lm, i);
+        lemma_bit_and(s.valid, lm, i);
+        lemma_bit_and(s.active, lm, i);
+        lemma_bit_and(s.frozen, lm, i);
+        lemma_bit_and(s.conflicted, lm, i);
+        lemma_bit_and(s.interior, lm, i);
+        lemma_bit_and(s.protected, lm, i);
+        lemma_bit_and(s.strong, lm, i);
+        lemma_bit_and(s.initialized, lm, i);
+        lemma_bit_and(s.cell, lm, i);
+        lemma_bit_and(s.exposed, lm, i);
+        lemma_bit_and(s.stored, lm, i);
+    }
+    if !s.wildcard {
+        assert forall|i: u64| i < 64 implies bit(p.main, i) == bit(lm, i) by {}
+        lemma_bits_ext(p.main, lm);
+    }
+    assert forall|t: u64| #![trigger p.ancestors[t as int]] t < p.count implies
+        bit(p.main, t) == bit(p.ancestors[t as int], 0) by {
+        assert(s.ancestors[t as int] == s.ancestors[t as int]);
+        lemma_bit_live(n as u64, t);
+        lemma_bit_and(s.main, lm, t);
+    }
+    assert forall|t: u64| #![trigger p.alias[t as int]] t < p.count implies (if bit(p.cell, t) {
+        &&& p.alias[t as int] < t
+        &&& !bit(p.cell, p.alias[t as int] as u64)
+        &&& bit(p.ancestors[t as int], p.alias[t as int] as u64)
+    } else {
+        p.alias[t as int] == t
+    }) by {
+        assert(s.alias[t as int] == s.alias[t as int]);
+        lemma_bit_live(n as u64, t);
+        lemma_bit_and(s.cell, lm, t);
+        if bit(s.cell, t) {
+            let u = s.alias[t as int] as u64;
+            lemma_bit_live(n as u64, u);
+            lemma_bit_and(s.cell, lm, u);
+        }
+    }
+    assert forall|t: u64| #![trigger p.ancestors[t as int]] t < p.count implies {
+        &&& bit(p.ancestors[t as int], t)
+        &&& forall|u: u64| u < 64 && bit(p.ancestors[t as int], u) ==> u <= t
+        &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(p.ancestors[t as int], u)
+            && bit(p.ancestors[u as int], w) ==> bit(p.ancestors[t as int], w)
+        &&& forall|u: u64, w: u64| u < 64 && w < 64 && bit(p.ancestors[t as int], u)
+            && bit(p.ancestors[t as int], w) && u <= w ==> bit(p.ancestors[w as int], u)
+    } by {
+        assert(s.ancestors[t as int] == s.ancestors[t as int]);
+    }
+    assert forall|i: u64| i < 64 implies {
+        &&& (p.count <= i ==> !bit(p.main, i) && !bit(p.valid, i) && !bit(p.stored, i))
+        &&& (bit(p.frozen, i) && bit(p.interior, i) ==> bit(p.active, i))
+        &&& (bit(p.exposed, i) ==> !bit(p.cell, i))
+        &&& (bit(p.conflicted, i) ==> !bit(p.active, i) && !bit(p.frozen, i)
+            && bit(p.protected, i))
+        &&& (bit(p.active, i) ==> bit(p.initialized, i))
+        &&& (bit(p.interior, i) ==> !bit(p.protected, i))
+        &&& (bit(p.strong, i) ==> bit(p.protected, i))
+    } by {
+        lemma_bit_live(n as u64, i);
+        lemma_bit_and(s.main, lm, i);
+        lemma_bit_and(s.valid, lm, i);
+        lemma_bit_and(s.active, lm, i);
+        lemma_bit_and(s.frozen, lm, i);
+        lemma_bit_and(s.conflicted, lm, i);
+        lemma_bit_and(s.interior, lm, i);
+        lemma_bit_and(s.protected, lm, i);
+        lemma_bit_and(s.strong, lm, i);
+        lemma_bit_and(s.initialized, lm, i);
+        lemma_bit_and(s.cell, lm, i);
+        lemma_bit_and(s.exposed, lm, i);
+        lemma_bit_and(s.stored, lm, i);
+    }
+    assert(clean_above(p.main, p.count as u64));
+    assert(clean_above(p.valid, p.count as u64));
+    assert(clean_above(p.active, p.count as u64));
+    assert(clean_above(p.frozen, p.count as u64));
+    assert(clean_above(p.conflicted, p.count as u64));
+    assert(clean_above(p.interior, p.count as u64));
+    assert(clean_above(p.protected, p.count as u64));
+    assert(clean_above(p.strong, p.count as u64));
+    assert(clean_above(p.initialized, p.count as u64));
+    assert(clean_above(p.cell, p.count as u64));
+    assert(clean_above(p.exposed, p.count as u64));
+    assert(clean_above(p.stored, p.count as u64));
+    assert(!bit(p.cell, 0)) by { lemma_bit_and(s.cell, lm, 0); }
+    assert(monitor_wf(&p));
+    let ap = abstraction(&p);
+    let as_ = abstraction(&s);
+    assert forall|t: nat| t < n implies node_eq(#[trigger] ap.nodes[t], as_.nodes[t]) by {
+        let i = t as u64;
+        lemma_bit_live(n as u64, i);
+        lemma_bit_and(s.main, lm, i);
+        lemma_bit_and(s.valid, lm, i);
+        lemma_bit_and(s.active, lm, i);
+        lemma_bit_and(s.frozen, lm, i);
+        lemma_bit_and(s.conflicted, lm, i);
+        lemma_bit_and(s.interior, lm, i);
+        lemma_bit_and(s.protected, lm, i);
+        lemma_bit_and(s.strong, lm, i);
+        lemma_bit_and(s.initialized, lm, i);
+        lemma_bit_and(s.cell, lm, i);
+        lemma_bit_and(s.exposed, lm, i);
+        lemma_bit_and(s.stored, lm, i);
+        assert(mask_set(p.ancestors[t as int]) =~= mask_set(s.ancestors[t as int]));
+    }
+}
+
+/// The theorem for the loop head: given the state `s` that the loop reached at its head, in the
+/// relation with the entry state `e` (which the `lemma_loop_*` lemmas give), some choice of the
+/// nondeterministic values makes `monitor_loop_head` produce, up to the abstraction, `s`
+/// without the tags created by earlier iterations, and accept it.
+pub proof fn lemma_loop_head_sound(e: MonitorState, s: MonitorState, common: u64)
+    requires
+        monitor_wf(&e), monitor_wf(&s), e.count <= s.count,
+        s.tracked_object_id == e.tracked_object_id, s.tracked_offset == e.tracked_offset,
+        e.exposed_values ==> s.exposed_values,
+        loop_rel(abstraction(&e), abstraction(&s), mask_set(common & live_mask(e.count as u64))),
+    ensures exists|v: LoopHavoc| {
+        let h = #[trigger] loop_head_spec(e, common, v);
+        &&& loop_head_ok(&h, &e)
+        &&& monitor_wf(&h)
+        &&& same_state(abstraction(&h), abstraction(&project(s, e.count)))
+        &&& forall|t: nat| t < e.count ==> node_eq(#[trigger] abstraction(&h).nodes[t],
+            abstraction(&s).nodes[t])
+    },
+{
+    let p = project(s, e.count);
+    lemma_project(s, e.count);
+    let roots = mask_set(common & live_mask(e.count as u64));
+    let (ae, ap, as_) = (abstraction(&e), abstraction(&p), abstraction(&s));
+    assert forall|t: nat| t < ae.count implies loop_le(#[trigger] ap.nodes[t], ae.nodes[t]) by {
+        assert(node_eq(ap.nodes[t], as_.nodes[t]));
+        assert(loop_le(as_.nodes[t], ae.nodes[t]));
+        assert(ap.nodes[t].ancestors =~= as_.nodes[t].ancestors);
+    }
+    assert forall|t: nat| t < ae.count && roots.contains(t) implies root_keep(
+        (#[trigger] ap.nodes[t]).perm, ae.nodes[t].perm) by {
+        assert(node_eq(ap.nodes[t], as_.nodes[t]));
+        assert(root_keep(as_.nodes[t].perm, ae.nodes[t].perm));
+    }
+    lemma_loop_head_complete(e, p, common);
+    let v = loop_head_witness(e, p);
+    let h = loop_head_spec(e, common, v);
+    let ah = abstraction(&h);
+    assert forall|t: nat| t < e.count implies node_eq(#[trigger] ah.nodes[t], as_.nodes[t]) by {
+        assert(node_eq(ap.nodes[t], ah.nodes[t]));
+        assert(node_eq(ap.nodes[t], as_.nodes[t]));
+        assert(ah.nodes[t].ancestors =~= as_.nodes[t].ancestors);
+    }
+}
+
+// --- Every monitor operation keeps the loop relation -----------------------------------------
+
+proof fn lemma_monitor_node_wf(s: MonitorState)
+    requires monitor_wf(&s),
+    ensures forall|t: nat| t < s.count ==> node_wf(#[trigger] abstraction(&s).nodes[t]),
+{
+    assert forall|t: nat| t < s.count implies node_wf(#[trigger] abstraction(&s).nodes[t]) by {
+        assert(t < 64);
+    }
+}
+
+/// Each transition keeps `loop_le`; a local one also `root_keep`.
+proof fn lemma_steps_loop(n: Node, is_write: bool)
+    requires node_wf(n),
+    ensures
+        local_step(n, is_write) matches Some(m) ==> loop_le(m, n) && root_keep(m.perm, n.perm),
+        foreign_step(n, is_write) matches Some(m) ==> loop_le(m, n),
+{
+}
+
+proof fn lemma_loop_le_trans(a: Node, b: Node, c: Node)
+    requires loop_le(a, b), loop_le(b, c),
+    ensures loop_le(a, c),
+{
+    lemma_perm_le_trans(a.perm, b.perm, c.perm);
+}
+
+proof fn lemma_node_eq_loop_le(a: Node, b: Node, c: Node)
+    requires node_eq(a, b), loop_le(b, c),
+    ensures loop_le(a, c),
+{
+    assert(a.ancestors =~= b.ancestors);
+}
+
+/// The relation survives a step whose nodes, for the tags of `e`, are each `loop_le` the
+/// previous ones, and `root_keep` for the roots.
+proof fn lemma_loop_rel_step(e: AbsState, a: AbsState, b: AbsState, roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots), e.count <= b.count,
+        e.unknown_exposed ==> b.unknown_exposed,
+        forall|t: nat| t < e.count ==> loop_le(#[trigger] b.nodes[t], a.nodes[t]),
+        forall|t: nat| t < e.count && roots.contains(t) ==> root_keep(
+            (#[trigger] b.nodes[t]).perm, a.nodes[t].perm),
+    ensures loop_rel(e, b, roots),
+{
+    assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], e.nodes[t]) by {
+        lemma_loop_le_trans(b.nodes[t], a.nodes[t], e.nodes[t]);
+    }
+}
+
+/// An unchanged state is still in the relation.
+proof fn lemma_loop_same(e: AbsState, a: AbsState, b: AbsState, roots: ISet<nat>)
+    requires loop_rel(e, a, roots), same_state(a, b),
+    ensures loop_rel(e, b, roots),
+{
+    assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], e.nodes[t]) by {
+        lemma_node_eq_loop_le(b.nodes[t], a.nodes[t], e.nodes[t]);
+    }
+}
+
+/// An access, given its local tags `l` and foreign tags `f`, keeps the relation if every root it
+/// treats as foreign is also local (a tag in both takes the local transition).
+pub proof fn lemma_loop_apply(e: AbsState, a: AbsState, b: AbsState, l: ISet<nat>,
+    f: ISet<nat>, is_write: bool, code: u8, roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        forall|t: nat| t < a.count ==> node_wf(#[trigger] a.nodes[t]),
+        apply_refines(a, b, l, f, is_write, code),
+        forall|t: nat| t < e.count && roots.contains(t) && f.contains(t) ==> l.contains(t),
+    ensures loop_rel(e, b, roots),
+{
+    if code != ACCESS_OK {
+        lemma_loop_same(e, a, b, roots);
+    } else {
+        assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], a.nodes[t])
+            && (roots.contains(t) ==> root_keep(b.nodes[t].perm, a.nodes[t].perm)) by {
+            let m = apply_step(a, l, f, t, is_write);
+            assert(m is Some);
+            lemma_steps_loop(a.nodes[t], is_write);
+            assert(node_eq(b.nodes[t], m->Some_0));
+            assert(loop_le(m->Some_0, a.nodes[t]));
+            lemma_node_eq_loop_le(b.nodes[t], m->Some_0, a.nodes[t]);
+        }
+        lemma_loop_rel_step(e, a, b, roots);
+    }
+}
+
+/// An access through `tag` keeps the relation, unless the checks give up, if the roots are
+/// ancestors of the tag the access acts through, or cells (which accesses do not change).
+pub proof fn lemma_loop_access(e: AbsState, a: AbsState, b: AbsState, tag: nat, is_write: bool,
+    code: u8, roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        forall|t: nat| t < a.count ==> node_wf(#[trigger] a.nodes[t]),
+        tag < a.count,
+        access_refines(a, b, tag, is_write, code),
+        code != ACCESS_UNKNOWN_WILDCARD,
+        forall|r: nat| r < e.count && #[trigger] roots.contains(r) ==> a.nodes[r].cell
+            || a.nodes[eff(a, tag)].ancestors.contains(r),
+    ensures loop_rel(e, b, roots),
+{
+    let x = eff(a, tag);
+    if a.nodes[x].main {
+        lemma_loop_apply(e, a, b, local_set(a, x), foreign_set(a, x), is_write, code, roots);
+    } else if a.unknown_exposed {
+        lemma_loop_same(e, a, b, roots);
+    } else {
+        let r = lowest(a, x);
+        let own = tree_set(a, r);
+        let (wc, wl, wf) = wild_access(a, own, Some(r), is_write);
+        if wc != ACCESS_OK {
+            lemma_loop_same(e, a, b, roots);
+        } else {
+            let f = ISet::new(|t: nat| own.contains(t) && !a.nodes[x].ancestors.contains(t)
+                && !a.nodes[t].cell).union(wf);
+            lemma_loop_apply(e, a, b, local_set(a, x).union(wl), f, is_write, code, roots);
+        }
+    }
+}
+
+/// An access through a pointer created from an integer keeps the relation when the loop has
+/// no roots (the compiler gives it none when it accesses memory through such a pointer).
+pub proof fn lemma_loop_wildcard(e: AbsState, a: AbsState, b: AbsState, is_write: bool, code: u8,
+    roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        forall|t: nat| t < a.count ==> node_wf(#[trigger] a.nodes[t]),
+        wildcard_refines(a, b, is_write, code),
+        code != ACCESS_UNKNOWN_WILDCARD,
+        forall|r: nat| !roots.contains(r),
+    ensures loop_rel(e, b, roots),
+{
+    if a.unknown_exposed {
+        lemma_loop_same(e, a, b, roots);
+    } else {
+        let (wc, wl, wf) = wild_access(a, ISet::empty(), None, is_write);
+        if wc != ACCESS_OK {
+            lemma_loop_same(e, a, b, roots);
+        } else {
+            lemma_loop_apply(e, a, b, wl, wf, is_write, code, roots);
+        }
+    }
+}
+
+/// Deallocation: a write access, then a check that changes nothing.
+pub proof fn lemma_loop_dealloc(e: AbsState, a: AbsState, b: AbsState, tag: nat, code: u8,
+    exposed_values: bool, roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        forall|t: nat| t < a.count ==> node_wf(#[trigger] a.nodes[t]),
+        dealloc_refines(a, b, tag, code, exposed_values),
+        code != ACCESS_UNKNOWN_WILDCARD,
+        exposed_values && tag == EXPOSED_TAG as nat ==> forall|r: nat| !roots.contains(r),
+        tag < a.count ==> forall|r: nat| r < e.count && #[trigger] roots.contains(r) ==>
+            a.nodes[r].cell || a.nodes[eff(a, tag)].ancestors.contains(r),
+    ensures loop_rel(e, b, roots),
+{
+    let (m, c1) = choose|m: AbsState, c1: u8| #[trigger] dealloc_witness(a, b, tag, code, m, c1,
+        exposed_values);
+    if exposed_values && tag == EXPOSED_TAG as nat {
+        lemma_loop_wildcard(e, a, m, true, c1, roots);
+    } else if tag < a.count {
+        lemma_loop_access(e, a, m, tag, true, c1, roots);
+    } else {
+        lemma_loop_same(e, a, m, roots);
+    }
+    lemma_loop_same(e, m, b, roots);
+}
+
+/// The end of a protector: an access through `p` that its descendants do not see.
+pub proof fn lemma_loop_end_protector(e: AbsState, a: AbsState, b: AbsState, p: nat, code: u8,
+    roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        forall|t: nat| t < a.count ==> node_wf(#[trigger] a.nodes[t]),
+        end_protector_refines(a, b, p, code),
+        code != ACCESS_UNKNOWN_WILDCARD,
+        forall|r: nat| r < e.count && #[trigger] roots.contains(r) ==> a.nodes[r].cell
+            || a.nodes[p].ancestors.contains(r),
+    ensures loop_rel(e, b, roots),
+{
+    let n = a.nodes[p];
+    if !(p < a.count && n.protected && n.initialized && n.perm != Perm::Disabled && !n.cell) {
+        lemma_loop_same(e, a, b, roots);
+    } else {
+        let f = ISet::new(|t: nat| t < a.count && !a.nodes[p].ancestors.contains(t)
+            && !desc_of(a, p, t) && !a.nodes[t].cell && !end_skipped(a, p, t));
+        lemma_loop_apply(e, a, b, local_set(a, p), f, n.perm == Perm::Active, code, roots);
+    }
+}
+
+/// A new reference adds a tag and changes no other.
+pub proof fn lemma_loop_new_borrow(e: AbsState, a: AbsState, b: AbsState, parent: nat,
+    covers: bool, in_cell: bool, freeze: bool, is_shared: bool, is_protected: bool,
+    is_strong: bool, r: nat, exposed_values: bool, roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots),
+        retag_spec(a, b, parent, covers, in_cell, freeze, is_shared, is_protected, is_strong, r,
+            exposed_values),
+    ensures loop_rel(e, b, roots),
+{
+    if b.count == a.count + 1 && r == a.count {
+        assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], e.nodes[t]) by {
+            lemma_node_eq_loop_le(b.nodes[t], a.nodes[t], e.nodes[t]);
+        }
+    } else {
+        lemma_loop_same(e, a, b, roots);
+    }
+}
+
+/// Exposing a tag, or recording that a pointer with it was stored, only sets a flag.
+pub proof fn lemma_loop_expose(e: AbsState, a: AbsState, b: AbsState, tag: nat,
+    roots: ISet<nat>)
+    requires loop_rel(e, a, roots), expose_spec(a, b, tag),
+    ensures loop_rel(e, b, roots),
+{
+    assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], a.nodes[t])
+        && (roots.contains(t) ==> root_keep(b.nodes[t].perm, a.nodes[t].perm)) by {
+        if tag < a.count && t == eff(a, tag) {
+            assert(b.nodes[t].ancestors =~= a.nodes[t].ancestors);
+        } else {
+            assert(node_eq(b.nodes[t], a.nodes[t]));
+            assert(b.nodes[t].ancestors =~= a.nodes[t].ancestors);
+        }
+    }
+    lemma_loop_rel_step(e, a, b, roots);
+}
+
+pub proof fn lemma_loop_store(e: AbsState, a: AbsState, b: AbsState, tag: nat, roots: ISet<nat>)
+    requires loop_rel(e, a, roots), store_spec(a, b, tag),
+    ensures loop_rel(e, b, roots),
+{
+    assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], a.nodes[t])
+        && (roots.contains(t) ==> root_keep(b.nodes[t].perm, a.nodes[t].perm)) by {
+        if tag < a.count && t == tag {
+            assert(b.nodes[t].ancestors =~= a.nodes[t].ancestors);
+        } else {
+            assert(node_eq(b.nodes[t], a.nodes[t]));
+            assert(b.nodes[t].ancestors =~= a.nodes[t].ancestors);
+        }
+    }
+    lemma_loop_rel_step(e, a, b, roots);
+}
+
+/// The return of a function called in the loop (its frame starts at or after the loop's first
+/// tag) only drops or unprotects tags created in the loop.
+pub proof fn lemma_loop_return(e: AbsState, a: AbsState, b: AbsState, frame: nat, kept: Seq<u8>,
+    roots: ISet<nat>)
+    requires
+        loop_rel(e, a, roots), return_spec(a, b, frame, kept), e.count <= frame <= a.count,
+        frame < 64, kept.len() == 4,
+    ensures loop_rel(e, b, roots),
+{
+    assert(kept_count(a.count, frame, kept) >= frame);
+    assert forall|t: nat| t < e.count implies loop_le(#[trigger] b.nodes[t], e.nodes[t]) by {
+        lemma_node_eq_loop_le(b.nodes[t], a.nodes[t], e.nodes[t]);
+    }
+}
+
 } // verus!
