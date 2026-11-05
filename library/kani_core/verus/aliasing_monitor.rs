@@ -3414,4 +3414,24 @@ pub proof fn lemma_loop_return(e: AbsState, a: AbsState, b: AbsState, frame: nat
     }
 }
 
+/// A return when no tag at or above the frame exists changes nothing.
+proof fn lemma_return_nothing(s: MonitorState, frame: u8, kept: [u8; 4])
+    requires monitor_wf(&s), frame >= 1, s.count <= frame,
+    ensures return_spec(abstraction(&s), abstraction(&s), frame as nat, kept@),
+{
+    let a = abstraction(&s);
+    let k = kept@;
+    assert(k.len() == 4);
+    let step = |c: nat, x: u8| if frame as nat <= x && (x as nat) < a.count && c <= x { x as nat + 1 } else { c };
+    assert(step(frame as nat, k[0]) == frame as nat);
+    assert(step(step(frame as nat, k[0]), k[1]) == frame as nat);
+    assert(step(step(step(frame as nat, k[0]), k[1]), k[2]) == frame as nat);
+    assert(step(step(step(step(frame as nat, k[0]), k[1]), k[2]), k[3]) == frame as nat);
+    assert(kept_count(a.count, frame as nat, k) == a.count);
+    assert forall|t: nat| t < a.count implies node_eq(#[trigger] a.nodes[t],
+        if frame < 64 && t >= frame { unprotect(a.nodes[t]) } else { a.nodes[t] }) by {
+        assert(a.nodes[t].ancestors =~= a.nodes[t].ancestors);
+    }
+}
+
 } // verus!

@@ -12,13 +12,13 @@ which only Verus sets; Kani's build ignores them.
 
 ## Running
 
-With Verus 0.2026.10.18:
+With Verus 0.2026.10.04.426d8b0 (Rust 1.98.1):
 
 ```
 verus library/kani_core/verus/aliasing_monitor.rs
 ```
 
-Expected: `verification results:: 162 verified, 0 errors`. The proof uses no `assume`, `admit` or
+Expected: `verification results:: 163 verified, 0 errors`. The proof uses no `assume`, `admit` or
 `external_body`.
 
 ## What is proved
