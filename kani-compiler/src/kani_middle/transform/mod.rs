@@ -32,6 +32,7 @@ use automatic::{AutomaticArbitraryPass, AutomaticHarnessPass};
 use dump_mir_pass::DumpMirPass;
 use rustc_hir::def::DefKind;
 use rustc_middle::ty::{EarlyBinder, TyCtxt, TypingEnv};
+use rustc_public::CrateDef;
 use rustc_public::mir::mono::{Instance, MonoItem};
 use rustc_public::mir::{Body, Local};
 use rustc_public::rustc_internal;
@@ -155,6 +156,12 @@ impl BodyTransformation {
                 unknown_check_type: CheckType::new_safety_check_assert_assume(queries),
                 kani_functions: queries.kani_functions().clone(),
                 loop_ghost_locals: vec![],
+                skip_panic_only: !unit.harnesses.iter().any(|harness| {
+                    !harness
+                        .def
+                        .tool_attrs(&["kanitool".to_string(), "should_panic".to_string()])
+                        .is_empty()
+                }),
             },
         );
         transformer.add_pass(queries, IntrinsicGeneratorPass::new(unsupported_check_type, queries));

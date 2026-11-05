@@ -128,6 +128,9 @@ pub struct AliasingPass {
     /// The ghost locals that the loops of the last instrumented body write (see
     /// `loop_ghost_locals`).
     pub loop_ghost_locals: Vec<(Instance, Vec<Local>)>,
+    /// Whether the functions that can only end in a panic run without the checks (see
+    /// `is_panic_only`). False when a harness of the unit expects a panic.
+    pub skip_panic_only: bool,
 }
 
 impl TransformPass for AliasingPass {
@@ -153,10 +156,31 @@ impl TransformPass for AliasingPass {
         if !is_instrumented(instance) {
             return (false, body);
         }
+        if self.skip_panic_only && is_panic_only(instance) {
+            // The execution fails at the panic this function ends in, so checking what it does
+            // first cannot turn a failure into a success. It and its callees run in spec mode,
+            // where the monitor does nothing; the panic ends the execution, so it never leaves.
+            let mut body = MutableBody::from(body);
+            let instrumenter = Instrumenter::new(tcx, &body, instance, self);
+            let mut source = if body.blocks()[0].statements.is_empty() {
+                SourceInstruction::Terminator { bb: 0 }
+            } else {
+                SourceInstruction::Statement { idx: 0, bb: 0 }
+            };
+            instrumenter.insert(
+                &mut body,
+                Action::Spec { enter: true },
+                &mut source,
+                InsertPosition::Before,
+            );
+            return (true, body.into());
+        }
         let dead_after_call = dead_after_call_temps(&body);
+        let dead_at_storage_dead = dead_at_storage_dead(&body);
         let mut body = MutableBody::from(body);
         let mut instrumenter = Instrumenter::new(tcx, &body, instance, self);
         instrumenter.dead_after_call = dead_after_call;
+        instrumenter.dead_at_storage_dead = dead_at_storage_dead;
         instrumenter.spec_locals = loop_invariant_locals(tcx, body.blocks(), body.locals());
         let first_ghost = body.locals().len();
         instrumenter.run(&mut body, is_harness(instance, tcx) || is_automatic_harness(instance));
@@ -309,6 +333,8 @@ struct Instrumenter<'a, 'tcx> {
     /// Compiler temporaries assigned a reference once and moved into a call once, and used nowhere
     /// else: their tag cannot be reached through them after the call.
     dead_after_call: HashSet<Local>,
+    /// References whose tag can be dropped when their storage ends (`dead_at_storage_dead`).
+    dead_at_storage_dead: HashSet<Local>,
     /// The locals of loop invariants (`loop_invariant_locals`), which are not instrumented.
     spec_locals: HashSet<Local>,
     /// The locals of the original body, for the types of the places it uses.
@@ -346,6 +372,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             frame_count: None,
             protector_tags: vec![],
             dead_after_call: HashSet::new(),
+            dead_at_storage_dead: HashSet::new(),
             spec_locals: HashSet::new(),
             locals: body.locals().to_vec(),
         }
@@ -434,6 +461,8 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
             })
             .collect();
         self.dead_after_call.retain(|local| fresh.contains(local));
+        self.dead_at_storage_dead
+            .retain(|local| fresh.contains(local) && !self.address_taken.contains(local));
 
         // Collect the instrumentation of the original instructions, then insert it from the last
         // instruction to the first so that earlier positions stay valid.
@@ -1715,6 +1744,14 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                     &mut after,
                 );
             }
+            StatementKind::StorageDead(local) if self.dead_at_storage_dead.contains(local) => {
+                // Nothing else holds this reference's tag (see `dead_at_storage_dead`): drop it,
+                // as a returning function drops its own. The library only drops the last tag, and
+                // keeps it if it was stored or exposed.
+                if let Some(tag_local) = self.tags.get(&(*local, vec![])).copied() {
+                    after.push(Action::DropTag { tag_local });
+                }
+            }
             StatementKind::FakeRead(..)
             | StatementKind::StorageLive(_)
             | StatementKind::StorageDead(_)
@@ -2984,6 +3021,22 @@ fn loop_ghost_locals(
 /// references it passes to the function under verification need tags.
 /// Nor is the function that registers and evaluates a loop invariant: the invariant is a
 /// specification, evaluated in the aliasing checks' specification mode (`aliasing_spec`).
+/// Whether `instance` can only end in a panic: a function of the standard library that never
+/// returns, other than the ones that end the process (`exit`, `abort`).
+fn is_panic_only(instance: Instance) -> bool {
+    let Ok(sig) = instance.ty().kind().fn_sig().map(|sig| sig.skip_binder()).ok_or(()) else {
+        return false;
+    };
+    if !matches!(sig.output().kind(), TyKind::RigidTy(RigidTy::Never)) {
+        return false;
+    }
+    let krate = instance.def.krate().name;
+    let name = instance.name();
+    matches!(krate.as_str(), "core" | "std" | "alloc")
+        && !name.contains("exit")
+        && !name.contains("abort")
+}
+
 pub fn is_instrumented(instance: Instance) -> bool {
     is_automatic_harness(instance)
         || (KaniFunction::try_from(instance).is_err()
@@ -3146,6 +3199,63 @@ fn fn_def(body: &MutableBody, func: &Operand) -> Option<(FnDef, GenericArgs)> {
 
 /// The compiler temporaries whose only uses are one assignment of a reference and one move into a
 /// call's arguments.
+/// The references nothing else holds the tag of: assigned once, by a reborrow, and otherwise only
+/// used through a dereference (accesses to the pointee and reborrows of it, which get tags of
+/// their own). A copy or move of the reference, or a raw pointer to its pointee, would carry the
+/// same tag, so any of them excludes it. Once its storage ends, nothing reaches its tag, unless a
+/// child outlives it, in which case the tag is not the last one and the library keeps it.
+fn dead_at_storage_dead(body: &Body) -> HashSet<Local> {
+    struct Scan {
+        whole: Vec<usize>,
+        excluded: Vec<bool>,
+    }
+    impl MirVisitor for Scan {
+        fn visit_statement(&mut self, stmt: &rustc_public::mir::Statement, location: Location) {
+            // Storage markers are not uses.
+            if !matches!(stmt.kind, StatementKind::StorageLive(_) | StatementKind::StorageDead(_)) {
+                self.super_statement(stmt, location);
+            }
+        }
+        fn visit_var_debug_info(&mut self, _: &rustc_public::mir::VarDebugInfo) {}
+        fn visit_place(&mut self, place: &Place, ptx: PlaceContext, location: Location) {
+            match place.projection.first() {
+                None => self.whole[place.local] += 1,
+                Some(ProjectionElem::Deref) => {}
+                Some(_) => self.excluded[place.local] = true,
+            }
+            self.super_place(place, ptx, location);
+        }
+        fn visit_rvalue(&mut self, rvalue: &Rvalue, location: Location) {
+            if let Rvalue::AddressOf(_, place) = rvalue {
+                self.excluded[place.local] = true;
+            }
+            self.super_rvalue(rvalue, location);
+        }
+    }
+    let n = body.locals().len();
+    let mut scan = Scan { whole: vec![0; n], excluded: vec![false; n] };
+    scan.visit_body(body);
+    let mut defs: HashMap<Local, usize> = HashMap::new();
+    for block in body.blocks.iter() {
+        for stmt in &block.statements {
+            if let StatementKind::Assign(place, Rvalue::Ref(..)) = &stmt.kind
+                && place.projection.is_empty()
+            {
+                *defs.entry(place.local).or_insert(0) += 1;
+            }
+        }
+    }
+    defs.into_iter()
+        .filter(|(local, n)| {
+            *n == 1
+                && scan.whole[*local] == 1
+                && !scan.excluded[*local]
+                && *local > body.arg_locals().len()
+        })
+        .map(|(local, _)| local)
+        .collect()
+}
+
 fn dead_after_call_temps(body: &Body) -> HashSet<Local> {
     struct Uses(Vec<usize>);
     impl MirVisitor for Uses {

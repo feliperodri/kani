@@ -1569,6 +1569,13 @@ macro_rules! kani_aliasing_monitor {
         ))]
         #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_return"))]
         pub fn monitor_return(s: &mut MonitorState, frame_count: u8, kept: [u8; 4]) {
+            // The function created no tag that is still alive: nothing to drop or unprotect.
+            // Most returns are of this kind, and the test is concrete on most paths.
+            if s.count <= frame_count {
+                #[cfg(verus_keep_ghost)]
+                proof! { lemma_return_nothing(*s, frame_count, kept); }
+                return;
+            }
             #[cfg(verus_keep_ghost)]
             proof_decl! { let ghost s0 = *s; }
             if frame_count < MAX_TAGS {
