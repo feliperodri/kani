@@ -164,7 +164,9 @@ macro_rules! kani_aliasing {
                 calls().loop_common = 0;
                 return;
             }
-            calls().loop_common &= s.ancestors[tag as usize];
+            // Accesses through `tag` act through `monitor_eff(tag)`, the tag itself unless it is a
+            // shared reference to a cell's bytes, which no access changes.
+            calls().loop_common &= s.ancestors[monitor_eff(s, tag) as usize];
         }
 
         /// The loop accesses the `size` bytes at `ptr` directly (through the root tag of their
@@ -194,42 +196,23 @@ macro_rules! kani_aliasing {
             if calls().spec != 0 {
                 return;
             }
-            let s = state();
             // SAFETY: the compiler passes the ghost local that `aliasing_loop_entry` wrote.
             let e = unsafe { &*snapshot };
-            s.tracked_object_id = e.tracked_object_id;
-            s.tracked_offset = e.tracked_offset;
-            s.count = e.count;
-            s.ancestors = e.ancestors;
-            s.main = e.main;
-            s.interior = e.interior;
-            s.protected = e.protected;
-            s.strong = e.strong;
-            s.cell = e.cell;
-            s.alias = e.alias;
-            s.wildcard = e.wildcard;
-            let live = monitor_live(s);
-            // The tags that are ancestors of every tag the loop accesses through see only local
-            // accesses, which never disable, freeze or conflict a tag (Reserved only becomes
-            // Active): they keep these bits.
-            let local = calls().loop_common & live;
-            let any = !local;
-            s.valid = e.valid & (super::any_raw::<u64>() | local);
-            s.active = (e.active | super::any_raw::<u64>()) & live;
-            s.frozen = (e.frozen | (super::any_raw::<u64>() & any)) & live;
-            s.conflicted = (e.conflicted | (super::any_raw::<u64>() & e.protected & any)) & live;
-            s.initialized = (e.initialized | super::any_raw::<u64>()) & live;
-            s.exposed = (e.exposed | super::any_raw::<u64>()) & live;
-            s.stored = (e.stored | super::any_raw::<u64>()) & live;
-            s.unknown_exposed = e.unknown_exposed || super::any_raw::<u8>() & 1 == 1;
-            s.exposed_values = e.exposed_values || super::any_raw::<u8>() & 1 == 1;
-            // A tag becomes Frozen only from Active (Reserved, Active, Frozen, Disabled).
-            super::assume(s.frozen & !e.frozen & !s.active == 0);
-            // The invariants of `monitor_wf` on each tag's bits.
-            super::assume(s.frozen & s.interior & !s.active == 0);
-            super::assume(s.exposed & s.cell == 0);
-            super::assume(s.conflicted & (s.active | s.frozen) == 0);
-            super::assume(s.active & !s.initialized == 0);
+            // Any state in the relation with the one where the loop started (see
+            // `monitor_loop_head` and its proof in `verus/aliasing_monitor.rs`).
+            let v = LoopHavoc {
+                valid: super::any_raw(),
+                active: super::any_raw(),
+                frozen: super::any_raw(),
+                conflicted: super::any_raw(),
+                initialized: super::any_raw(),
+                exposed: super::any_raw(),
+                stored: super::any_raw(),
+                unknown_exposed: super::any_raw::<u8>() & 1 == 1,
+                exposed_values: super::any_raw::<u8>() & 1 == 1,
+            };
+            let ok = monitor_loop_head(state(), e, calls().loop_common, v);
+            super::assume(ok);
         }
 
         /// Start (`true`) or end (`false`) the evaluation of a specification, such as a loop

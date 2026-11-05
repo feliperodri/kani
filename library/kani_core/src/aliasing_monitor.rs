@@ -1622,5 +1622,78 @@ macro_rules! kani_aliasing_monitor {
             #[cfg(verus_keep_ghost)]
             proof! { lemma_return(s0, s1, *s, frame_count, kept, count); }
         }
+
+        /// The nondeterministic choices of `monitor_loop_head`: the new bits of each mask, and
+        /// the two flags.
+        #[cfg_attr(verus_keep_ghost, verus_verify)]
+        pub struct LoopHavoc {
+            pub valid: u64,
+            pub active: u64,
+            pub frozen: u64,
+            pub conflicted: u64,
+            pub initialized: u64,
+            pub exposed: u64,
+            pub stored: u64,
+            pub unknown_exposed: bool,
+            pub exposed_values: bool,
+        }
+
+        /// The borrow state at the head of a loop with a contract, where CBMC starts an
+        /// arbitrary iteration: any state whose tags are those of `e`, the state where the loop
+        /// started, each with the same ancestors and protector and a permission that later
+        /// transitions can reach from its permission in `e` (Reserved, Active, Frozen,
+        /// Disabled). The tags in `common`, ancestors of every tag the loop accesses through,
+        /// only see local accesses: they stay valid and keep their frozen and conflicted bits.
+        /// `v` is nondeterministic; the result is whether the state they give is well
+        /// formed, which the caller assumes. `loop_head_complete` proves that every state the
+        /// loop can reach is one of them (up to the abstraction).
+        #[cfg_attr(verus_keep_ghost, verus_verify)]
+        #[cfg_attr(verus_keep_ghost, verus_spec(r =>
+            requires monitor_wf(e),
+            ensures
+                *final(s) == loop_head_spec(*e, common, v),
+                r == loop_head_ok(&*final(s), e),
+                !r || monitor_wf(&*final(s)),
+        ))]
+        #[cfg_attr(not(verus_keep_ghost), unsafe(export_name = "__VERIFIER_kani_aliasing_monitor_loop_head"))]
+        pub fn monitor_loop_head(
+            s: &mut MonitorState,
+            e: &MonitorState,
+            common: u64,
+            v: LoopHavoc,
+        ) -> bool {
+            s.tracked_object_id = e.tracked_object_id;
+            s.tracked_offset = e.tracked_offset;
+            s.count = e.count;
+            s.ancestors = e.ancestors;
+            s.main = e.main;
+            s.interior = e.interior;
+            s.protected = e.protected;
+            s.strong = e.strong;
+            s.cell = e.cell;
+            s.alias = e.alias;
+            s.wildcard = e.wildcard;
+            let live = monitor_live(e);
+            let local = common & live;
+            let any = !local;
+            s.valid = e.valid & (v.valid | local);
+            s.active = (e.active | v.active) & live;
+            s.frozen = (e.frozen | (v.frozen & any)) & live;
+            s.conflicted = (e.conflicted | (v.conflicted & e.protected & any)) & live;
+            s.initialized = (e.initialized | v.initialized) & live;
+            s.exposed = (e.exposed | v.exposed) & live;
+            s.stored = (e.stored | v.stored) & live;
+            s.unknown_exposed = e.unknown_exposed || v.unknown_exposed;
+            s.exposed_values = e.exposed_values || v.exposed_values;
+            // A tag becomes Frozen only from Active, and `monitor_wf`'s conditions on each tag.
+            let ok = s.frozen & !e.frozen & !s.active == 0
+                && s.frozen & s.interior & !s.active == 0
+                && s.exposed & s.cell == 0
+                && s.conflicted & (s.active | s.frozen) == 0
+                && s.active & !s.initialized == 0;
+            #[cfg(verus_keep_ghost)]
+            proof! { if ok { lemma_loop_head_wf(*e, *s, common, v); } }
+            ok
+        }
     };
 }
