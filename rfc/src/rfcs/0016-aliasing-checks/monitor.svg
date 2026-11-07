@@ -1,0 +1,91 @@
+<!-- Copyright Kani Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <title>How the instrumentation and the monitor check the User Experience example</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <rect width="1000" height="600" fill="#fff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold">From Rust code to a failed check: the example of "User Experience"</text>
+  <!-- column headers -->
+  <text x="30"  y="62" font-weight="bold">1. Rust (harness body)</text>
+  <text x="300" y="62" font-weight="bold">2. MIR after the aliasing pass (simplified)</text>
+  <text x="690" y="62" font-weight="bold">3. Monitor state at the tracked byte</text>
+  <!-- Rust -->
+  <rect x="20" y="75" width="250" height="210" rx="6" fill="#f6f8fa" stroke="#999"/>
+  <g font-family="Menlo, Consolas, monospace" font-size="12" xml:space="preserve">
+    <text x="32" y="100">let mut x = 0;</text>
+    <text x="32" y="140">let p = &amp;mut x as *mut i32;</text>
+    <text x="32" y="180">let r = unsafe { &amp;mut *p };</text>
+    <text x="32" y="220">unsafe { *p = 1 };</text>
+    <text x="32" y="260">*r = 2;</text>
+  </g>
+  <!-- MIR -->
+  <rect x="290" y="75" width="380" height="210" rx="6" fill="#fffdf2" stroke="#999"/>
+  <g font-family="Menlo, Consolas, monospace" font-size="11.5">
+    <text x="300" y="100">x: tag = 0 (the allocation's root)</text>
+    <text x="300" y="132">tmp = &amp;mut x;  tag_tmp = new_borrow(0)</text>
+    <text x="300" y="148">p = tmp as *mut;  tag_p = tag_tmp  // raw: same tag</text>
+    <text x="300" y="180">r = &amp;mut *p;  tag_r = new_borrow(tag_p)</text>
+    <text x="300" y="212">c = access(p, tag_p, write); assert(c == OK)</text>
+    <text x="300" y="228">*p = 1</text>
+    <text x="300" y="252">c = access(r, tag_r, write); assert(c == OK)</text>
+    <text x="300" y="268">*r = 2</text>
+  </g>
+  <g stroke="#333" stroke-width="1.2" marker-end="url(#a)">
+    <line x1="255" y1="136" x2="290" y2="136"/>
+    <line x1="255" y1="176" x2="290" y2="176"/>
+    <line x1="255" y1="216" x2="290" y2="216"/>
+    <line x1="255" y1="256" x2="290" y2="256"/>
+  </g>
+  <!-- monitor table -->
+  <rect x="685" y="75" width="300" height="210" rx="6" fill="#f2f7ff" stroke="#999"/>
+  <g font-size="12">
+    <text x="695" y="98" font-weight="bold">tag</text>
+    <text x="735" y="98" font-weight="bold">ancestors</text>
+    <text x="815" y="98" font-weight="bold">after new_borrow</text>
+    <text x="695" y="122">0</text><text x="735" y="122">{0}</text><text x="815" y="122">Active</text>
+    <text x="695" y="142">1</text><text x="735" y="142">{0,1}</text><text x="815" y="142">Reserved</text>
+    <text x="695" y="162">2</text><text x="735" y="162">{0,1,2}</text><text x="815" y="162">Reserved</text>
+    <line x1="695" y1="172" x2="975" y2="172" stroke="#bbb"/>
+    <text x="695" y="192" font-weight="bold">write through tag 1 (p):</text>
+    <text x="695" y="210">child for 0, 1: 1 becomes Active</text>
+    <text x="695" y="228">foreign for 2: Reserved to Disabled</text>
+    <line x1="695" y1="238" x2="975" y2="238" stroke="#bbb"/>
+    <text x="695" y="258" font-weight="bold" fill="#b00020">write through tag 2 (r):</text>
+    <text x="695" y="276" fill="#b00020">2 is Disabled: result ACCESS_INVALIDATED</text>
+  </g>
+  <g stroke="#333" stroke-width="1.2" marker-end="url(#a)">
+    <line x1="670" y1="136" x2="685" y2="136"/>
+    <line x1="670" y1="216" x2="685" y2="216"/>
+    <line x1="670" y1="256" x2="685" y2="256"/>
+  </g>
+  <!-- bottom: representation -->
+  <text x="30" y="325" font-weight="bold">How the monitor stores this (library/kani_core/src/aliasing_monitor.rs)</text>
+  <rect x="20" y="335" width="560" height="190" rx="6" fill="#f6f8fa" stroke="#999"/>
+  <g font-family="Menlo, Consolas, monospace" font-size="12" xml:space="preserve">
+    <text x="32" y="358">tracked_object_id, tracked_offset   // the tracked byte (nondet.)</text>
+    <text x="32" y="378">count = 3                            // live tags 0..count, at most 64</text>
+    <text x="32" y="398">ancestors[t]: u64                    // bit u set: u is an ancestor of t</text>
+    <text x="32" y="418">valid, active, frozen: u64           // bit t: permission of tag t</text>
+    <text x="32" y="438">conflicted, interior, cell, protected, strong, initialized,</text>
+    <text x="32" y="454">exposed, stored: u64                 // more per-tag bits</text>
+    <text x="32" y="480">before the write through 1:  valid=0b111 active=0b001</text>
+    <text x="32" y="496">after:                       valid=0b011 active=0b011</text>
+    <text x="32" y="514">                             // Disabled = not valid</text>
+  </g>
+  <rect x="600" y="335" width="385" height="190" rx="6" fill="#fff" stroke="#999"/>
+  <g font-size="12.5">
+    <text x="612" y="358" font-weight="bold">One access, in the monitor</text>
+    <text x="612" y="380">1. If the accessed bytes don't contain the tracked</text>
+    <text x="612" y="396">    byte: nothing to do.</text>
+    <text x="612" y="418">2. local  = ancestors[tag] (child access for them)</text>
+    <text x="612" y="434">    foreign = every other live tag</text>
+    <text x="612" y="456">3. Apply Tree Borrows' transition to each tag,</text>
+    <text x="612" y="472">    with a few bitwise operations on the masks.</text>
+    <text x="612" y="494">4. Return ACCESS_OK, or the rule that fails;</text>
+    <text x="612" y="510">    the inserted assert reports it.</text>
+  </g>
+  <text x="20" y="560" fill="#555">CBMC executes this code symbolically, so the tracked byte, the tags and the masks may be symbolic: the check holds for every choice</text>
+  <text x="20" y="578" fill="#555">of tracked byte the harness allows. A violation at any byte is found by the execution that tracks that byte.</text>
+</svg>

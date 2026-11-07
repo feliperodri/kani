@@ -1,0 +1,64 @@
+<!-- Copyright Kani Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="560" viewBox="0 0 920 560" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <title>Tree Borrows permissions of one tag at one byte, and the transitions accesses cause</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <rect width="920" height="560" fill="#fff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold">Permission of one tag at one byte, and how accesses change it</text>
+  <text x="20" y="48" fill="#555">"Child" access: through this tag or one of its descendants. "Foreign" access: through any other tag.</text>
+  <text x="20" y="66" fill="#555">Transitions follow Miri's tree_borrows/perms.rs; names in parentheses are Miri's. Red: undefined behavior.</text>
+  <g stroke="#333" stroke-width="1.5">
+    <rect x="50"  y="110" width="200" height="56" rx="10" fill="#e8f1fb"/>
+    <rect x="390" y="110" width="160" height="56" rx="10" fill="#e6f4ea"/>
+    <rect x="700" y="110" width="160" height="56" rx="10" fill="#fff4e0"/>
+    <rect x="50"  y="310" width="200" height="56" rx="10" fill="#e8f1fb"/>
+    <rect x="390" y="310" width="160" height="56" rx="10" fill="#eeeeee"/>
+    <rect x="40"  y="460" width="220" height="56" rx="10" fill="#f3e8fb"/>
+    <rect x="700" y="460" width="160" height="56" rx="10" fill="#fafafa"/>
+  </g>
+  <text x="150" y="134" text-anchor="middle" font-weight="bold">Reserved</text>
+  <text x="150" y="153" text-anchor="middle" fill="#555">(ReservedFrz)</text>
+  <text x="470" y="134" text-anchor="middle" font-weight="bold">Active</text>
+  <text x="470" y="153" text-anchor="middle" fill="#555">(Unique)</text>
+  <text x="780" y="143" text-anchor="middle" font-weight="bold">Frozen</text>
+  <text x="150" y="334" text-anchor="middle" font-weight="bold">Reserved, conflicted</text>
+  <text x="150" y="353" text-anchor="middle" fill="#555">exists only while protected</text>
+  <text x="470" y="343" text-anchor="middle" font-weight="bold">Disabled</text>
+  <text x="150" y="484" text-anchor="middle" font-weight="bold">Reserved, interior-mutable</text>
+  <text x="150" y="503" text-anchor="middle" fill="#555">(ReservedIM)</text>
+  <text x="780" y="484" text-anchor="middle" font-weight="bold">Cell</text>
+  <text x="780" y="503" text-anchor="middle" fill="#555">no access changes it</text>
+  <g stroke="#333" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <path d="M250,138 L390,138"/>
+    <path d="M550,138 L700,138"/>
+    <path d="M150,166 L150,310"/>
+    <path d="M230,166 L410,310"/>
+    <path d="M250,338 L390,338"/>
+    <path d="M470,166 L470,310"/>
+    <path d="M760,166 L540,310"/>
+    <path d="M200,460 L420,166"/>
+  </g>
+  <text x="320" y="130" text-anchor="middle">child write</text>
+  <text x="625" y="122" text-anchor="middle">foreign read</text>
+  <text x="625" y="156" text-anchor="middle" fill="#555">(not protected)</text>
+  <text x="58" y="220">foreign read</text>
+  <text x="58" y="236" fill="#555">(if protected)</text>
+  <text x="250" y="230">foreign write</text>
+  <text x="320" y="330" text-anchor="middle">foreign write</text>
+  <text x="478" y="230">foreign write, or</text>
+  <text x="478" y="246">foreign read if protected</text>
+  <text x="660" y="240">foreign write</text>
+  <text x="236" y="420">child write</text>
+  <g fill="#b00020" font-size="12">
+    <text x="700" y="186">child write: UB</text>
+    <text x="390" y="388">any child access: UB</text>
+    <text x="390" y="404">becoming Disabled while protected and</text>
+    <text x="390" y="420">initialized: UB</text>
+    <text x="50"  y="388">child write: UB</text>
+  </g>
+  <text x="300" y="484" fill="#555">Unprotected Reserved ignores foreign reads.</text>
+  <text x="300" y="502" fill="#555">Interior-mutable Reserved also ignores foreign writes;</text>
+  <text x="300" y="520" fill="#555">Miri never creates it under a protector.</text>
+</svg>

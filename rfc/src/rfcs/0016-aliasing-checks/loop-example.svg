@@ -1,0 +1,87 @@
+<!-- Copyright Kani Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="Helvetica, Arial, sans-serif" font-size="12.5">
+  <title>reborrow_in_loop: Kani's loop-contract passes and the borrow state at x</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold">reborrow_in_loop: the two passes of a loop contract, and the borrow state at the tracked byte (in x)</text>
+  <text x="20" y="48" fill="#555">Tags: 0 = x's allocation, 1 = r = &amp;mut x, 2 = t = &amp;mut *r (one per iteration). Roots of the loop: {0, 1}: every access in the loop is through a descendant of r.</text>
+  <!-- blocks -->
+  <g stroke="#333" stroke-width="1.4">
+    <rect x="20"  y="70" width="180" height="70" rx="8" fill="#eef2f7"/>
+    <rect x="230" y="70" width="200" height="70" rx="8" fill="#e6f4ea"/>
+    <rect x="460" y="70" width="170" height="70" rx="8" fill="#fff4e0"/>
+    <rect x="660" y="70" width="200" height="70" rx="8" fill="#e6f4ea"/>
+    <rect x="890" y="70" width="170" height="70" rx="8" fill="#eef2f7"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="110" y="95" font-weight="bold">Prehead (entry)</text>
+    <text x="110" y="113">evaluate invariant;</text>
+    <text x="110" y="129">snapshot e of the monitor</text>
+    <text x="330" y="95" font-weight="bold">HEAD, pass 1: base case</text>
+    <text x="330" y="113">the real first iteration,</text>
+    <text x="330" y="129">from the entry state</text>
+    <text x="545" y="95" font-weight="bold">STEP</text>
+    <text x="545" y="113">assert inv. held at entry;</text>
+    <text x="545" y="129">havoc; assume inv.</text>
+    <text x="760" y="95" font-weight="bold">HEAD, pass 2: step</text>
+    <text x="760" y="113">an arbitrary iteration;</text>
+    <text x="760" y="129">then assert inv.; assume false</text>
+    <text x="975" y="95" font-weight="bold">EXIT, after the loop</text>
+    <text x="975" y="113">guard false in pass 2</text>
+    <text x="975" y="129">(or in pass 1: no iteration)</text>
+  </g>
+  <g stroke="#333" stroke-width="1.4" marker-end="url(#a)">
+    <line x1="200" y1="105" x2="230" y2="105"/>
+    <line x1="430" y1="105" x2="460" y2="105"/>
+    <line x1="630" y1="105" x2="660" y2="105"/>
+    <line x1="860" y1="105" x2="890" y2="105"/>
+  </g>
+  <!-- what the aliasing checks do at each block -->
+  <text x="20" y="172" font-weight="bold">What the aliasing instrumentation does</text>
+  <g font-size="12">
+    <text x="20"  y="194">LoopEntry: e := monitor state</text>
+    <text x="230" y="194">LoopHead at the head: the state</text>
+    <text x="230" y="210">becomes any s with loop_rel(e, s)</text>
+    <text x="230" y="226">(also on pass 1: s = e is allowed)</text>
+    <text x="460" y="194">CBMC havocs i and *r (the</text>
+    <text x="460" y="210">write set), not the monitor;</text>
+    <text x="460" y="226">tag locals the loop assigns too</text>
+    <text x="660" y="194">LoopHead again: any s with</text>
+    <text x="660" y="210">loop_rel(e, s); earlier tags</text>
+    <text x="660" y="226">dropped, their locals unknown</text>
+    <text x="890" y="194">x = 7: write through tag 0;</text>
+    <text x="890" y="210">foreign for 1: Disabled</text>
+    <text x="890" y="226">(r is not used again: OK)</text>
+  </g>
+  <!-- tables -->
+  <text x="20" y="262" font-weight="bold">Permission at x (sets: what the abstraction allows)</text>
+  <g font-size="12">
+    <rect x="20" y="272" width="1040" height="150" fill="#fafafa" stroke="#ccc"/>
+    <text x="30"  y="294" font-weight="bold">tag</text>
+    <text x="110" y="294" font-weight="bold">entry e</text>
+    <text x="230" y="294" font-weight="bold">pass 1, after the head</text>
+    <text x="460" y="294" font-weight="bold">pass 1, after *t = i</text>
+    <text x="660" y="294" font-weight="bold">pass 2, after the head</text>
+    <text x="890" y="294" font-weight="bold">after x = 7</text>
+    <text x="30"  y="318">0 (x)</text>
+    <text x="110" y="318">Active</text><text x="230" y="318">Active (a root: stays valid)</text><text x="460" y="318">Active</text><text x="660" y="318">Active (a root)</text><text x="890" y="318">Active</text>
+    <text x="30"  y="342">1 (r)</text>
+    <text x="110" y="342">Reserved</text><text x="230" y="342">Reserved or Active (a root)</text><text x="460" y="342">Active</text><text x="660" y="342">Reserved or Active (a root)</text><text x="890" y="342">Disabled</text>
+    <text x="30"  y="366">2 (t)</text>
+    <text x="110" y="366">does not exist</text><text x="230" y="366">created by the reborrow:</text><text x="460" y="366">Active; dropped when t's</text><text x="660" y="366">new tag 2 again,</text><text x="890" y="366">does not exist</text>
+    <text x="230" y="382">Reserved, child of 1</text><text x="460" y="382">storage ends</text><text x="660" y="382">child of 1</text>
+    <text x="30" y="410" fill="#555">Without the roots, 1 could be any permission at or below Reserved, including Disabled, and the reborrow &amp;mut *r would fail spuriously.</text>
+  </g>
+  <!-- obligations -->
+  <text x="20" y="450" font-weight="bold">Proof obligations</text>
+  <g font-size="12">
+    <text x="20" y="470">CBMC, in one query: the invariant i &lt;= 3 holds at entry and after the step iteration; the loop writes only {i, *r};</text>
+    <text x="20" y="486">every aliasing check in both passes and after the loop passes.</text>
+    <text x="20" y="506">Verus, once for all loops: every monitor operation keeps loop_rel(e, _) (lemma_loop_*), so the havoc covers every state</text>
+    <text x="20" y="522">that any number of iterations reaches (lemma_loop_head_sound). The compiler's roots {0, 1} are assumed to be ancestors of every</text>
+    <text x="20" y="538">tag the loop accesses through: here, every access goes through t, a child of r.</text>
+  </g>
+</svg>
