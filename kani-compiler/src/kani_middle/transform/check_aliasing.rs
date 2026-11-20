@@ -804,7 +804,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                             elems.push(PathElem::Downcast(variant_index.as_usize()));
                         }
                         elems.push(PathElem::Field(field_index.as_usize()));
-                        push(elems, normalize(field.ty(self.tcx, args)));
+                        push(elems, normalize(field.ty(self.tcx, *args)));
                     }
                 }
             }
@@ -844,7 +844,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 let variant =
                     def.variants().get(rustc_abi::VariantIdx::from_usize(variant.unwrap_or(0)))?;
                 let field = variant.fields.get(rustc_abi::FieldIdx::from_usize(field))?;
-                Some(normalize(field.ty(self.tcx, args)))
+                Some(normalize(field.ty(self.tcx, *args)))
             }
             (rustc_middle::ty::TyKind::Closure(_, args), None) => args
                 .as_closure()
@@ -1014,7 +1014,7 @@ impl<'a, 'tcx> Instrumenter<'a, 'tcx> {
                 def.non_enum_variant()
                     .fields
                     .iter()
-                    .map(|field| normalize(field.ty(self.tcx, args)))
+                    .map(|field| normalize(field.ty(self.tcx, *args)))
                     .collect(),
             ),
             rustc_middle::ty::TyKind::Closure(_, args) => Some(
